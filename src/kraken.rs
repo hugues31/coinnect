@@ -6,7 +6,6 @@ use crypto::hmac::Hmac;
 use crypto::mac::Mac;
 use crypto::sha2::{Sha256, Sha512};
 
-
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::header;
@@ -25,6 +24,7 @@ use std::time::Duration;
 use std::path::PathBuf;
 use std::fs::File;
 use std::str;
+use std::iter::repeat;
 
 use helpers;
 
@@ -147,18 +147,22 @@ impl KrakenApi {
 
     fn create_signature(&self, urlpath: String, postdata: &str, nonce: &str) -> String {
         let message_presha256 = nonce.to_string() + postdata;
-        println!("message {:?}", message_presha256);
 
         let mut sha256 = Sha256::new();
         sha256.input_str(&message_presha256);
-        let final_sha = sha256.result_str();
+        let mut buffer: Vec<u8> = repeat(0).take((sha256.output_bits()+7)/8).collect();
+        sha256.result(&mut buffer);
 
-        let message_premac = urlpath + &final_sha;
+        let mut concatenated = urlpath.as_bytes().to_vec();
+        for elem in buffer {
+            concatenated.push(elem);
+        }
 
         let hmac_key = self.api_secret.from_base64().unwrap();
         let mut hmac = Hmac::new(Sha512::new(), &hmac_key);
-        hmac.input(message_premac.as_bytes());
-        hmac.result().code().to_base64(STANDARD)
+        hmac.input(&concatenated);
+        let hmac_result = hmac.result().code().to_base64(STANDARD);
+        hmac_result
     }
 
     /// Result: Server's time
