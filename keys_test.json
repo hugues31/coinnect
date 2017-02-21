@@ -1,0 +1,12 @@
+{
+    "account_kraken": {
+        "exchange"  : "kraken",
+        "api_key"   : "123456789ABCDEF",
+        "api_secret": "ABC&EF?abcdef"
+    },
+    "account_poloniex": {
+        "exchange"  : "poloniex",
+        "api_key"   : "XYXY-XYXY-XYXY-XY",
+        "api_secret": "A0A0B1B1C2C2"
+    }
+}

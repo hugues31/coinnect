@@ -1,0 +1,24 @@
+[package]
+name = "coinnect"
+version = "0.1.0"
+license = "Apache-2.0/MIT"
+authors = ["Hugues Gaillard <hugues.gaillard@me.com>"]
+description = "A Rust library to connect to various crypto-currencies exchanges."
+keywords = [ "crypto", "bitcoin", "trading", "poloniex", "kraken" ]
+readme = "README.md"
+
+[[example]]
+name = "simple"
+path = "examples/simple.rs"
+
+[[example]]
+name = "kraken_trading"
+path = "examples/kraken_trading.rs"
+
+[dependencies]
+hyper = "0.10.4"
+serde_json = "0.9"
+time = "0.1.36"
+rust-crypto = "0.2"
+rustc-serialize = "0.3"
+hyper-native-tls = "0.2.2"
