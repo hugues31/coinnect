@@ -161,8 +161,7 @@ impl KrakenApi {
         let hmac_key = self.api_secret.from_base64().unwrap();
         let mut hmac = Hmac::new(Sha512::new(), &hmac_key);
         hmac.input(&concatenated);
-        let hmac_result = hmac.result().code().to_base64(STANDARD);
-        hmac_result
+        hmac.result().code().to_base64(STANDARD)
     }
 
     /// Result: Server's time
@@ -351,5 +350,357 @@ impl KrakenApi {
     pub fn get_account_balance(&mut self) -> Option<Map<String, Value>> {
         let params = HashMap::new();
         self.private_query("Balance", &params)
+    }
+
+    /// URL: https://api.kraken.com/0/private/TradeBalance
+    ///
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = base asset used to determine balance (default = ZUSD)
+    /// ```
+    /// Result: array of trade balance info
+    ///
+    /// ```ignore
+    /// eb = equivalent balance (combined balance of all currencies)
+    /// tb = trade balance (combined balance of all equity currencies)
+    /// m = margin amount of open positions
+    /// n = unrealized net profit/loss of open positions
+    /// c = cost basis of open positions
+    /// v = current floating valuation of open positions
+    /// e = equity = trade balance + unrealized net profit/loss
+    /// mf = free margin = equity - initial margin (maximum margin available to open new positions)
+    /// ml = margin level = (equity / initial margin) * 100
+    /// ```
+    /// Note: Rates used for the floating valuation is the midpoint of the best bid and ask prices
+    pub fn get_trade_balance(&mut self, aclass: &str, asset: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        self.private_query("TradeBalance", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// trades = whether or not to include trades in output (optional.  default = false)
+    /// userref = restrict results to given user reference id (optional)
+    /// ```
+    ///
+    /// Result: array of order info in open array with txid as the key
+    ///
+    /// ```ignore
+    /// refid = Referral order transaction id that created this order
+    /// userref = user reference id
+    /// status = status of order:
+    ///     pending = order pending book entry
+    ///     open = open order
+    ///     closed = closed order
+    ///     canceled = order canceled
+    ///     expired = order expired
+    /// opentm = unix timestamp of when order was placed
+    /// starttm = unix timestamp of order start time (or 0 if not set)
+    /// expiretm = unix timestamp of order end time (or 0 if not set)
+    /// descr = order description info
+    ///     pair = asset pair
+    ///     type = type of order (buy/sell)
+    ///     ordertype = order type (See Add standard order)
+    ///     price = primary price
+    ///     price2 = secondary price
+    ///     leverage = amount of leverage
+    ///     order = order description
+    ///     close = conditional close order description (if conditional close set)
+    /// vol = volume of order (base currency unless viqc set in oflags)
+    /// vol_exec = volume executed (base currency unless viqc set in oflags)
+    /// cost = total cost (quote currency unless unless viqc set in oflags)
+    /// fee = total fee (quote currency)
+    /// price = average price (quote currency unless viqc set in oflags)
+    /// stopprice = stop price (quote currency, for trailing stops)
+    /// limitprice = triggered limit price (quote currency, when limit based order type triggered)
+    /// misc = comma delimited list of miscellaneous info
+    ///     stopped = triggered by stop price
+    ///     touched = triggered by touch price
+    ///     liquidated = liquidation
+    ///     partial = partial fill
+    /// oflags = comma delimited list of order flags
+    ///     viqc = volume in quote currency
+    ///     fcib = prefer fee in base currency (default if selling)
+    ///     fciq = prefer fee in quote currency (default if buying)
+    ///     nompp = no market price protection
+    /// trades = array of trade ids related to order (if trades info requested and data available)
+    /// ```
+    ///
+    /// Note: Unless otherwise stated, costs, fees, prices, and volumes are in the asset pair's scale,
+    /// not the currency's scale. For example, if the asset pair uses a lot size that has a scale of 8,
+    /// the volume will use a scale of 8, even if the currency it represents only has a scale of 2.
+    /// Similarly, if the asset pair's pricing scale is 5, the scale will remain as 5, even if the
+    /// underlying currency has a scale of 8.
+    pub fn get_open_orders(&mut self, trades: &str, userref: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("trades", trades);
+        params.insert("userref", userref);
+        self.private_query("OpenOrders", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// trades = whether or not to include trades in output (optional.  default = false)
+    /// userref = restrict results to given user reference id (optional)
+    /// start = starting unix timestamp or order tx id of results (optional.  exclusive)
+    /// end = ending unix timestamp or order tx id of results (optional.  inclusive)
+    /// ofs = result offset
+    /// closetime = which time to use (optional)
+    ///     open
+    ///     close
+    ///     both (default)
+    /// ```
+    ///
+    /// Result: array of order info
+    ///
+    /// ```ignore
+    /// closed = array of order info.  See Get open orders.  Additional fields:
+    ///     closetm = unix timestamp of when order was closed
+    ///     reason = additional info on status (if any)
+    /// count = amount of available order info matching criteria
+    /// ```
+    /// Note: Times given by order tx ids are more accurate than unix timestamps. If an order tx id is given
+    /// for the time, the order's open time is used
+    pub fn get_closed_orders(&mut self, trades: &str, userref: &str, start: &str, end: &str, ofs: &str, closetime: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("trades", trades);
+        params.insert("userref", userref);
+        params.insert("start", start);
+        params.insert("end", end);
+        params.insert("ofs", ofs);
+        params.insert("closetime", closetime);
+        self.private_query("OpenOrders", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// trades = whether or not to include trades in output (optional.  default = false)
+    /// userref = restrict results to given user reference id (optional)
+    /// txid = comma delimited list of transaction ids to query info about (20 maximum)
+    /// ```
+    /// Result: associative array of orders info
+    ///
+    /// ```ignore
+    /// <order_txid> = order info.  See Get open orders/Get closed orders
+    /// ```
+    pub fn query_orders_info(&mut self, trades: &str, userref: &str, txid: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("trades", trades);
+        params.insert("userref", userref);
+        params.insert("txid", txid);
+        self.private_query("QueryOrders", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// type = type of trade (optional)
+    ///     all = all types (default)
+    ///     any position = any position (open or closed)
+    ///     closed position = positions that have been closed
+    ///     closing position = any trade closing all or part of a position
+    ///     no position = non-positional trades
+    /// trades = whether or not to include trades related to position in output (optional.  default = false)
+    /// start = starting unix timestamp or trade tx id of results (optional.  exclusive)
+    /// end = ending unix timestamp or trade tx id of results (optional.  inclusive)
+    /// ofs = result offset
+    /// ```
+    /// Result: array of trade info
+    ///
+    /// ```ignore
+    /// trades = array of trade info with txid as the key
+    ///     ordertxid = order responsible for execution of trade
+    ///     pair = asset pair
+    ///     time = unix timestamp of trade
+    ///     type = type of order (buy/sell)
+    ///     ordertype = order type
+    ///     price = average price order was executed at (quote currency)
+    ///     cost = total cost of order (quote currency)
+    ///     fee = total fee (quote currency)
+    ///     vol = volume (base currency)
+    ///     margin = initial margin (quote currency)
+    ///     misc = comma delimited list of miscellaneous info
+    ///         closing = trade closes all or part of a position
+    /// count = amount of available trades info matching criteria
+    /// If the trade opened a position, the follow fields are also present in the trade info:
+    ///
+    ///     posstatus = position status (open/closed)
+    ///     cprice = average price of closed portion of position (quote currency)
+    ///     ccost = total cost of closed portion of position (quote currency)
+    ///     cfee = total fee of closed portion of position (quote currency)
+    ///     cvol = total fee of closed portion of position (quote currency)
+    ///     cmargin = total margin freed in closed portion of position (quote currency)
+    ///     net = net profit/loss of closed portion of position (quote currency, quote currency scale)
+    ///     trades = list of closing trades for position (if available)
+    /// ```
+    ///
+    /// Note:
+    ///
+    /// Unless otherwise stated, costs, fees, prices, and volumes are in the asset pair's scale, not the currency's scale.
+    /// Times given by trade tx ids are more accurate than unix timestamps.
+    pub fn get_trades_history(&mut self, type_trade: &str, trades: &str, start: &str, end: &str, ofs: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("type", type_trade);
+        params.insert("trades", trades);
+        params.insert("start", start);
+        params.insert("end", end);
+        params.insert("ofs", ofs);
+        self.private_query("TradesHistory", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// txid = comma delimited list of transaction ids to query info about (20 maximum)
+    /// trades = whether or not to include trades related to position in output (optional.  default = false)
+    /// ```
+    // Result: associative array of trades info
+    ///
+    /// ```ignore
+    /// <trade_txid> = trade info.  See Get trades history
+    /// ```
+    pub fn query_trades_info(&mut self, txid: &str, trades: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("txid", txid);
+        params.insert("trades", trades);
+        self.private_query("QueryTrades", &params)
+    }
+    /// Input:
+    ///
+    /// ```ignore
+    /// txid = comma delimited list of transaction ids to restrict output to
+    /// docalcs = whether or not to include profit/loss calculations (optional.  default = false)
+    /// ```
+    /// Result: associative array of open position info
+    ///
+    /// ```ignore
+    /// <position_txid> = open position info
+    ///     ordertxid = order responsible for execution of trade
+    ///     pair = asset pair
+    ///     time = unix timestamp of trade
+    ///     type = type of order used to open position (buy/sell)
+    ///     ordertype = order type used to open position
+    ///     cost = opening cost of position (quote currency unless viqc set in oflags)
+    ///     fee = opening fee of position (quote currency)
+    ///     vol = position volume (base currency unless viqc set in oflags)
+    ///     vol_closed = position volume closed (base currency unless viqc set in oflags)
+    ///     margin = initial margin (quote currency)
+    ///     value = current value of remaining position (if docalcs requested.  quote currency)
+    ///     net = unrealized profit/loss of remaining position (if docalcs requested.  quote
+    ///           currency, quote currency scale)
+    ///     misc = comma delimited list of miscellaneous info
+    ///     oflags = comma delimited list of order flags
+    ///         viqc = volume in quote currency
+    /// ```
+    ///
+    /// Note: Unless otherwise stated, costs, fees, prices, and volumes are in the asset pair's
+    /// scale, not the currency's scale.
+    pub fn get_open_positions(&mut self, txid: &str, docalcs: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("txid", txid);
+        params.insert("docalcs", docalcs);
+        self.private_query("OpenPositions", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = comma delimited list of assets to restrict output to (optional.  default = all)
+    /// type = type of ledger to retrieve (optional):
+    ///     all (default)
+    ///     deposit
+    ///     withdrawal
+    ///     trade
+    ///     margin
+    /// start = starting unix timestamp or ledger id of results (optional.  exclusive)
+    /// end = ending unix timestamp or ledger id of results (optional.  inclusive)
+    /// ofs = result offset
+    /// ```
+    /// Result: associative array of ledgers info
+    ///
+    /// ```ignore
+    /// <ledger_id> = ledger info
+    ///     refid = reference id
+    ///     time = unx timestamp of ledger
+    ///     type = type of ledger entry
+    ///     aclass = asset class
+    ///     asset = asset
+    ///     amount = transaction amount
+    ///     fee = transaction fee
+    ///     balance = resulting balance
+    /// ```
+    /// Note: Times given by ledger ids are more accurate than unix timestamps.
+    pub fn get_ledgers_info(&mut self, aclass: &str, asset: &str, type_ledger: &str, start: &str, end: &str, ofs: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("type_ledger", type_ledger);
+        params.insert("start", start);
+        params.insert("end", end);
+        params.insert("ofs", ofs);
+        self.private_query("Ledgers", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// id = comma delimited list of ledger ids to query info about (20 maximum)
+    /// ```
+    /// Result: associative array of ledgers info
+    ///
+    /// ```ignore
+    /// <ledger_id> = ledger info.  See Get ledgers info
+    /// ```
+    pub fn query_ledgers(&mut self, id: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("id", id);
+        self.private_query("QueryLedgers", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// pair = comma delimited list of asset pairs to get fee info on (optional)
+    /// fee-info = whether or not to include fee info in results (optional)
+    /// ```
+    /// Result: associative array
+    ///
+    /// ```ignore
+    /// currency = volume currency
+    /// volume = current discount volume
+    /// fees = array of asset pairs and fee tier info (if requested)
+    ///     fee = current fee in percent
+    ///     minfee = minimum fee for pair (if not fixed fee)
+    ///     maxfee = maximum fee for pair (if not fixed fee)
+    ///     nextfee = next tier's fee for pair (if not fixed fee.  nil if at lowest fee tier)
+    ///     nextvolume = volume level of next tier (if not fixed fee.  nil if at lowest fee tier)
+    ///     tiervolume = volume level of current tier (if not fixed fee.  nil if at lowest fee tier)
+    /// fees_maker = array of asset pairs and maker fee tier info (if requested) for any pairs on
+    ///             maker/taker schedule
+    ///     fee = current fee in percent
+    ///     minfee = minimum fee for pair (if not fixed fee)
+    ///     maxfee = maximum fee for pair (if not fixed fee)
+    ///     nextfee = next tier's fee for pair (if not fixed fee.  nil if at lowest fee tier)
+    ///     nextvolume = volume level of next tier (if not fixed fee.  nil if at lowest fee tier)
+    ///     tiervolume = volume level of current tier (if not fixed fee.  nil if at lowest fee tier)
+    /// ```
+    /// Note: If an asset pair is on a maker/taker fee schedule, the taker side is given in "fees"
+    /// and maker side in "fees_maker". For pairs not on maker/taker, they will only be given in
+    /// "fees".
+    pub fn get_trade_volume(&mut self, pair: &str, fee_info: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("pair", pair);
+        params.insert("fee-info", fee_info);
+        self.private_query("TradeVolume", &params)
     }
 }
