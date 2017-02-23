@@ -27,6 +27,4 @@ pub mod kraken;
 mod helpers;
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

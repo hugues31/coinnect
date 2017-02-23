@@ -53,7 +53,8 @@ impl PoloniexApi {
         }
     }
 
-    /// Create a new PoloniexApi from a json configuration file. This file must follow this structure:
+    /// Create a new PoloniexApi from a json configuration file. This file must follow this
+    /// structure:
     ///
     /// ```ignore
     /// {
@@ -102,9 +103,12 @@ impl PoloniexApi {
         }
     }
 
-    fn public_query(&mut self, method: &str, params: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
+    fn public_query(&mut self,
+                    method: &str,
+                    params: &HashMap<&str, &str>)
+                    -> Option<Map<String, Value>> {
         let url = "https://poloniex.com/public?command=".to_string() + method + "&" +
-        &helpers::url_encode_hashmap(params);
+                  &helpers::url_encode_hashmap(params);
 
         self.block_or_continue();
         let mut response = self.http_client.get(&url).send().unwrap();
@@ -114,7 +118,10 @@ impl PoloniexApi {
         return self.deserialize_json(buffer);
     }
 
-    fn private_query(&mut self, method: &str, params: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
+    fn private_query(&mut self,
+                     method: &str,
+                     params: &HashMap<&str, &str>)
+                     -> Option<Map<String, Value>> {
         let unix_timestamp = helpers::get_unix_timestamp_ms().to_string();
         let mut post_params = params.clone();
         post_params.insert("command", method);
@@ -135,11 +142,11 @@ impl PoloniexApi {
         self.block_or_continue();
 
         let mut response = self.http_client
-        .post("https://poloniex.com/tradingApi")
-        .headers(custom_header)
-        .body(&post_data)
-        .send()
-        .unwrap();
+            .post("https://poloniex.com/tradingApi")
+            .headers(custom_header)
+            .body(&post_data)
+            .send()
+            .unwrap();
         self.last_request = helpers::get_unix_timestamp_ms();
 
         let mut buffer = String::new();
@@ -167,7 +174,8 @@ impl PoloniexApi {
     /// Sample output :
     ///
     /// ```ignore
-    /// {"BTC_LTC":{"BTC":"2.23248854","LTC":"87.10381314"},"BTC_NXT":{"BTC":"0.981616","NXT":"14145"},
+    /// {"BTC_LTC":{"BTC":"2.23248854","LTC":"87.10381314"},"BTC_NXT":{"BTC":"0.981616",
+    /// "NXT":"14145"},
     /// ... "totalBTC":"81.89657704","totalLTC":"78.52083806"}
     /// ```
     pub fn return_24_volume(&mut self) -> Option<Map<String, Value>> {
@@ -181,7 +189,10 @@ impl PoloniexApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "isFrozen": 0, "seq": 18849}
     /// ```
-    pub fn return_order_book(&mut self, currency_pair: &str, depth: &str) -> Option<Map<String, Value>> {
+    pub fn return_order_book(&mut self,
+                             currency_pair: &str,
+                             depth: &str)
+                             -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("depth", depth);
@@ -191,10 +202,16 @@ impl PoloniexApi {
     /// Sample output :
     ///
     /// ```ignore
-    /// [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140","total":"0.01064"},
-    /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655","total":"0.04978"}, ... ]
+    /// [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140",
+    /// "total":"0.01064"},
+    /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
+    /// "total":"0.04978"}, ... ]
     /// ```
-    pub fn return_trade_history(&mut self, currency_pair: &str, start: &str, end: &str) -> Option<Map<String, Value>> {
+    pub fn return_trade_history(&mut self,
+                                currency_pair: &str,
+                                start: &str,
+                                end: &str)
+                                -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -208,7 +225,12 @@ impl PoloniexApi {
     /// [{"date":1405699200,"high":0.0045388,"low":0.00403001,"open":0.00404545,"close":0.00427592,
     /// "volume":44.11655644,"quoteVolume":10259.29079097,"weightedAverage":0.00430015}, ...]
     /// ```
-    pub fn return_chart_data(&mut self, currency_pair: &str, start: &str, end: &str, period: &str) -> Option<Map<String, Value>> {
+    pub fn return_chart_data(&mut self,
+                             currency_pair: &str,
+                             start: &str,
+                             end: &str,
+                             period: &str)
+                             -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -237,7 +259,9 @@ impl PoloniexApi {
         self.public_query("returnLoanOrders", &params)
     }
 
-    /// Returns all of your available balances. Sample output:
+    /// Returns all of your available balances.
+    ///
+    ///Sample output:
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     pub fn return_balances(&mut self) -> Option<Map<String, Value>> {
         let params = HashMap::new();
@@ -248,6 +272,7 @@ impl PoloniexApi {
     /// and the estimated BTC value of your balance. By default, this call is limited to your
     /// exchange account; set the "account" POST parameter to "all" to include your margin and
     //// lending accounts.
+    ///
     /// Sample output:
     ///
     /// ```ignore
@@ -259,7 +284,9 @@ impl PoloniexApi {
         self.private_query("returnCompleteBalances", &params)
     }
 
-    /// Returns all of your deposit addresses. Sample output:
+    /// Returns all of your deposit addresses.
+    ///
+    /// Sample output:
     ///
     /// ```ignore
     /// {"BTC":"19YqztHmspv2egyD6jQM3yn81x5t5krVdJ","LTC":"LPgf9kjv9H1Vuh4XSaKhzBe8JHdou1WgUB",
@@ -271,6 +298,7 @@ impl PoloniexApi {
     }
 
     /// Generates a new deposit address for the currency specified by the "currency" POST parameter.
+    ///
     /// Sample output:
     ///
     /// ```ignore
@@ -282,20 +310,30 @@ impl PoloniexApi {
         self.private_query("generateNewAddress", &params)
     }
 
-    /// Returns your deposit and withdrawal history within a range, specified by the "start" and "end" POST parameters,
+    /// Returns your deposit and withdrawal history within a range, specified by the "start" and
+    /// "end" POST parameters,
     /// both of which should be given as UNIX timestamps.
+    ///
     /// Sample output:
     ///
     /// ```ignore
     /// {"deposits":
     /// [{"currency":"BTC","address":"...","amount":"0.01006132","confirmations":10,
-    /// "txid":"17f819a91369a9ff6c4a34216d434597cfc1b4a3d0489b46bd6f924137a47701","timestamp":1399305798,"status":"COMPLETE"},
+    /// "txid":"17f819a91369a9ff6c4a34216d434597cfc1b4a3d0489b46bd6f924137a47701",
+    /// "timestamp":1399305798,"status":"COMPLETE"},
     /// {"currency":"BTC","address":"...","amount":"0.00404104","confirmations":10,
-    /// "txid":"7acb90965b252e55a894b535ef0b0b65f45821f2899e4a379d3e43799604695c","timestamp":1399245916,"status":"COMPLETE"}],
-    /// "withdrawals":[{"withdrawalNumber":134933,"currency":"BTC","address":"1N2i5n8DwTGzUq2Vmn9TUL8J1vdr1XBDFg","amount":"5.00010000",
-    /// "timestamp":1399267904,"status":"COMPLETE: 36e483efa6aff9fd53a235177579d98451c4eb237c210e66cd2b9a2d4a988f8e","ipAddress":"..."}]}
+    /// "txid":"7acb90965b252e55a894b535ef0b0b65f45821f2899e4a379d3e43799604695c",
+    /// "timestamp":1399245916,"status":"COMPLETE"}],
+    /// "withdrawals":[{"withdrawalNumber":134933,"currency":"BTC",
+    /// "address":"1N2i5n8DwTGzUq2Vmn9TUL8J1vdr1XBDFg","amount":"5.00010000",
+    /// "timestamp":1399267904,
+    /// "status":"COMPLETE: 36e483efa6aff9fd53a235177579d98451c4eb237c210e66cd2b9a2d4a988f8e",
+    /// "ipAddress":"..."}]}
     /// ```
-    pub fn return_deposits_withdrawals(&mut self, start: &str, end: &str) -> Option<Map<String, Value>> {
+    pub fn return_deposits_withdrawals(&mut self,
+                                       start: &str,
+                                       end: &str)
+                                       -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("start", start);
         params.insert("end", end);
@@ -304,6 +342,7 @@ impl PoloniexApi {
 
     ///Returns your open orders for a given market, specified by the "currencyPair" POST parameter,
     /// e.g. "BTC_XCP". Set "currencyPair" to "all" to return open orders for all markets.
+    ///
     /// Sample output for single market:
     ///
     /// ```ignore
@@ -313,7 +352,8 @@ impl PoloniexApi {
     ///
     /// ```ignore
     /// Or, for all markets:
-    /// {"BTC_1CR":[],"BTC_AC":[{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
+    /// {"BTC_1CR":[],"BTC_AC":[{"orderNumber":"120466","type":"sell","rate":"0.025",
+    /// "amount":"100","total":"2.5"},
     /// {"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}], ... }
     /// ```
     pub fn return_open_orders(&mut self, currency_pair: &str) -> Option<Map<String, Value>> {
@@ -322,25 +362,42 @@ impl PoloniexApi {
         self.private_query("returnOpenOrders", &params)
     }
 
-    /// Returns your trade history for a given market, specified by the "currencyPair" POST parameter.
+    /// Returns your trade history for a given market, specified by the "currencyPair" POST
+    /// parameter.
     /// You may specify "all" as the currencyPair to receive your trade history for all markets.
-    /// You may optionally specify a range via "start" and/or "end" POST parameters, given in UNIX timestamp format;
+    /// You may optionally specify a range via "start" and/or "end" POST parameters, given in UNIX
+    /// timestamp format;
     /// if you do not specify a range, it will be limited to one day.
+    ///
     /// Sample output:
+    ///
+    /// ```ignore
     /// [{ "globalTradeID": 25129732, "tradeID": "6325758", "date": "2016-04-05 08:08:40",
     /// "rate": "0.02565498", "amount": "0.10000000", "total": "0.00256549", "fee": "0.00200000",
     /// "orderNumber": "34225313575", "type": "sell", "category": "exchange" },
     /// { "globalTradeID": 25129628, "tradeID": "6325741", "date": "2016-04-05 08:07:55",
     /// "rate": "0.02565499", "amount": "0.10000000", "total": "0.00256549",
-    /// "fee": "0.00200000", "orderNumber": "34225195693", "type": "buy", "category": "exchange" }, ... ]
+    /// "fee": "0.00200000", "orderNumber": "34225195693", "type": "buy", "category": "exchange" },
+    /// ... ]
+    /// ```
+    ///
     /// Or, for all markets:
-    /// {"BTC_MAID": [ { "globalTradeID": 29251512, "tradeID": "1385888", "date": "2016-05-03 01:29:55",
-    /// "rate": "0.00014243", "amount": "353.74692925", "total": "0.05038417", "fee": "0.00200000",
-    /// "orderNumber": "12603322113", "type": "buy", "category": "settlement" },
+    ///
+    /// ```ignore
+    /// {"BTC_MAID": [ { "globalTradeID": 29251512, "tradeID": "1385888",
+    /// "date": "2016-05-03 01:29:55", "rate": "0.00014243", "amount": "353.74692925",
+    /// "total": "0.05038417", "fee": "0.00200000", "orderNumber": "12603322113", "type": "buy",
+    /// "category": "settlement" },
     /// { "globalTradeID": 29251511, "tradeID": "1385887", "date": "2016-05-03 01:29:55",
     /// "rate": "0.00014111", "amount": "311.24262497", "total": "0.04391944", "fee": "0.00200000",
-    /// "orderNumber": "12603319116", "type": "sell", "category": "marginTrade" }, ... ],"BTC_LTC":[ ... ] ... }
-    pub fn return_private_trade_history(&mut self, currency_pair: &str, start: &str, end: &str) -> Option<Map<String, Value>> {
+    /// "orderNumber": "12603319116", "type": "sell", "category": "marginTrade" }, ... ],
+    /// "BTC_LTC":[ ... ] ... }
+    /// ```
+    pub fn return_private_trade_history(&mut self,
+                                        currency_pair: &str,
+                                        start: &str,
+                                        end: &str)
+                                        -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -349,21 +406,38 @@ impl PoloniexApi {
     }
 
     /// Returns all trades involving a given order, specified by the "orderNumber" POST parameter.
-    /// If no trades for the order have occurred or you specify an order that does not belong to you, you will receive an error.
+    /// If no trades for the order have occurred or you specify an order that does not belong to
+    /// you, you will receive an error.
+    ///
     /// Sample output:
+    ///
+    /// ```ignore
     /// [{"globalTradeID": 20825863, "tradeID": 147142, "currencyPair": "BTC_XVC", "type": "buy",
-    /// "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000", "date": "2016-03-14 01:04:36"}, ...]
+    /// "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000",
+    /// "date": "2016-03-14 01:04:36"}, ...]
+    /// ```
     pub fn return_order_trades(&mut self, order_number: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("returnOrderTrades", &params)
     }
 
-    /// Places a limit buy order in a given market. Required POST parameters are "currencyPair", "rate", and "amount".
-    /// If successful, the method will return the order number. Sample output:
-    /// {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21",
-    /// "rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
-    pub fn buy(&mut self, currency_pair: &str, rate: &str, amount: &str) -> Option<Map<String, Value>> {
+    /// Places a limit buy order in a given market. Required POST parameters are "currencyPair",
+    /// "rate", and "amount".
+    /// If successful, the method will return the order number.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732",
+    /// "date":"2014-10-18 23:03:21", "rate":"0.00000173","total":"0.00058625","tradeID":"16164",
+    /// "type":"buy"}]}
+    /// ```
+    pub fn buy(&mut self,
+               currency_pair: &str,
+               rate: &str,
+               amount: &str)
+               -> Option<Map<String, Value>> {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
@@ -372,8 +446,13 @@ impl PoloniexApi {
         self.private_query("buy", &params)
     }
 
-    /// Places a sell order in a given market. Parameters and output are the same as for the buy method.
-    pub fn sell(&mut self, currency_pair: &str, rate: &str, amount: &str) -> Option<Map<String, Value>> {
+    /// Places a sell order in a given market. Parameters and output are the same as for the buy
+    /// method.
+    pub fn sell(&mut self,
+                currency_pair: &str,
+                rate: &str,
+                amount: &str)
+                -> Option<Map<String, Value>> {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
@@ -395,7 +474,9 @@ impl PoloniexApi {
     /// meaning either both operations will succeed or both will fail.
     /// Required POST parameters are "orderNumber" and "rate"; you may optionally
     /// specify "amount" if you wish to change the amount of the new order.
-    /// "postOnly" or "immediateOrCancel" may be specified for exchange orders, but will have no effect on margin orders.
+    /// "postOnly" or "immediateOrCancel" may be specified for exchange orders, but will have no
+    /// effect on margin orders.
+    ///
     /// Sample output:
     ///
     /// ```ignore
@@ -413,12 +494,17 @@ impl PoloniexApi {
     /// In order to use this method, the withdrawal privilege must be enabled for your API key.
     /// Required POST parameters are "currency", "amount", and "address".
     /// For XMR withdrawals, you may optionally specify "paymentId".
+    ///
     /// Sample output:
     ///
     /// ```ignore
     /// {"response":"Withdrew 2398 NXT."}
     /// ```
-    pub fn withdraw(&mut self, currency: &str, amount: &str, address: &str) -> Option<Map<String, Value>> {
+    pub fn withdraw(&mut self,
+                    currency: &str,
+                    amount: &str,
+                    address: &str)
+                    -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -427,28 +513,36 @@ impl PoloniexApi {
     }
 
     /// If you are enrolled in the maker-taker fee schedule, returns your current
-    /// trading fees and trailing 30-day volume in BTC. This information is updated once every 24 hours.
+    /// trading fees and trailing 30-day volume in BTC. This information is updated once every
+    /// 24 hours.
+    ///
     /// Sample output:
     ///
     /// ```ignore
-    /// {"makerFee": "0.00140000", "takerFee": "0.00240000", "thirtyDayVolume": "612.00248891", "nextTier": "1200.00000000"}
+    /// {"makerFee": "0.00140000", "takerFee": "0.00240000", "thirtyDayVolume": "612.00248891",
+    /// "nextTier": "1200.00000000"}
     /// ```
     pub fn return_free_info(&mut self) -> Option<Map<String, Value>> {
         let params = HashMap::new();
         self.private_query("returnFeeInfo", &params)
     }
 
-    /// Returns your balances sorted by account. You may optionally specify the "account" POST parameter
-    /// if you wish to fetch only the balances of one account. Please note that balances
-    /// in your margin account may not be accessible if you have any open margin positions or orders.
+    /// Returns your balances sorted by account. You may optionally specify the "account" POST
+    /// parameter if you wish to fetch only the balances of one account. Please note that balances
+    /// in your margin account may not be accessible if you have any open margin positions or
+    /// orders.
+    ///
     /// Sample output:
     ///
     /// ```ignore
-    /// {"exchange":{"BTC":"1.19042859","BTM":"386.52379392","CHA":"0.50000000","DASH":"120.00000000",
-    /// "STR":"3205.32958001", "VNL":"9673.22570147"},"margin":{"BTC":"3.90015637",
-    /// "DASH":"250.00238240","XMR":"497.12028113"},"lending":{"DASH":"0.01174765","LTC":"11.99936230"}}
+    /// {"exchange":{"BTC":"1.19042859","BTM":"386.52379392","CHA":"0.50000000",
+    /// "DASH":"120.00000000", "STR":"3205.32958001", "VNL":"9673.22570147"},
+    /// "margin":{"BTC":"3.90015637", "DASH":"250.00238240","XMR":"497.12028113"},
+    /// "lending":{"DASH":"0.01174765","LTC":"11.99936230"}}
     /// ```
-    pub fn return_available_account_balances(&mut self, account: &str) -> Option<Map<String, Value>> {
+    pub fn return_available_account_balances(&mut self,
+                                             account: &str)
+                                             -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("account", account);
         self.private_query("returnAvailableAccountBalances", &params)
