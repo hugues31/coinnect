@@ -12,13 +12,18 @@ and the MIT License.
 **WARNING:**  This library is highly experimental at the moment. Please do not invest what you can't afford to loose.
 
 ### Exchange support:
-- [x] Poloniex (partial)
-- [x] Kraken (partial)
+- [x] Poloniex
+- [x] Kraken
 - [ ] Bitstamp
 - [ ] Whaleclub
 - [ ] ...
 
 Feel free to make a PR to add support to your favorite exchange ;)
+
+### Documentation
+
+- [Master](https://docs.rs/coinnect/)
+
 
 ## Usage
 

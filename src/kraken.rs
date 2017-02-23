@@ -703,4 +703,122 @@ impl KrakenApi {
         params.insert("fee-info", fee_info);
         self.private_query("TradeVolume", &params)
     }
+
+    // TODO: add optional closing order
+    /// Input:
+    ///
+    /// ```ignore
+    /// pair = asset pair
+    /// type = type of order (buy/sell)
+    /// ordertype = order type:
+    ///     market
+    ///     limit (price = limit price)
+    ///     stop-loss (price = stop loss price)
+    ///     take-profit (price = take profit price)
+    ///     stop-loss-profit (price = stop loss price, price2 = take profit price)
+    ///     stop-loss-profit-limit (price = stop loss price, price2 = take profit price)
+    ///     stop-loss-limit (price = stop loss trigger price, price2 = triggered limit price)
+    ///     take-profit-limit (price = take profit trigger price, price2 = triggered limit price)
+    ///     trailing-stop (price = trailing stop offset)
+    ///     trailing-stop-limit (price = trailing stop offset, price2 = triggered limit offset)
+    ///     stop-loss-and-limit (price = stop loss price, price2 = limit price)
+    ///     settle-position
+    /// price = price (optional.  dependent upon ordertype)
+    /// price2 = secondary price (optional.  dependent upon ordertype)
+    /// volume = order volume in lots
+    /// leverage = amount of leverage desired (optional.  default = none)
+    /// oflags = comma delimited list of order flags (optional):
+    ///     viqc = volume in quote currency (not available for leveraged orders)
+    ///     fcib = prefer fee in base currency
+    ///     fciq = prefer fee in quote currency
+    ///     nompp = no market price protection
+    ///     post = post only order (available when ordertype = limit)
+    /// starttm = scheduled start time (optional):
+    ///     0 = now (default)
+    ///     +<n> = schedule start time <n> seconds from now
+    ///     <n> = unix timestamp of start time
+    /// expiretm = expiration time (optional):
+    ///     0 = no expiration (default)
+    ///     +<n> = expire <n> seconds from now
+    ///     <n> = unix timestamp of expiration time
+    /// userref = user reference id.  32-bit signed number.  (optional)
+    /// validate = validate inputs only.  do not submit order (optional)
+    ///
+    /// optional closing order to add to system when order gets filled:
+    ///     close[ordertype] = order type
+    ///     close[price] = price
+    ///     close[price2] = secondary price
+    /// ```
+    /// Result:
+    ///
+    /// ```ignore
+    /// descr = order description info
+    ///     order = order description
+    ///     close = conditional close order description (if conditional close set)
+    /// txid = array of transaction ids for order (if order was added successfully)
+    /// Errors: errors include (but are not limited to):
+    ///
+    /// EGeneral:Invalid arguments
+    /// EService:Unavailable
+    /// ETrade:Invalid request
+    /// EOrder:Cannot open position
+    /// EOrder:Cannot open opposing position
+    /// EOrder:Margin allowance exceeded
+    /// EOrder:Margin level too low
+    /// EOrder:Insufficient margin (exchange does not have sufficient funds to allow margin trading)
+    /// EOrder:Insufficient funds (insufficient user funds)
+    /// EOrder:Order minimum not met (volume too low)
+    /// EOrder:Orders limit exceeded
+    /// EOrder:Positions limit exceeded
+    /// EOrder:Rate limit exceeded
+    /// EOrder:Scheduled orders limit exceeded
+    /// EOrder:Unknown position
+    /// ```
+    /// Note:
+    ///
+    /// See Get tradable asset pairs for specifications on asset pair prices, lots, and leverage.
+    /// Prices can be preceded by +, -, or # to signify the price as a relative amount (with the
+    ///     exception of trailing stops, which are always relative). + adds the amount to the
+    ///     current offered price. - subtracts the amount from the current offered price. # will
+    ///     either add or subtract the amount to the current offered price, depending on the type
+    ///     and order type used. Relative prices can be suffixed with a % to signify the relative
+    ///     amount as a percentage of the offered price.
+    /// For orders using leverage, 0 can be used for the volume to auto-fill the volume needed to
+    /// close out your position.
+    /// If you receive the error "EOrder:Trading agreement required", refer to your API key
+    /// management page for further details.
+    pub fn add_standard_order(&mut self, pair: &str, type_order: &str, ordertype: &str, price: &str, price2: &str, volume: &str, leverage: &str, oflags: &str, starttm: &str, expiretm: &str, userref: &str, validate: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("pair", pair);
+        params.insert("type", type_order);
+        params.insert("ordertype", ordertype);
+        params.insert("price", price);
+        params.insert("price2", price2);
+        params.insert("volume", volume);
+        params.insert("leverage", leverage);
+        params.insert("oflags", oflags);
+        params.insert("starttm", starttm);
+        params.insert("expiretm", expiretm);
+        params.insert("userref", userref);
+        params.insert("validate", validate);
+        self.private_query("AddOrder", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// txid = transaction id
+    /// ```
+    /// Result:
+    ///
+    /// ```ignore
+    /// count = number of orders canceled
+    /// pending = if set, order(s) is/are pending cancellation
+    /// ```
+    /// Note: txid may be a user reference id.
+    pub fn cancel_open_order(&mut self, txid: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("txid", txid);
+        self.private_query("CancelOrder", &params)
+    }
 }
