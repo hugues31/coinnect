@@ -194,8 +194,11 @@ impl KrakenApi {
     /// decimals = scaling decimal places for record keeping
     /// display_decimals = scaling decimal places for output display
     /// ```
-    pub fn get_asset_info(&mut self) -> Option<Map<String, Value>> {
-        let params = HashMap::new();
+    pub fn get_asset_info(&mut self, info: &str, aclass: &str, asset: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("info", info);
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
         self.public_query("Assets", &params)
     }
 
@@ -231,12 +234,19 @@ impl KrakenApi {
     ///     margin_call = margin call level
     ///     margin_stop = stop-out/liquidation margin level
     /// ```
-    pub fn get_tradable_asset_pairs(&mut self) -> Option<Map<String, Value>> {
-        let params = HashMap::new();
+    pub fn get_tradable_asset_pairs(&mut self, info: &str, pair: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("info", info);
+        params.insert("pair", pair);
         self.public_query("AssetPairs", &params)
     }
 
-    /// Input: pair = comma delimited list of asset pairs to get info on
+    /// Input:
+    ///
+    /// ```ignore
+    /// pair = comma delimited list of asset pairs to get info on
+    /// ```
+    ///
     /// Result: array of pair names and their ticker info
     ///
     /// ```ignore
@@ -820,5 +830,195 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("txid", txid);
         self.private_query("CancelOrder", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being deposited
+    /// ```
+    /// Result: associative array of deposit methods:
+    ///
+    /// ```ignore
+    /// method = name of deposit method
+    /// limit = maximum net amount that can be deposited right now, or false if no limit
+    /// fee = amount of fees that will be paid
+    /// address-setup-fee = whether or not method has an address setup fee (optional)
+    /// ```
+    pub fn get_deposit_methods(&mut self, aclass: &str, asset: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        self.private_query("DepositMethods", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being deposited
+    /// method = name of the deposit method
+    /// new = whether or not to generate a new address (optional.  default = false)
+    /// ```
+    /// Result: associative array of deposit addresses:
+    ///
+    /// ```ignore
+    /// address = deposit address
+    /// expiretm = expiration time in unix timestamp, or 0 if not expiring
+    /// new = whether or not address has ever been used
+    /// ```
+    pub fn get_deposit_addresses(&mut self, aclass: &str, asset: &str, method: &str, new: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("method", method);
+        params.insert("new", new);
+        self.private_query("DepositAddresses", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being deposited
+    /// method = name of the deposit method
+    /// ```
+    /// Result: array of array deposit status information:
+    ///
+    /// ```ignore
+    /// method = name of the deposit method used
+    /// aclass = asset class
+    /// asset = asset X-ISO4217-A3 code
+    /// refid = reference id
+    /// txid = method transaction id
+    /// info = method transaction information
+    /// amount = amount deposited
+    /// fee = fees paid
+    /// time = unix timestamp when request was made
+    /// status = status of deposit
+    /// status-prop = additional status properties (if available)
+    ///     return = a return transaction initiated by Kraken
+    ///     onhold = deposit is on hold pending review
+    /// ```
+    /// For information about the status, please refer to the IFEX financial transaction states.
+    pub fn get_status_of_recent_deposits(&mut self, aclass: &str, asset: &str, method: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("method", method);
+        self.private_query("DepositStatus", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being withdrawn
+    /// key = withdrawal key name, as set up on your account
+    /// amount = amount to withdraw
+    /// ```
+    /// Result: associative array of withdrawal info:
+    ///
+    /// ```ignore
+    /// method = name of the withdrawal method that will be used
+    /// limit = maximum net amount that can be withdrawn right now
+    /// fee = amount of fees that will be paid
+    /// ```
+    pub fn get_withdrawal_information(&mut self, aclass: &str, asset: &str, key: &str, amount: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("key", key);
+        params.insert("amount", amount);
+        self.private_query("WithdrawInfo", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being withdrawn
+    /// key = withdrawal key name, as set up on your account
+    /// amount = amount to withdraw, including fees
+    /// ```
+    /// Result: associative array of withdrawal transaction:
+    ///
+    /// ```ignore
+    /// refid = reference id
+    /// ```
+    pub fn withdraw_funds(&mut self, aclass: &str, asset: &str, key: &str, amount: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("key", key);
+        params.insert("amount", amount);
+        self.private_query("Withdraw", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being withdrawn
+    /// method = withdrawal method name (optional)
+    /// ```
+    /// Result: array of array withdrawal status information:
+    ///
+    /// ```ignore
+    /// method = name of the withdrawal method used
+    /// aclass = asset class
+    /// asset = asset X-ISO4217-A3 code
+    /// refid = reference id
+    /// txid = method transaction id
+    /// info = method transaction information
+    /// amount = amount withdrawn
+    /// fee = fees paid
+    /// time = unix timestamp when request was made
+    /// status = status of withdrawal
+    /// status-prop = additional status properties (if available)
+    ///     cancel-pending = cancelation requested
+    ///     canceled = canceled
+    ///     cancel-denied = cancelation requested but was denied
+    ///     return = a return transaction initiated by Kraken; it cannot be canceled
+    ///     onhold = withdrawal is on hold pending review
+    /// ```
+    /// For information about the status, please refer to the IFEX financial transaction states.
+    pub fn get_status_of_recent_withdrawals(&mut self, aclass: &str, asset: &str, method: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("method", method);
+        self.private_query("WithdrawStatus", &params)
+    }
+
+    /// Input:
+    ///
+    /// ```ignore
+    /// aclass = asset class (optional):
+    ///     currency (default)
+    /// asset = asset being withdrawn
+    /// refid = withdrawal reference id
+    /// ```
+    /// Result:
+    /// ```ignore
+    /// true on success
+    /// ```
+    ///
+    /// Note: Cancelation cannot be guaranteed. This will put in a cancelation request. Depending
+    /// upon how far along the withdrawal process is, it may not be possible to cancel the
+    /// withdrawal.
+    pub fn request_withdrawal_cancelation(&mut self, aclass: &str, asset: &str, refid: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("aclass", aclass);
+        params.insert("asset", asset);
+        params.insert("refid", refid);
+        self.private_query("WithdrawCancel", &params)
     }
 }
