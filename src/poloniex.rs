@@ -26,9 +26,20 @@ use std::fs::File;
 use helpers;
 
 
-header! { (KeyHeader, "Key") => [String] }
-header! { (SignHeader, "Sign") => [String] }
-header! { (ContentHeader, "Content-Type") => [String] }
+header! {
+    #[doc(hidden)]
+    (KeyHeader, "Key") => [String]
+}
+
+header! {
+    #[doc(hidden)]
+    (SignHeader, "Sign") => [String]
+}
+
+header! {
+    #[doc(hidden)]
+    (ContentHeader, "Content-Type") => [String]
+}
 
 
 pub struct PoloniexApi {
@@ -107,8 +118,10 @@ impl PoloniexApi {
                     method: &str,
                     params: &HashMap<&str, &str>)
                     -> Option<Map<String, Value>> {
+        let mut params = params.clone();
+        helpers::strip_empties(&mut params);
         let url = "https://poloniex.com/public?command=".to_string() + method + "&" +
-                  &helpers::url_encode_hashmap(params);
+                  &helpers::url_encode_hashmap(&params);
 
         self.block_or_continue();
         let mut response = self.http_client.get(&url).send().unwrap();
@@ -126,7 +139,7 @@ impl PoloniexApi {
         let mut post_params = params.clone();
         post_params.insert("command", method);
         post_params.insert("nonce", &unix_timestamp);
-
+        helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(&post_params);
 
         let mut hmac = Hmac::new(Sha512::new(), self.api_secret.as_bytes());

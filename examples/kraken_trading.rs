@@ -9,5 +9,5 @@ fn main() {
     let path = PathBuf::from("keys_real.json");
     let mut my_api = KrakenApi::new_from_file("account_kraken", path);
 
-    println!("return {:?}", my_api.get_account_balance());
+    println!("return {:?}", my_api.get_deposit_methods("", ""));
 }

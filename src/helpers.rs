@@ -20,3 +20,13 @@ pub fn get_unix_timestamp_ms() -> i64 {
     //Calculate milliseconds
     (current_time.sec as i64 * 1000) + (current_time.nsec as i64 / 1000 / 1000)
 }
+
+pub fn strip_empties(x: &mut HashMap<&str, &str>) {
+    let empties: Vec<_> = x.iter()
+        .filter(|&(_, &v)| v.is_empty())
+        .map(|(k, _)| k.clone())
+        .collect();
+    for empty in empties {
+        x.remove(&empty);
+    }
+}

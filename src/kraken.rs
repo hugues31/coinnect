@@ -28,8 +28,15 @@ use std::iter::repeat;
 
 use helpers;
 
-header! { (KeyHeader, "API-Key") => [String] }
-header! { (SignHeader, "API-Sign") => [String] }
+header! {
+    #[doc(hidden)]
+    (KeyHeader, "API-Key") => [String]
+}
+
+header! {
+    #[doc(hidden)]
+    (SignHeader, "API-Sign") => [String]
+}
 
 
 pub struct KrakenApi {
@@ -105,10 +112,11 @@ impl KrakenApi {
 
     fn public_query(&mut self,
                     method: &str,
-                    params: &HashMap<&str, &str>)
+                    params: &mut HashMap<&str, &str>)
                     -> Option<Map<String, Value>> {
+        helpers::strip_empties(params);
         let url = "https://api.kraken.com/0/public/".to_string() + method + "?" +
-                  &helpers::url_encode_hashmap(params);
+                  &helpers::url_encode_hashmap(&params);
 
         self.block_or_continue();
         let mut response = self.http_client.get(&url).send().unwrap();
@@ -120,19 +128,20 @@ impl KrakenApi {
 
     fn private_query(&mut self,
                      method: &str,
-                     params: &HashMap<&str, &str>)
+                     mut params: &mut HashMap<&str, &str>)
                      -> Option<Map<String, Value>> {
         let url = "https://api.kraken.com/0/private/".to_string() + method;
 
         let urlpath = "/0/private/".to_string() + method;
 
-        // Create header
         let nonce = helpers::get_unix_timestamp_ms().to_string();
-        let mut params = params.clone();
+        helpers::strip_empties(&mut params);
 
+        let mut params = params.clone(); // TODO: Remove .clone()
         params.insert("nonce", &nonce);
 
         let postdata = helpers::url_encode_hashmap(&params);
+
         let signature = self.create_signature(urlpath, &postdata, &nonce);
 
         let mut custom_header = header::Headers::new();
@@ -178,8 +187,8 @@ impl KrakenApi {
     /// ```
     /// Note: This is to aid in approximating the skew time between the server and client.
     pub fn get_server_time(&mut self) -> Option<Map<String, Value>> {
-        let params = HashMap::new();
-        self.public_query("Time", &params)
+        let mut params = HashMap::new();
+        self.public_query("Time", &mut params)
     }
 
     /// Input:
@@ -210,7 +219,7 @@ impl KrakenApi {
         params.insert("info", info);
         params.insert("aclass", aclass);
         params.insert("asset", asset);
-        self.public_query("Assets", &params)
+        self.public_query("Assets", &mut params)
     }
 
     /// Input:
@@ -253,7 +262,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("info", info);
         params.insert("pair", pair);
-        self.public_query("AssetPairs", &params)
+        self.public_query("AssetPairs", &mut params)
     }
 
     /// Input:
@@ -279,7 +288,7 @@ impl KrakenApi {
     pub fn get_ticker_information(&mut self, pair: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
-        self.public_query("Ticker", &params)
+        self.public_query("Ticker", &mut params)
     }
 
     /// Input:
@@ -311,7 +320,7 @@ impl KrakenApi {
         params.insert("pair", pair);
         params.insert("interval", interval);
         params.insert("since", since);
-        self.public_query("OHLC", &params)
+        self.public_query("OHLC", &mut params)
     }
 
     /// Input:
@@ -331,7 +340,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("count", count);
-        self.public_query("Depth", &params)
+        self.public_query("Depth", &mut params)
     }
 
 
@@ -353,7 +362,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("since", since);
-        self.public_query("Trades", &params)
+        self.public_query("Trades", &mut params)
     }
 
     /// Input:
@@ -379,13 +388,13 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("since", since);
-        self.public_query("Spread", &params)
+        self.public_query("Spread", &mut params)
     }
 
     /// Result: array of asset names and balance amount
     pub fn get_account_balance(&mut self) -> Option<Map<String, Value>> {
-        let params = HashMap::new();
-        self.private_query("Balance", &params)
+        let mut params = HashMap::new();
+        self.private_query("Balance", &mut params)
     }
 
     /// Input:
@@ -413,7 +422,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
-        self.private_query("TradeBalance", &params)
+        self.private_query("TradeBalance", &mut params)
     }
 
     /// Input:
@@ -476,7 +485,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("trades", trades);
         params.insert("userref", userref);
-        self.private_query("OpenOrders", &params)
+        self.private_query("OpenOrders", &mut params)
     }
 
     /// Input:
@@ -518,7 +527,7 @@ impl KrakenApi {
         params.insert("end", end);
         params.insert("ofs", ofs);
         params.insert("closetime", closetime);
-        self.private_query("OpenOrders", &params)
+        self.private_query("OpenOrders", &mut params)
     }
 
     /// Input:
@@ -542,7 +551,7 @@ impl KrakenApi {
         params.insert("trades", trades);
         params.insert("userref", userref);
         params.insert("txid", txid);
-        self.private_query("QueryOrders", &params)
+        self.private_query("QueryOrders", &mut params)
     }
 
     /// Input:
@@ -608,7 +617,7 @@ impl KrakenApi {
         params.insert("start", start);
         params.insert("end", end);
         params.insert("ofs", ofs);
-        self.private_query("TradesHistory", &params)
+        self.private_query("TradesHistory", &mut params)
     }
 
     /// Input:
@@ -627,7 +636,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("txid", txid);
         params.insert("trades", trades);
-        self.private_query("QueryTrades", &params)
+        self.private_query("QueryTrades", &mut params)
     }
     /// Input:
     ///
@@ -663,7 +672,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("txid", txid);
         params.insert("docalcs", docalcs);
-        self.private_query("OpenPositions", &params)
+        self.private_query("OpenPositions", &mut params)
     }
 
     /// Input:
@@ -711,7 +720,7 @@ impl KrakenApi {
         params.insert("start", start);
         params.insert("end", end);
         params.insert("ofs", ofs);
-        self.private_query("Ledgers", &params)
+        self.private_query("Ledgers", &mut params)
     }
 
     /// Input:
@@ -727,7 +736,7 @@ impl KrakenApi {
     pub fn query_ledgers(&mut self, id: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("id", id);
-        self.private_query("QueryLedgers", &params)
+        self.private_query("QueryLedgers", &mut params)
     }
 
     /// Input:
@@ -764,7 +773,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("fee-info", fee_info);
-        self.private_query("TradeVolume", &params)
+        self.private_query("TradeVolume", &mut params)
     }
 
     // TODO: add optional closing order
@@ -877,7 +886,7 @@ impl KrakenApi {
         params.insert("expiretm", expiretm);
         params.insert("userref", userref);
         params.insert("validate", validate);
-        self.private_query("AddOrder", &params)
+        self.private_query("AddOrder", &mut params)
     }
 
     /// Input:
@@ -895,7 +904,7 @@ impl KrakenApi {
     pub fn cancel_open_order(&mut self, txid: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("txid", txid);
-        self.private_query("CancelOrder", &params)
+        self.private_query("CancelOrder", &mut params)
     }
 
     /// Input:
@@ -917,7 +926,7 @@ impl KrakenApi {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
-        self.private_query("DepositMethods", &params)
+        self.private_query("DepositMethods", &mut params)
     }
 
     /// Input:
@@ -947,7 +956,7 @@ impl KrakenApi {
         params.insert("asset", asset);
         params.insert("method", method);
         params.insert("new", new);
-        self.private_query("DepositAddresses", &params)
+        self.private_query("DepositAddresses", &mut params)
     }
 
     /// Input:
@@ -985,7 +994,7 @@ impl KrakenApi {
         params.insert("aclass", aclass);
         params.insert("asset", asset);
         params.insert("method", method);
-        self.private_query("DepositStatus", &params)
+        self.private_query("DepositStatus", &mut params)
     }
 
     /// Input:
@@ -1015,7 +1024,7 @@ impl KrakenApi {
         params.insert("asset", asset);
         params.insert("key", key);
         params.insert("amount", amount);
-        self.private_query("WithdrawInfo", &params)
+        self.private_query("WithdrawInfo", &mut params)
     }
 
     /// Input:
@@ -1043,7 +1052,7 @@ impl KrakenApi {
         params.insert("asset", asset);
         params.insert("key", key);
         params.insert("amount", amount);
-        self.private_query("Withdraw", &params)
+        self.private_query("Withdraw", &mut params)
     }
 
     /// Input:
@@ -1084,7 +1093,7 @@ impl KrakenApi {
         params.insert("aclass", aclass);
         params.insert("asset", asset);
         params.insert("method", method);
-        self.private_query("WithdrawStatus", &params)
+        self.private_query("WithdrawStatus", &mut params)
     }
 
     /// Input:
@@ -1112,6 +1121,6 @@ impl KrakenApi {
         params.insert("aclass", aclass);
         params.insert("asset", asset);
         params.insert("refid", refid);
-        self.private_query("WithdrawCancel", &params)
+        self.private_query("WithdrawCancel", &mut params)
     }
 }
