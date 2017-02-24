@@ -1,6 +1,7 @@
 TODO
 ====
 
+- [ ] Add tests
 - [ ] remove 'unsafe' unwrap()
 - [ ] implement two-factor auth
 - [ ] Add Option type for optional parameter

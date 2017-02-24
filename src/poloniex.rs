@@ -561,18 +561,226 @@ impl PoloniexApi {
         self.private_query("returnAvailableAccountBalances", &params)
     }
 
-    // TODO: implement the other methods
-    // returnTradableBalances
-    // transferBalance
-    // returnMarginAccountSummary
-    // marginBuy
-    // marginSell
-    // getMarginPosition
-    // closeMarginPosition
-    // createLoanOffer
-    // cancelLoanOffer
-    // returnOpenLoanOffers
-    // returnActiveLoans
-    // returnLendingHistory
-    // toggleAutoRenew
+    /// Returns your current tradable balances for each currency in each market for which
+    /// margin trading is enabled. Please note that these balances may vary continually with
+    /// market conditions.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"BTC_DASH":{"BTC":"8.50274777","DASH":"654.05752077"},"BTC_LTC":{"BTC":"8.50274777",
+    /// "LTC":"1214.67825290"},"BTC_XMR":{"BTC":"8.50274777","XMR":"3696.84685650"}}
+    /// ```
+    pub fn return_tradable_balances(&mut self) -> Option<Map<String, Value>> {
+        let params = HashMap::new();
+        self.private_query("returnTradableBalances", &params)
+    }
+
+    /// Transfers funds from one account to another (e.g. from your exchange account to your
+    /// margin account). Required POST parameters are "currency", "amount", "fromAccount",
+    /// and "toAccount".
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Transferred 2 BTC from exchange to margin account."}
+    /// ```
+    pub fn transfer_balance(&mut self, currency: &str, amount: &str, from_account: &str, to_account: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        params.insert("amount", amount);
+        params.insert("fromAccount", from_account);
+        params.insert("toAccount", to_account);
+        self.private_query("transferBalance", &params)
+    }
+
+
+    /// Returns a summary of your entire margin account. This is the same information you will
+    /// find in the Margin Account section of the Margin Trading page, under the Markets list.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"totalValue": "0.00346561","pl": "-0.00001220","lendingFees": "0.00000000",
+    /// "netValue": "0.00345341","totalBorrowedValue": "0.00123220","currentMargin": "2.80263755"}
+    /// ```
+    pub fn return_margin_account_summary(&mut self) -> Option<Map<String, Value>> {
+        let params = HashMap::new();
+        self.private_query("returnMarginAccountSummary", &params)
+    }
+
+    /// Places a margin buy order in a given market. Required POST parameters are
+    /// "currencyPair", "rate", and "amount". You may optionally specify a maximum lending
+    /// rate using the "lendingRate" parameter. If successful, the method will return the order
+    /// number and any trades immediately resulting from your order.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Margin order placed.","orderNumber":"154407998",
+    /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
+    /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"buy"}]}}
+    /// ```
+    pub fn margin_buy(&mut self, currency_pair: &str, rate: &str, amount: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currencyPair", currency_pair);
+        params.insert("rate", rate);
+        params.insert("amount", amount);
+        params.insert("lendingRate", lending_rate);
+        self.private_query("marginBuy", &params)
+    }
+
+    /// Places a margin sell order in a given market. Required POST parameters are
+    /// "currencyPair", "rate", and "amount". You may optionally specify a maximum lending
+    /// rate using the "lendingRate" parameter. If successful, the method will return the order
+    /// number and any trades immediately resulting from your order.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Margin order placed.","orderNumber":"154407998",
+    /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
+    /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"sell"}]}}
+    /// ```
+    pub fn margin_sell(&mut self, currency_pair: &str, rate: &str, amount: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currencyPair", currency_pair);
+        params.insert("rate", rate);
+        params.insert("amount", amount);
+        params.insert("lendingRate", lending_rate);
+        self.private_query("marginSell", &params)
+    }
+
+    /// Returns information about your margin position in a given market, specified by the
+    /// "currencyPair" POST parameter. You may set "currencyPair" to "all" if you wish to fetch all
+    /// of your margin positions at once. If you have no margin position in the specified market,
+    /// "type" will be set to "none". "liquidationPrice" is an estimate, and does not necessarily
+    /// represent the price at which an actual forced liquidation will occur. If you have no
+    /// liquidation price, the value will be -1.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"amount":"40.94717831","total":"-0.09671314","basePrice":"0.00236190",
+    /// "liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
+    /// ```
+    pub fn get_margin_position(&mut self, currency_pair: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currencyPair", currency_pair);
+        self.private_query("getMarginPosition", &params)
+    }
+
+    /// Closes your margin position in a given market (specified by the "currencyPair" POST
+    /// parameter) using a market order. This call will also return success if you do not have an
+    /// open position in the specified market.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Successfully closed margin position.",
+    /// "resultingTrades":{"BTC_XMR":[{"amount":"7.09215901","date":"2015-05-10 22:38:49",
+    /// "rate":"0.00235337","total":"0.01669047","tradeID":"1213346","type":"sell"},
+    /// {"amount":"24.00289920","date":"2015-05-10 22:38:49","rate":"0.00235321",
+    /// "total":"0.05648386","tradeID":"1213347","type":"sell"}]}}
+    /// ```
+    pub fn close_margin_position(&mut self, currency_pair: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currencyPair", currency_pair);
+        self.private_query("closeMarginPosition", &params)
+    }
+
+    /// Creates a loan offer for a given currency. Required POST parameters are "currency",
+    /// "amount", "duration", "autoRenew" (0 or 1), and "lendingRate".
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Loan order placed.","orderID":10590}
+    /// ```
+    pub fn create_loan_offer(&mut self, currency: &str, amount: &str, duration: &str, auto_renew: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        params.insert("amount", amount);
+        params.insert("duration", duration);
+        params.insert("autoRenew", auto_renew);
+        params.insert("lendingRate", lending_rate);
+        self.private_query("createLoanOffer", &params)
+    }
+
+    /// Cancels a loan offer specified by the "orderNumber" POST parameter.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":"Loan offer canceled."}
+    /// ```
+    pub fn cancel_loan_offer(&mut self, order_number: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("orderNumber", order_number);
+        self.private_query("cancelLoanOffer", &params)
+    }
+
+    /// Returns your open loan offers for each currency.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"BTC":[{"id":10595,"rate":"0.00020000","amount":"3.00000000","duration":2,"autoRenew":1,
+    /// "date":"2015-05-10 23:33:50"}],"LTC":[{"id":10598,"rate":"0.00002100",
+    /// "amount":"10.00000000","duration":2,"autoRenew":1,"date":"2015-05-10 23:34:35"}]}
+    /// ```
+    pub fn return_open_loan_offers(&mut self) -> Option<Map<String, Value>> {
+        let params = HashMap::new();
+        self.private_query("returnOpenLoanOffers", &params)
+    }
+
+    /// Returns your active loans for each currency.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"provided":[{"id":75073,"currency":"LTC","rate":"0.00020000","amount":"0.72234880",
+    /// "range":2,"autoRenew":0,"date":"2015-05-10 23:45:05","fees":"0.00006000"},
+    /// {"id":74961,"currency":"LTC","rate":"0.00002000","amount":"4.43860711","range":2,
+    /// "autoRenew":0,"date":"2015-05-10 23:45:05","fees":"0.00006000"}],
+    /// "used":[{"id":75238,"currency":"BTC","rate":"0.00020000","amount":"0.04843834","range":2,
+    /// "date":"2015-05-10 23:51:12","fees":"-0.00000001"}]}
+    /// ```
+    pub fn return_active_loans(&mut self) -> Option<Map<String, Value>> {
+        let params = HashMap::new();
+        self.private_query("returnActiveLoans", &params)
+    }
+
+    /// Returns your lending history within a time range specified by the "start" and "end" POST
+    /// parameters as UNIX timestamps. "limit" may also be specified to limit the number of rows
+    /// returned.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// [{ "id": 175589553, "currency": "BTC", "rate": "0.00057400", "amount": "0.04374404",
+    /// "duration": "0.47610000", "interest": "0.00001196", "fee": "-0.00000179",
+    /// "earned": "0.00001017", "open": "2016-09-28 06:47:26", "close": "2016-09-28 18:13:03" }]
+    /// ```
+    pub fn return_lending_history(&mut self, start: &str, end: &str, limit: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("start", start);
+        params.insert("end", end);
+        params.insert("limit", limit);
+        self.private_query("returnLendingHistory", &params)
+    }
+
+    /// Toggles the autoRenew setting on an active loan, specified by the "orderNumber" POST
+    /// parameter. If successful, "message" will indicate the new autoRenew setting.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"success":1,"message":0}
+    /// ```
+    pub fn toggle_auto_renew(&mut self, order_number: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("orderNumber", order_number);
+        self.private_query("toggleAutoRenew", &params)
+    }
 }
