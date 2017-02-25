@@ -5,16 +5,19 @@
 ![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)
 
 
-Coinnect is a Rust library aiming to provide a complete access to REST APIs for various crypto-currencies exchanges.
-Currently only Poloniex is supported but other exchanges will be added soon.
+Coinnect is a Rust library aiming to provide a complete access to REST APIs for
+various crypto-currencies exchanges.
+Currently only Poloniex and Kraken are supported but other exchanges will be
+added soon.
 All methods consume HTTPS api. The purpose of this crate is not to stream data
 (you should use websocket/FIX in that case).
 
 The project is dual licensed under the terms of the Apache License, Version 2.0,
 and the MIT License.
 
-**WARNING:**  This library is highly experimental at the moment. Please do not invest what you can't afford to loose. This is a personal project, I can not be held responsible for
-the library malfunction, which can lead to a loss of money.
+**WARNING:**  This library is highly experimental at the moment. Please do not
+invest what you can't afford to loose. This is a personal project, I can not be
+held responsible for the library malfunction, which can lead to a loss of money.
 
 ### Exchange support:
 - [x] Poloniex

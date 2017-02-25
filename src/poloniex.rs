@@ -264,8 +264,11 @@ impl PoloniexApi {
     }
 
     /// Sample output :
+    ///
+    /// ```ignore
     /// {"offers":[{"rate":"0.00200000","amount":"64.66305732","rangeMin":2,"rangeMax":8}, ... ],
     /// "demands":[{"rate":"0.00170000","amount":"26.54848841","rangeMin":2,"rangeMax":2}, ... ]}
+    /// ```
     pub fn return_loan_orders(&mut self, currency: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
@@ -274,8 +277,11 @@ impl PoloniexApi {
 
     /// Returns all of your available balances.
     ///
-    ///Sample output:
+    /// Sample output:
+    ///
+    /// ```ignore
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
+    /// ```
     pub fn return_balances(&mut self) -> Option<Map<String, Value>> {
         let params = HashMap::new();
         self.private_query("returnBalances", &params)
@@ -585,7 +591,12 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"message":"Transferred 2 BTC from exchange to margin account."}
     /// ```
-    pub fn transfer_balance(&mut self, currency: &str, amount: &str, from_account: &str, to_account: &str) -> Option<Map<String, Value>> {
+    pub fn transfer_balance(&mut self,
+                            currency: &str,
+                            amount: &str,
+                            from_account: &str,
+                            to_account: &str)
+                            -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -621,7 +632,12 @@ impl PoloniexApi {
     /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
     /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"buy"}]}}
     /// ```
-    pub fn margin_buy(&mut self, currency_pair: &str, rate: &str, amount: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+    pub fn margin_buy(&mut self,
+                      currency_pair: &str,
+                      rate: &str,
+                      amount: &str,
+                      lending_rate: &str)
+                      -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
@@ -642,7 +658,12 @@ impl PoloniexApi {
     /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
     /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"sell"}]}}
     /// ```
-    pub fn margin_sell(&mut self, currency_pair: &str, rate: &str, amount: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+    pub fn margin_sell(&mut self,
+                       currency_pair: &str,
+                       rate: &str,
+                       amount: &str,
+                       lending_rate: &str)
+                       -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
@@ -697,7 +718,13 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"message":"Loan order placed.","orderID":10590}
     /// ```
-    pub fn create_loan_offer(&mut self, currency: &str, amount: &str, duration: &str, auto_renew: &str, lending_rate: &str) -> Option<Map<String, Value>> {
+    pub fn create_loan_offer(&mut self,
+                             currency: &str,
+                             amount: &str,
+                             duration: &str,
+                             auto_renew: &str,
+                             lending_rate: &str)
+                             -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -762,7 +789,11 @@ impl PoloniexApi {
     /// "duration": "0.47610000", "interest": "0.00001196", "fee": "-0.00000179",
     /// "earned": "0.00001017", "open": "2016-09-28 06:47:26", "close": "2016-09-28 18:13:03" }]
     /// ```
-    pub fn return_lending_history(&mut self, start: &str, end: &str, limit: &str) -> Option<Map<String, Value>> {
+    pub fn return_lending_history(&mut self,
+                                  start: &str,
+                                  end: &str,
+                                  limit: &str)
+                                  -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("start", start);
         params.insert("end", end);
