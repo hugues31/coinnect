@@ -6,9 +6,8 @@
 
 
 Coinnect is a Rust library aiming to provide a complete access to REST APIs for
-various crypto-currencies exchanges.
-Currently only Poloniex and Kraken are supported but other exchanges will be
-added soon.
+various crypto-currencies exchanges (see below for a list of supported
+exchanges).
 All methods consume HTTPS api. The purpose of this crate is not to stream data
 (you should use websocket/FIX in that case).
 
@@ -22,7 +21,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 ### Exchange support:
 - [x] Poloniex
 - [x] Kraken
-- [ ] Bitstamp
+- [x] Bitstamp (partial)
 - [ ] Whaleclub
 - [ ] ...
 
@@ -52,7 +51,7 @@ For optional parameters, enter an empty &str ("") if you don't specify it.
 
 ## Example
 
-The example below show you how to connect to Poloniex
+The example below shows you how to connect to Poloniex
 
 ```rust
 extern crate coinnect;
