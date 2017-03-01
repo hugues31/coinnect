@@ -72,4 +72,40 @@ mod bitstamp_tests {
         assert!(result.unwrap().contains_key("open"));
     }
 
+    #[test]
+    fn should_return_an_order_book() {
+        let mut api = BitstampApi::new("", "");
+        let result = api.return_order_book("btcusd");
+        assert_eq!(result.is_some(), true);
+    }
+
+    #[test]
+    fn order_book_should_have_a_timestamp() {
+        let mut api = BitstampApi::new("", "");
+        let result = api.return_order_book("btcusd");
+        assert!(result.unwrap().contains_key("timestamp"));
+    }
+    #[test]
+    fn order_book_should_have_bids() {
+        let mut api = BitstampApi::new("", "");
+        let result = api.return_order_book("btcusd");
+        assert!(result.unwrap().contains_key("bids"));
+    }
+    #[test]
+    fn order_book_should_have_asks() {
+        let mut api = BitstampApi::new("", "");
+        let result = api.return_order_book("btcusd");
+        assert!(result.unwrap().contains_key("bids"));
+    }
+
+    #[test]
+    fn order_book_should_have_asks_for_btcusd() {
+        let mut api = BitstampApi::new("", "");
+        assert!(api.return_order_book("btcusd").unwrap().contains_key("asks"));
+    }
+    #[test]
+    fn order_book_should_have_asks_for_btceur() {
+        let mut api = BitstampApi::new("", "");
+        assert!(api.return_order_book("btceur").unwrap().contains_key("asks"));
+    }
 }

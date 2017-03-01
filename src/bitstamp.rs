@@ -148,4 +148,19 @@ impl BitstampApi {
         params.insert("pair", "btcusd");
         self.public_query(&params)
     }
+
+    /// Sample output :
+    ///
+    /// ```ignore
+    /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
+    /// [0.00006900,408], ... ], "isFrozen": 0, "seq": 18849}
+    /// ```
+    pub fn return_order_book(&mut self,
+                             pair: &str)
+                             -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("method", "order_book");
+        params.insert("pair", pair);
+        self.public_query(&params)
+    }
 }
