@@ -1,6 +1,10 @@
 //! Use this module to interact with Bitstamp exchange.
 //! Please see examples for more informations.
 
+use crypto::sha2::Sha256;
+use crypto::hmac::Hmac;
+use crypto::mac::Mac;
+
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::net::HttpsConnector;
@@ -109,6 +113,29 @@ impl BitstampApi {
 
     pub fn build_url(method: &str, pair: &str) -> String {
         "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + &pair + "/"
+    }
+
+    pub fn generate_nonce(fixed_nonce:Option<String>) -> String {
+        match fixed_nonce {
+            Some(v) => v,
+            None => helpers::get_unix_timestamp_ms().to_string(),
+        }
+    }
+
+    pub fn build_signature(customer_id: &str, api_key: &str, api_secret: &str, nonce: String) -> String {
+        const C: &'static [u8] = b"0123456789ABCDEF";
+
+        let message = nonce + customer_id + api_key;
+        let mut hmac = Hmac::new(Sha256::new(), api_secret.as_bytes());
+        hmac.input(message.as_bytes());
+        let result = hmac.result();
+        let mut raw_signature = result.code();
+        let mut signature = Vec::with_capacity(raw_signature.len() * 2);
+        for &byte in raw_signature {
+            signature.push(C[(byte >> 4) as usize]);
+            signature.push(C[(byte & 0xf) as usize]);
+        }
+        String::from_utf8(signature).unwrap()
     }
 
     fn public_query(&mut self,

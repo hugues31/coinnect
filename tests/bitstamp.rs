@@ -108,4 +108,19 @@ mod bitstamp_tests {
         let mut api = BitstampApi::new("", "");
         assert!(api.return_order_book("btceur").unwrap().contains_key("asks"));
     }
+
+    #[test]
+    fn should_create_a_fixed_nonce_when_requested() {
+        assert_eq!(BitstampApi::generate_nonce(Some("1".to_string())), "1");
+    }
+    #[test]
+    fn should_create_a_nonce_bigger_than_2017() {
+        assert!(BitstampApi::generate_nonce(None).parse::<i64>().unwrap() > 1483228800);
+    }
+    #[test]
+    fn should_create_a_correct_signature() {
+        assert_eq!(
+            BitstampApi::build_signature("123456", "1234567890ABCDEF1234567890ABCDEF", "1234567890ABCDEF1234567890ABCDEF", "1".to_string()),
+            "0421E65BB519A045016A2E4B2F71F50579AA8AD3F6059109C61A3064ACF45712");
+    }
 }
