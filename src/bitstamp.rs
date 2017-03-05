@@ -152,7 +152,6 @@ impl BitstampApi {
         let mut params = params.clone();
         helpers::strip_empties(&mut params);
 
-        // TODO pass the pair as parameter, dont hardcode it #FIXME
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
         let url: String = BitstampApi::build_url(method, pair);
