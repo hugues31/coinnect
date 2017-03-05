@@ -7,6 +7,7 @@ use crypto::mac::Mac;
 
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
+use hyper::header::ContentType;
 use hyper::net::HttpsConnector;
 
 use serde_json;
@@ -40,16 +41,18 @@ header! {
 
 
 pub struct BitstampApi {
-    last_request: i64, // unix timestamp in ms, to avoid ban
+    last_request: i64,
+    // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
+    customer_id: String,
     http_client: Client,
 }
 
 
 impl BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    pub fn new(api_key: &str, api_secret: &str) -> BitstampApi {
+    pub fn new(customer_id: &str, api_key: &str, api_secret: &str) -> BitstampApi {
         let ssl = NativeTlsClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
 
@@ -57,6 +60,7 @@ impl BitstampApi {
             last_request: 0,
             api_key: api_key.to_string(),
             api_secret: api_secret.to_string(),
+            customer_id: customer_id.to_string(),
             http_client: Client::with_connector(connector),
         }
     }
@@ -72,9 +76,10 @@ impl BitstampApi {
     ///         "api_secret": "ABC&EF?abcdef"
     ///     },
     ///     "account_bitstamp": {
-    ///         "exchange"  : "bitstamp",
-    ///         "api_key"   : "XYXY-XYXY-XYXY-XY",
-    ///         "api_secret": "A0A0B1B1C2C2"
+    ///         "exchange"   : "bitstamp",
+    ///         "api_key"    : "1234567890ABCDEF1234567890ABCDEF",
+    ///         "api_secret" : "1234567890ABCDEF1234567890ABCDEF",
+    ///         "customer_id": "123456"
     ///     }
     /// }
     /// ```
@@ -89,8 +94,9 @@ impl BitstampApi {
         let json_obj = data.as_object().unwrap().get(config_name).unwrap();
         let api_key = json_obj.get("api_key").unwrap().as_str().unwrap();
         let api_secret = json_obj.get("api_secret").unwrap().as_str().unwrap();
+        let customer_id = json_obj.get("customer_id").unwrap().as_str().unwrap();
 
-        BitstampApi::new(api_key, api_secret)
+        BitstampApi::new(customer_id, api_key, api_secret)
     }
 
     fn block_or_continue(&self) {
@@ -115,21 +121,23 @@ impl BitstampApi {
         "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + &pair + "/"
     }
 
-    pub fn generate_nonce(fixed_nonce:Option<String>) -> String {
+    pub fn generate_nonce(fixed_nonce: Option<String>) -> String {
         match fixed_nonce {
             Some(v) => v,
             None => helpers::get_unix_timestamp_ms().to_string(),
         }
     }
 
-    pub fn build_signature(customer_id: &str, api_key: &str, api_secret: &str, nonce: String) -> String {
+    pub fn build_signature(nonce: String, customer_id: String, api_key: String, api_secret: String) -> String {
         const C: &'static [u8] = b"0123456789ABCDEF";
 
-        let message = nonce + customer_id + api_key;
+        let message = nonce + &customer_id + &api_key;
         let mut hmac = Hmac::new(Sha256::new(), api_secret.as_bytes());
+
         hmac.input(message.as_bytes());
         let result = hmac.result();
-        let mut raw_signature = result.code();
+
+        let raw_signature = result.code();
         let mut signature = Vec::with_capacity(raw_signature.len() * 2);
         for &byte in raw_signature {
             signature.push(C[(byte >> 4) as usize]);
@@ -155,6 +163,48 @@ impl BitstampApi {
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
         return self.deserialize_json(buffer);
+    }
+
+    ///
+    ///
+    /// #Examples
+    ///
+    /// ```ignore
+    /// extern crate coinnect;
+    /// use coinnect::bitstamp::BitstampApi;
+    /// let mut api = BitstampApi::new("", "");
+    /// let  result = api.private_query("balance", "btcusd");
+    /// assert_eq!(true, true);
+    /// ```
+    fn private_query(&mut self,
+                     params: &HashMap<&str, &str>)
+                     -> Option<Map<String, Value>> {
+        let method: &str = params.get("method").unwrap();
+        let pair: &str = params.get("pair").unwrap();
+        let url: String = BitstampApi::build_url(method, pair);
+
+        let nonce = BitstampApi::generate_nonce(None);
+        let signature = BitstampApi::build_signature(nonce.clone(),
+                                                     self.customer_id.clone(),
+                                                     self.api_key.clone(),
+                                                     self.api_secret.clone());
+
+        let copy_api_key = self.api_key.clone();
+        let mut post_params: &mut HashMap<&str, &str> = &mut HashMap::new();
+        post_params.insert("key", &copy_api_key);
+        post_params.insert("signature", &signature);
+        post_params.insert("nonce", &nonce);
+        helpers::strip_empties(&mut post_params);
+        let post_data = helpers::url_encode_hashmap(&post_params);
+        let mut response = self.http_client.post(&url)
+                            .header(ContentType::form_url_encoded())
+                            .body(&post_data)
+                            .send()
+                            .unwrap();
+
+        let mut buffer = String::new();
+        response.read_to_string(&mut buffer).unwrap();
+        self.deserialize_json(buffer)
     }
 
     /// Sample output :
@@ -189,5 +239,19 @@ impl BitstampApi {
         params.insert("method", "order_book");
         params.insert("pair", pair);
         self.public_query(&params)
+    }
+
+    /// Returns all of your available balances.
+    ///
+    /// Sample output:
+    ///
+    /// ```ignore
+    /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
+    /// ```
+    pub fn return_balances(&mut self, pair: &str) -> Option<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("method", "balance");
+        params.insert("pair", pair);
+        self.private_query(&params)
     }
 }
