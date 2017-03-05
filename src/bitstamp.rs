@@ -41,8 +41,7 @@ header! {
 
 
 pub struct BitstampApi {
-    last_request: i64,
-    // unix timestamp in ms, to avoid ban
+    last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
     customer_id: String,
