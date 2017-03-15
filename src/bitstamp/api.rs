@@ -1,10 +1,6 @@
 //! Use this module to interact with Bitstamp exchange.
 //! Please see examples for more informations.
 
-use crypto::sha2::Sha256;
-use crypto::hmac::Hmac;
-use crypto::mac::Mac;
-
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::header::ContentType;
@@ -16,13 +12,11 @@ use serde_json::value::Map;
 
 use std::collections::HashMap;
 use std::io::Read;
-use std::thread;
-use std::time::Duration;
 use std::path::PathBuf;
 use std::fs::File;
 
 use helpers;
-
+use bitstamp::tools;
 
 header! {
     #[doc(hidden)]
@@ -98,53 +92,6 @@ impl BitstampApi {
         BitstampApi::new(customer_id, api_key, api_secret)
     }
 
-    fn block_or_continue(&self) {
-        let threshold = 1000; // 600 requests per 10 mins = 1 request per second
-        let delay = helpers::get_unix_timestamp_ms() - self.last_request;
-        if delay < threshold {
-            let duration_ms = Duration::from_millis(delay as u64);
-            thread::sleep(duration_ms);
-        }
-    }
-
-    fn deserialize_json(&mut self, json_string: String) -> Option<Map<String, Value>> {
-        let data: Value = serde_json::from_str(&json_string).unwrap();
-
-        match data.as_object() {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
-    }
-
-    pub fn build_url(method: &str, pair: &str) -> String {
-        "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + &pair + "/"
-    }
-
-    pub fn generate_nonce(fixed_nonce: Option<String>) -> String {
-        match fixed_nonce {
-            Some(v) => v,
-            None => helpers::get_unix_timestamp_ms().to_string(),
-        }
-    }
-
-    pub fn build_signature(nonce: String, customer_id: String, api_key: String, api_secret: String) -> String {
-        const C: &'static [u8] = b"0123456789ABCDEF";
-
-        let message = nonce + &customer_id + &api_key;
-        let mut hmac = Hmac::new(Sha256::new(), api_secret.as_bytes());
-
-        hmac.input(message.as_bytes());
-        let result = hmac.result();
-
-        let raw_signature = result.code();
-        let mut signature = Vec::with_capacity(raw_signature.len() * 2);
-        for &byte in raw_signature {
-            signature.push(C[(byte >> 4) as usize]);
-            signature.push(C[(byte & 0xf) as usize]);
-        }
-        String::from_utf8(signature).unwrap()
-    }
-
     fn public_query(&mut self,
                     params: &HashMap<&str, &str>)
                     -> Option<Map<String, Value>> {
@@ -153,14 +100,14 @@ impl BitstampApi {
 
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
-        let url: String = BitstampApi::build_url(method, pair);
+        let url: String = tools::build_url(method, pair);
 
-        self.block_or_continue();
+        tools::block_or_continue(self.last_request);
         let mut response = self.http_client.get(&url).send().unwrap();
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return self.deserialize_json(buffer);
+        return tools::deserialize_json(buffer);
     }
 
     ///
@@ -179,10 +126,10 @@ impl BitstampApi {
                      -> Option<Map<String, Value>> {
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
-        let url: String = BitstampApi::build_url(method, pair);
+        let url: String = tools::build_url(method, pair);
 
-        let nonce = BitstampApi::generate_nonce(None);
-        let signature = BitstampApi::build_signature(nonce.clone(),
+        let nonce = tools::generate_nonce(None);
+        let signature = tools::build_signature(nonce.clone(),
                                                      self.customer_id.clone(),
                                                      self.api_key.clone(),
                                                      self.api_secret.clone());
@@ -202,7 +149,7 @@ impl BitstampApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        self.deserialize_json(buffer)
+        tools::deserialize_json(buffer)
     }
 
     /// Sample output :
