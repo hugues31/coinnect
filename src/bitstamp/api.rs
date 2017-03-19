@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use std::fs::File;
 
 use helpers;
-use bitstamp::tools;
+use bitstamp::utils;
 
 header! {
     #[doc(hidden)]
@@ -100,14 +100,14 @@ impl BitstampApi {
 
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
-        let url: String = tools::build_url(method, pair);
+        let url: String = utils::build_url(method, pair);
 
-        tools::block_or_continue(self.last_request);
+        utils::block_or_continue(self.last_request);
         let mut response = self.http_client.get(&url).send().unwrap();
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return tools::deserialize_json(buffer);
+        return utils::deserialize_json(buffer);
     }
 
     ///
@@ -126,13 +126,13 @@ impl BitstampApi {
                      -> Option<Map<String, Value>> {
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
-        let url: String = tools::build_url(method, pair);
+        let url: String = utils::build_url(method, pair);
 
-        let nonce = tools::generate_nonce(None);
-        let signature = tools::build_signature(nonce.clone(),
-                                                     self.customer_id.clone(),
-                                                     self.api_key.clone(),
-                                                     self.api_secret.clone());
+        let nonce = utils::generate_nonce(None);
+        let signature = utils::build_signature(nonce.clone(),
+                                               self.customer_id.clone(),
+                                               self.api_key.clone(),
+                                               self.api_secret.clone());
 
         let copy_api_key = self.api_key.clone();
         let mut post_params: &mut HashMap<&str, &str> = &mut HashMap::new();
@@ -149,7 +149,7 @@ impl BitstampApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        tools::deserialize_json(buffer)
+        utils::deserialize_json(buffer)
     }
 
     /// Sample output :

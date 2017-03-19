@@ -2,12 +2,12 @@
 mod bitstamp_tests {
     extern crate coinnect;
     use self::coinnect::bitstamp::api::BitstampApi;
-    use self::coinnect::bitstamp::tools;
+    use self::coinnect::bitstamp::utils;
 
     #[test]
     fn build_url_should_return_the_a_url() {
         assert_eq!(
-            tools::build_url("ticker", "btcusd"),
+            utils::build_url("ticker", "btcusd"),
             "https://www.bitstamp.net/api/v2/ticker/btcusd/");
     }
 
@@ -112,11 +112,11 @@ mod bitstamp_tests {
 
     #[test]
     fn should_create_a_fixed_nonce_when_requested() {
-        assert_eq!(tools::generate_nonce(Some("1".to_string())), "1");
+        assert_eq!(utils::generate_nonce(Some("1".to_string())), "1");
     }
     #[test]
     fn should_create_a_nonce_bigger_than_2017() {
-        assert!(tools::generate_nonce(None).parse::<i64>().unwrap() > 1483228800);
+        assert!(utils::generate_nonce(None).parse::<i64>().unwrap() > 1483228800);
     }
     #[test]
     fn should_create_a_correct_signature() {
@@ -126,7 +126,7 @@ mod bitstamp_tests {
         let api_secret = "1234567890ABCDEF1234567890ABCDEF".to_string();
         let expected_signature = "7D7C4168D49CBC2620A45EF00EAA228C1287561F1C1F94172272E1231A8ADF6B".to_string();
         assert_eq!(
-            tools::build_signature(nonce, customer_id, api_key, api_secret),
+            utils::build_signature(nonce, customer_id, api_key, api_secret),
             expected_signature
         );
     }
