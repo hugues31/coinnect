@@ -17,6 +17,7 @@ use std::fs::File;
 
 use helpers;
 use bitstamp::utils;
+use exchange::ExchangeApi;
 
 header! {
     #[doc(hidden)]
@@ -43,9 +44,9 @@ pub struct BitstampApi {
 }
 
 
-impl BitstampApi {
+impl ExchangeApi<BitstampApi> for BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    pub fn new(customer_id: &str, api_key: &str, api_secret: &str) -> BitstampApi {
+    fn new(customer_id: &str, api_key: &str, api_secret: &str) -> BitstampApi {
         let ssl = NativeTlsClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
 
@@ -78,7 +79,7 @@ impl BitstampApi {
     /// ```
     /// For this example, you could use load your Bitstamp account with
     /// `new_from_file("account_bitstamp", Path::new("/keys.json"))`
-    pub fn new_from_file(config_name: &str, path: PathBuf) -> BitstampApi {
+    fn new_from_file(config_name: &str, path: PathBuf) -> BitstampApi {
         let mut f = File::open(&path).unwrap();
         let mut buffer = String::new();
         f.read_to_string(&mut buffer).unwrap();
@@ -164,7 +165,7 @@ impl BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    pub fn return_ticker(&mut self) -> Option<Map<String, Value>> {
+    fn return_ticker(&mut self) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("method", "ticker");
         params.insert("pair", "btcusd");
@@ -177,7 +178,7 @@ impl BitstampApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    pub fn return_order_book(&mut self,
+    fn return_order_book(&mut self,
                              pair: &str)
                              -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
@@ -193,7 +194,7 @@ impl BitstampApi {
     /// ```ignore
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self, pair: &str) -> Option<Map<String, Value>> {
+    fn return_balances(&mut self, pair: &str) -> Option<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("method", "balance");
         params.insert("pair", pair);
