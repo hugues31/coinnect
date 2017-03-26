@@ -4,7 +4,7 @@ mod exchange_tests {
 
     #[test]
     fn tests_work() {
-//        use coinnect::Exchange::ExchangeApi;
+//        use self::coinnect::Exchange::ExchangeApi;
         assert!(true);
     }
 }

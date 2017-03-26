@@ -4,8 +4,16 @@ use serde_json::value::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum Exchange {
+    Bitstamp,
+    Kraken,
+    Poloniex,
+}
+
 pub trait ExchangeApi<T> {
-    fn new(customer_id: &str, api_key: &str, api_secret: &str) -> T;
+    fn new(params: &HashMap<&str, &str>) -> T;
     fn new_from_file(config_name: &str, path: PathBuf) -> T;
 
     fn public_query(&mut self, params: &HashMap<&str, &str>) -> Option<Map<String, Value>>;

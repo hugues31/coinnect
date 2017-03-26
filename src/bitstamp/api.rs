@@ -46,7 +46,17 @@ pub struct BitstampApi {
 
 impl ExchangeApi<BitstampApi> for BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    fn new(customer_id: &str, api_key: &str, api_secret: &str) -> BitstampApi {
+    fn new(params: &HashMap<&str, &str>) -> BitstampApi {
+//        customer_id: &str, api_key: &str, api_secret: &str
+        let mut params = params.clone();
+        helpers::strip_empties(&mut params);
+
+        let empty_str: &str = "";
+
+        let api_key = params.get("api_key").unwrap_or(&empty_str);
+        let api_secret = params.get("api_secret").unwrap_or(&empty_str);
+        let customer_id = params.get("customer_id").unwrap_or(&empty_str);
+
         let ssl = NativeTlsClient::new().unwrap();
         let connector = HttpsConnector::new(ssl);
 
@@ -90,14 +100,16 @@ impl ExchangeApi<BitstampApi> for BitstampApi {
         let api_secret = json_obj.get("api_secret").unwrap().as_str().unwrap();
         let customer_id = json_obj.get("customer_id").unwrap().as_str().unwrap();
 
-        BitstampApi::new(customer_id, api_key, api_secret)
+        let mut params = HashMap::new();
+        params.insert("api_key", api_key);
+        params.insert("api_secret", api_secret);
+        params.insert("customer_id", customer_id);
+        BitstampApi::new(&params)
     }
 
     fn public_query(&mut self,
                     params: &HashMap<&str, &str>)
                     -> Option<Map<String, Value>> {
-        let mut params = params.clone();
-        helpers::strip_empties(&mut params);
 
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
@@ -125,6 +137,7 @@ impl ExchangeApi<BitstampApi> for BitstampApi {
     fn private_query(&mut self,
                      params: &HashMap<&str, &str>)
                      -> Option<Map<String, Value>> {
+
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
         let url: String = utils::build_url(method, pair);
