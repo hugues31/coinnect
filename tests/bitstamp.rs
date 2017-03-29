@@ -151,7 +151,7 @@ mod bitstamp_tests {
         );
     }
 
-    /// IMPORTANT: Real keys are needed in order to retrieve the balance
+    // IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
     fn balance_should_have_usd_btc_fee() {
         use std::path::PathBuf;

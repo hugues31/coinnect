@@ -2,7 +2,7 @@ use serde_json::value::Map;
 use serde_json::value::Value;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::fmt::Debug;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -12,10 +12,7 @@ pub enum Exchange {
     Poloniex,
 }
 
-pub trait ExchangeApi<T> {
-    fn new(params: &HashMap<&str, &str>) -> T;
-    fn new_from_file(config_name: &str, path: PathBuf) -> T;
-
+pub trait ExchangeApi: Debug {
     fn public_query(&mut self, params: &HashMap<&str, &str>) -> Option<Map<String, Value>>;
     fn private_query(&mut self, params: &HashMap<&str, &str>) -> Option<Map<String, Value>>;
 

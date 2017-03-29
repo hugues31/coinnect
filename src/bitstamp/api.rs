@@ -34,7 +34,7 @@ header! {
     (ContentHeader, "Content-Type") => [String]
 }
 
-
+#[derive(Debug)]
 pub struct BitstampApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
@@ -44,10 +44,9 @@ pub struct BitstampApi {
 }
 
 
-impl ExchangeApi<BitstampApi> for BitstampApi {
+impl BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    fn new(params: &HashMap<&str, &str>) -> BitstampApi {
-//        customer_id: &str, api_key: &str, api_secret: &str
+    pub fn new(params: &HashMap<&str, &str>) -> BitstampApi {
         let mut params = params.clone();
         helpers::strip_empties(&mut params);
 
@@ -89,7 +88,7 @@ impl ExchangeApi<BitstampApi> for BitstampApi {
     /// ```
     /// For this example, you could use load your Bitstamp account with
     /// `new_from_file("account_bitstamp", Path::new("/keys.json"))`
-    fn new_from_file(config_name: &str, path: PathBuf) -> BitstampApi {
+    pub fn new_from_file(config_name: &str, path: PathBuf) -> BitstampApi {
         let mut f = File::open(&path).unwrap();
         let mut buffer = String::new();
         f.read_to_string(&mut buffer).unwrap();
@@ -106,6 +105,9 @@ impl ExchangeApi<BitstampApi> for BitstampApi {
         params.insert("customer_id", customer_id);
         BitstampApi::new(&params)
     }
+}
+
+impl ExchangeApi for BitstampApi {
 
     fn public_query(&mut self,
                     params: &HashMap<&str, &str>)
