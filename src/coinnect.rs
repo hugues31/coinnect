@@ -3,6 +3,7 @@ use pair::Pair;
 use bitstamp::api::BitstampApi;
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use serde_json::value::Map;
 use serde_json::value::Value;
 
@@ -27,6 +28,20 @@ impl Coinnect {
             Exchange::Poloniex => Box::new(UnimplementedApi),
         }
     }
+
+    /// Create a new CoinnectApi from a json configuration file. This file must follow this
+    /// structure:
+    ///
+    /// For this example, you could use load your Bitstamp account with
+    /// `new_from_file(Exchange::Bitstamp, Path::new("/keys.json"))`
+    pub fn new_from_file(exchange: Exchange, path: PathBuf) -> Box<ExchangeApi> {
+
+        match exchange {
+            Exchange::Bitstamp => Box::new(BitstampApi::new_from_file("account_bitstamp", path)),
+            Exchange::Kraken => Box::new(UnimplementedApi),
+            Exchange::Poloniex => Box::new(UnimplementedApi),
+        }
+    }
 }
 
 
@@ -41,7 +56,7 @@ impl ExchangeApi for UnimplementedApi {
         panic!("Not implemented");
     }
 
-    fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+    fn return_ticker(&mut self, _: Pair) -> Option<Map<String, Value>> {
         panic!("Not implemented");
     }
     fn return_order_book(&mut self, _: &str) -> Option<Map<String, Value>> {
