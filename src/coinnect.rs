@@ -8,10 +8,7 @@ use serde_json::value::Map;
 use serde_json::value::Value;
 
 #[derive(Debug)]
-#[derive(PartialEq)]
-pub enum Coinnect {
-    BitstampApi
-}
+pub struct Coinnect;
 
 impl Coinnect {
     /// Create a new CoinnectApi by providing an API key & API secret

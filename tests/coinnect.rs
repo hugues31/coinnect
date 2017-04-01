@@ -4,6 +4,7 @@ mod coinnect_tests {
 
     use self::coinnect::coinnect::Coinnect;
     use self::coinnect::exchange::{ Exchange, ExchangeApi };
+    use self::coinnect::pair::Pair;
 
     #[test]
     fn can_create_new_api_connection_to_bitstamp() {
@@ -31,5 +32,13 @@ mod coinnect_tests {
     fn can_create_new_api_connection_to_poloniex() {
 //        let api = Coinnect::new(Exchange::Poloniex, "", "", "");
 //        assert_eq!(api, Exchange::Poloniex);
+    }
+
+    #[test]
+    fn coinnect_can_get_a_ticker_from_bitstamp() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let ticker = api.return_ticker(Pair::BtcUsd);
+
+        assert!(ticker.is_some());
     }
 }
