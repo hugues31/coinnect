@@ -18,6 +18,7 @@ use std::fs::File;
 use helpers;
 use bitstamp::utils;
 use exchange::ExchangeApi;
+use pair::Pair;
 
 header! {
     #[doc(hidden)]
@@ -180,10 +181,15 @@ impl ExchangeApi for BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    fn return_ticker(&mut self) -> Option<Map<String, Value>> {
+    fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+
+        let wanted_pair = match pair {
+            Pair::BtcUsd => "btcusd",
+        };
+
         let mut params = HashMap::new();
+        params.insert("pair", wanted_pair);
         params.insert("method", "ticker");
-        params.insert("pair", "btcusd");
         self.public_query(&params)
     }
 
