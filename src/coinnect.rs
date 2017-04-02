@@ -56,10 +56,10 @@ impl ExchangeApi for UnimplementedApi {
     fn return_ticker(&mut self, _: Pair) -> Option<Map<String, Value>> {
         panic!("Not implemented");
     }
-    fn return_order_book(&mut self, _: &str) -> Option<Map<String, Value>> {
+    fn return_order_book(&mut self, _: Pair) -> Option<Map<String, Value>> {
         panic!("Not implemented");
     }
-    fn return_balances(&mut self, _: &str) -> Option<Map<String, Value>> {
+    fn return_balances(&mut self, _: Pair) -> Option<Map<String, Value>> {
         panic!("Not implemented");
     }
 }

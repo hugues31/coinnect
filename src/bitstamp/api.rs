@@ -199,12 +199,15 @@ impl ExchangeApi for BitstampApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    fn return_order_book(&mut self,
-                             pair: &str)
-                             -> Option<Map<String, Value>> {
+    fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+
+        let wanted_pair = match pair {
+            Pair::BtcUsd => "btcusd",
+        };
+
         let mut params = HashMap::new();
         params.insert("method", "order_book");
-        params.insert("pair", pair);
+        params.insert("pair", wanted_pair);
         self.public_query(&params)
     }
 
@@ -215,10 +218,15 @@ impl ExchangeApi for BitstampApi {
     /// ```ignore
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    fn return_balances(&mut self, pair: &str) -> Option<Map<String, Value>> {
+    fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+
+        let wanted_pair = match pair {
+            Pair::BtcUsd => "btcusd",
+        };
+
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", pair);
+        params.insert("pair", wanted_pair);
         self.private_query(&params)
     }
 }

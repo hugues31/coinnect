@@ -19,6 +19,6 @@ pub trait ExchangeApi: Debug {
     fn private_query(&mut self, params: &HashMap<&str, &str>) -> Option<Map<String, Value>>;
 
     fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>>;
-    fn return_order_book(&mut self, pair: &str) -> Option<Map<String, Value>>;
-    fn return_balances(&mut self, pair: &str) -> Option<Map<String, Value>>;
+    fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>>;
+    fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>>;
 }

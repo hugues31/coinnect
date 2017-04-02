@@ -92,7 +92,7 @@ mod bitstamp_tests {
     fn should_return_an_order_book() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_order_book("btcusd");
+        let result = api.return_order_book(Pair::BtcUsd);
         assert_eq!(result.is_some(), true);
     }
 
@@ -100,21 +100,21 @@ mod bitstamp_tests {
     fn order_book_should_have_a_timestamp() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_order_book("btcusd");
+        let result = api.return_order_book(Pair::BtcUsd);
         assert!(result.unwrap().contains_key("timestamp"));
     }
     #[test]
     fn order_book_should_have_bids() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_order_book("btcusd");
+        let result = api.return_order_book(Pair::BtcUsd);
         assert!(result.unwrap().contains_key("bids"));
     }
     #[test]
     fn order_book_should_have_asks() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_order_book("btcusd");
+        let result = api.return_order_book(Pair::BtcUsd);
         assert!(result.unwrap().contains_key("bids"));
     }
 
@@ -122,13 +122,13 @@ mod bitstamp_tests {
     fn order_book_should_have_asks_for_btcusd() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        assert!(api.return_order_book("btcusd").unwrap().contains_key("asks"));
+        assert!(api.return_order_book(Pair::BtcUsd).unwrap().contains_key("asks"));
     }
     #[test]
     fn order_book_should_have_asks_for_btceur() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        assert!(api.return_order_book("btceur").unwrap().contains_key("asks"));
+        assert!(api.return_order_book(Pair::BtcUsd).unwrap().contains_key("asks"));
     }
 
     #[test]
@@ -158,7 +158,7 @@ mod bitstamp_tests {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
         let mut api = BitstampApi::new_from_file("account_bitstamp", path);
-        let result = api.return_balances("btcusd").unwrap();
+        let result = api.return_balances(Pair::BtcUsd).unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();
         let result_looking_for_fee = result.clone();

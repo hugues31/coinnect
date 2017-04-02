@@ -39,6 +39,26 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
         let ticker = api.return_ticker(Pair::BtcUsd);
 
-        assert!(ticker.is_some());
+        assert!( ticker.is_some() );
+    }
+    #[test]
+    fn coinnect_ticker_from_bitstamp_should_have_the_correct_last() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let ticker = api.return_ticker(Pair::BtcUsd);
+
+        assert!( ticker.unwrap().contains_key("last") );
+    }
+
+    #[test]
+    fn coinnect_should_return_an_order_book_from_bitstamp() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let order_book = api.return_order_book(Pair::BtcUsd);
+        assert!( order_book.is_some() );
+    }
+    #[test]
+    fn order_book_should_have_bids() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let result = api.return_order_book(Pair::BtcUsd);
+        assert!( result.unwrap().contains_key("bids") );
     }
 }
