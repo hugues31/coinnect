@@ -15,6 +15,12 @@ mod bitstamp_tests {
             utils::build_url("ticker", "btcusd"),
             "https://www.bitstamp.net/api/v2/ticker/btcusd/");
     }
+    #[test]
+    fn build_url_should_return_the_url_for_transactions_for_btc_usd() {
+        assert_eq!(
+            utils::build_url("transactions", "btcusd"),
+            "https://www.bitstamp.net/api/v2/transactions/btcusd/");
+    }
 
     #[test]
     fn can_get_real_bitstamp_tick() {
@@ -150,6 +156,27 @@ mod bitstamp_tests {
             utils::build_signature(nonce, customer_id, api_key, api_secret),
             expected_signature
         );
+    }
+
+    #[test]
+    fn should_return_the_trade_history_for_btc_usd_from_public_query() {
+        let mut params = HashMap::new();
+        let mut api = BitstampApi::new(&params);
+
+        params.insert("pair", "btcusd");
+        params.insert("method", "transactions");
+        let result = api.public_query(&params);
+
+        assert_eq!( result.is_some(), false );
+    }
+
+    #[test]
+    fn should_return_the_trade_history_for_btc_usd() {
+        let params = HashMap::new();
+        let mut api = BitstampApi::new(&params);
+        let result = api.return_trade_history(Pair::BtcUsd);
+
+        assert_eq!( result.is_some(), false );
     }
 
     // IMPORTANT: Real keys are needed in order to retrieve the balance

@@ -62,6 +62,28 @@ mod coinnect_tests {
         assert!( result.unwrap().contains_key("bids") );
     }
 
+    #[test]
+    fn public_query_should_be_able_to_return_the_trade_history_for_btc_usd_from_bitstamp() {
+        use std::collections::HashMap;
+
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+
+        let mut params = HashMap::new();
+        params.insert("pair", "btcusd");
+        params.insert("method", "transactions");
+        let result = api.public_query(&params);
+
+        assert_eq!( result.is_some(), false );
+    }
+
+    #[test]
+    fn should_return_the_trade_history_for_btc_usd_from_bitstamp() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let result = api.return_trade_history(Pair::BtcUsd);
+
+        assert_eq!( result.is_some(), false );
+    }
+
     // IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
     fn balance_should_have_usd_btc_fee() {
