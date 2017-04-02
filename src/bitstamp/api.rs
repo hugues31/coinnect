@@ -183,13 +183,13 @@ impl ExchangeApi for BitstampApi {
     /// ```
     fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
-        let wanted_pair = match pair {
+        let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
             _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
-        params.insert("pair", wanted_pair);
+        params.insert("pair", currency_pair);
         params.insert("method", "ticker");
         self.public_query(&params)
     }
@@ -202,16 +202,38 @@ impl ExchangeApi for BitstampApi {
     /// ```
     fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
-        let wanted_pair = match pair {
+        let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
             _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
         params.insert("method", "order_book");
-        params.insert("pair", wanted_pair);
+        params.insert("pair", currency_pair);
         self.public_query(&params)
     }
+
+    /// Sample output :
+    ///
+    /// ```ignore
+    /// [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140",
+    /// "total":"0.01064"},
+    /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
+    /// "total":"0.04978"}, ... ]
+    /// ```
+    fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+
+        let currency_pair = match pair {
+            Pair::BTC_USD => "btcusd",
+            _  => panic!("Unknown pair"),
+        };
+
+        let mut params = HashMap::new();
+        params.insert("pair", currency_pair);
+        params.insert("method", "transactions");
+        self.public_query(&params)
+    }
+
 
     /// Returns all of your available balances.
     ///
@@ -222,14 +244,14 @@ impl ExchangeApi for BitstampApi {
     /// ```
     fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
-        let wanted_pair = match pair {
+        let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
             _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", wanted_pair);
+        params.insert("pair", currency_pair);
         self.private_query(&params)
     }
 }

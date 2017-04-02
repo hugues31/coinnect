@@ -20,5 +20,7 @@ pub trait ExchangeApi: Debug {
 
     fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>>;
     fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>>;
+    fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>>;
+
     fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>>;
 }
