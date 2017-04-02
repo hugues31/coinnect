@@ -184,7 +184,8 @@ impl ExchangeApi for BitstampApi {
     fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
         let currency_pair = match pair {
-            Pair::BtcUsd => "btcusd",
+            Pair::BTC_USD => "btcusd",
+            _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
@@ -202,8 +203,9 @@ impl ExchangeApi for BitstampApi {
     fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
         let currency_pair = match pair {
-        Pair::BtcUsd => "btcusd",
-    };
+            Pair::BTC_USD => "btcusd",
+            _  => panic!("Unknown pair"),
+        };
 
         let mut params = HashMap::new();
         params.insert("method", "order_book");
@@ -222,7 +224,8 @@ impl ExchangeApi for BitstampApi {
     fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
         let currency_pair = match pair {
-            Pair::BtcUsd => "btcusd",
+            Pair::BTC_USD => "btcusd",
+            _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
@@ -242,7 +245,8 @@ impl ExchangeApi for BitstampApi {
     fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>> {
 
         let currency_pair = match pair {
-            Pair::BtcUsd => "btcusd",
+            Pair::BTC_USD => "btcusd",
+            _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();

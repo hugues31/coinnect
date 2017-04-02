@@ -37,14 +37,14 @@ mod coinnect_tests {
     #[test]
     fn coinnect_can_get_a_ticker_from_bitstamp() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let ticker = api.return_ticker(Pair::BtcUsd);
+        let ticker = api.return_ticker(Pair::BTC_USD);
 
         assert!( ticker.is_some() );
     }
     #[test]
     fn coinnect_ticker_from_bitstamp_should_have_the_correct_last() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let ticker = api.return_ticker(Pair::BtcUsd);
+        let ticker = api.return_ticker(Pair::BTC_USD);
 
         assert!( ticker.unwrap().contains_key("last") );
     }
@@ -52,13 +52,13 @@ mod coinnect_tests {
     #[test]
     fn coinnect_should_return_an_order_book_from_bitstamp() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let order_book = api.return_order_book(Pair::BtcUsd);
+        let order_book = api.return_order_book(Pair::BTC_USD);
         assert!( order_book.is_some() );
     }
     #[test]
     fn order_book_should_have_bids() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let result = api.return_order_book(Pair::BtcUsd);
+        let result = api.return_order_book(Pair::BTC_USD);
         assert!( result.unwrap().contains_key("bids") );
     }
 
@@ -79,7 +79,7 @@ mod coinnect_tests {
     #[test]
     fn should_return_the_trade_history_for_btc_usd_from_bitstamp() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let result = api.return_trade_history(Pair::BtcUsd);
+        let result = api.return_trade_history(Pair::BTC_USD);
 
         assert_eq!( result.is_some(), false );
     }
@@ -90,7 +90,7 @@ mod coinnect_tests {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
         let mut api = Coinnect::new_from_file(Exchange::Bitstamp , path);
-        let result = api.return_balances(Pair::BtcUsd).unwrap();
+        let result = api.return_balances(Pair::BTC_USD).unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();
         let result_looking_for_fee = result.clone();
