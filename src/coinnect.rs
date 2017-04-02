@@ -47,19 +47,19 @@ struct UnimplementedApi;
 
 impl ExchangeApi for UnimplementedApi {
     fn public_query(&mut self, _: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
-        panic!("Not implemented");
+        unimplemented!();
     }
     fn private_query(&mut self, _: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
-        panic!("Not implemented");
+        unimplemented!();
     }
 
     fn return_ticker(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        panic!("Not implemented");
+        unimplemented!();
     }
     fn return_order_book(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        panic!("Not implemented");
+        unimplemented!();
     }
     fn return_balances(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        panic!("Not implemented");
+        unimplemented!();
     }
 }
