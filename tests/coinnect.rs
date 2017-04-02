@@ -61,4 +61,20 @@ mod coinnect_tests {
         let result = api.return_order_book(Pair::BtcUsd);
         assert!( result.unwrap().contains_key("bids") );
     }
+
+    // IMPORTANT: Real keys are needed in order to retrieve the balance
+    #[test]
+    fn balance_should_have_usd_btc_fee() {
+        use std::path::PathBuf;
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp , path);
+        let result = api.return_balances(Pair::BtcUsd).unwrap();
+        let result_looking_for_usd = result.clone();
+        let result_looking_for_btc = result.clone();
+        let result_looking_for_fee = result.clone();
+
+        assert!(result_looking_for_usd.contains_key("usd_balance"));
+        assert!(result_looking_for_btc.contains_key("btc_balance"));
+        assert!(result_looking_for_fee.contains_key("fee"));
+    }
 }
