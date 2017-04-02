@@ -290,7 +290,7 @@ impl PoloniexApi {
     /// Returns all of your balances, including available balance, balance on orders,
     /// and the estimated BTC value of your balance. By default, this call is limited to your
     /// exchange account; set the "account" POST parameter to "all" to include your margin and
-    //// lending accounts.
+    /// lending accounts.
     ///
     /// Sample output:
     ///
