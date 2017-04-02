@@ -78,6 +78,8 @@ fn main() {
 
 ```
 
+For more examples, please see [examples](examples/).
+
 ## Contribution
 
 Your contribution is highly appreciated. Do not hesitate to open an issue or a
