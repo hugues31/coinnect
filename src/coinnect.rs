@@ -1,4 +1,4 @@
-use exchange::{ Exchange, ExchangeApi };
+use exchange::{Exchange, ExchangeApi};
 use pair::Pair;
 use bitstamp::api::BitstampApi;
 

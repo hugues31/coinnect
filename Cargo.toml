@@ -18,6 +18,10 @@ path = "examples/simple.rs"
 name = "kraken_trading"
 path = "examples/kraken_trading.rs"
 
+[[example]]
+name = "generic_api"
+path = "examples/generic_api.rs"
+
 [dependencies]
 hyper = "0.10.4"
 serde_json = "0.9"
