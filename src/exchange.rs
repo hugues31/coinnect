@@ -1,3 +1,5 @@
+//! This module contains Exchange enum.
+
 use pair::Pair;
 
 use serde_json::value::Map;

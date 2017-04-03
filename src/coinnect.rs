@@ -1,3 +1,5 @@
+//! Use this module to create a generic API.
+
 use exchange::{Exchange, ExchangeApi};
 use pair::Pair;
 use bitstamp::api::BitstampApi;

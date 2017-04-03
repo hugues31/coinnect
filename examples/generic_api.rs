@@ -6,10 +6,11 @@ extern crate coinnect;
 
 use coinnect::coinnect::Coinnect;
 use coinnect::exchange::Exchange::*;
+use coinnect::pair::Pair;
 
 fn main() {
     // We create a Coinnect Generic API
-    // as Poloniex does not need customer_id field, we keep it empty
-    let mut _my_api = Coinnect::new(Poloniex, "", "api_key", "api_secret");
-
+    // Since Poloniex does not need customer_id field, we keep it empty
+    let mut my_api = Coinnect::new(Poloniex, "", "api_key", "api_secret");
+    my_api.return_balances(Pair::ETC_BTC);
 }

@@ -1,3 +1,5 @@
+//! This module contains Pair enum.
+
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[allow(non_camel_case_types)]
