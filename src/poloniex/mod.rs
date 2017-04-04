@@ -107,7 +107,10 @@ impl PoloniexApi {
     }
 
     fn deserialize_json(&mut self, json_string: String) -> Result<Map<String, Value>, error::Error> {
-        let data: Value = serde_json::from_str(&json_string).unwrap();
+        let data: Value = match serde_json::from_str(&json_string) {
+            Ok(data) => data,
+            Err(_) => return Err(error::Error::BadParse)
+        };
 
         match data.as_object() {
             Some(value) => Ok(value.clone()),
@@ -125,7 +128,10 @@ impl PoloniexApi {
                   &helpers::url_encode_hashmap(&params);
 
         self.block_or_continue();
-        let mut response = self.http_client.get(&url).send().unwrap();
+        let mut response = match self.http_client.get(&url).send() {
+            Ok(response) => response,
+            Err(_)  => return Err(error::Error::ServiceUnavailable)
+        };
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
@@ -155,12 +161,14 @@ impl PoloniexApi {
 
         self.block_or_continue();
 
-        let mut response = self.http_client
+        let mut response = match self.http_client
             .post("https://poloniex.com/tradingApi")
-            .headers(custom_header)
             .body(&post_data)
-            .send()
-            .unwrap();
+            .headers(custom_header)
+            .send() {
+                Ok(response) => response,
+                Err(_) => return Err(error::Error::ServiceUnavailable),
+            };
         self.last_request = helpers::get_unix_timestamp_ms();
 
         let mut buffer = String::new();
