@@ -103,7 +103,10 @@ impl KrakenApi {
     }
 
     fn deserialize_json(&mut self, json_string: String) -> Result<Map<String, Value>, error::Error> {
-        let data: Value = serde_json::from_str(&json_string).unwrap();
+        let data: Value = match serde_json::from_str(&json_string) {
+            Ok(data) => data,
+            Err(_) => return Err(error::Error::BadParse)
+        };
 
         match data.as_object() {
             Some(value) => Ok(value.clone()),
@@ -120,7 +123,10 @@ impl KrakenApi {
                   &helpers::url_encode_hashmap(&params);
 
         self.block_or_continue();
-        let mut response = self.http_client.get(&url).send().unwrap();
+        let mut response = match self.http_client.get(&url).send() {
+            Ok(response) => response,
+            Err(_)  => return Err(error::Error::ServiceUnavailable)
+        };
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
@@ -149,12 +155,14 @@ impl KrakenApi {
         custom_header.set(KeyHeader(self.api_key.clone()));
         custom_header.set(SignHeader(signature));
 
-        let mut res = self.http_client
+        let mut res = match self.http_client
             .post(&url)
             .body(&postdata)
             .headers(custom_header)
-            .send()
-            .unwrap();
+            .send() {
+                Ok(res) => res,
+                Err(_) => return Err(error::Error::ServiceUnavailable),
+            };
 
         let mut buffer = String::new();
         res.read_to_string(&mut buffer).unwrap();
