@@ -27,6 +27,7 @@ extern crate time;
 
 pub mod coinnect;
 pub mod exchange;
+pub mod error;
 pub mod pair;
 mod helpers;
 
