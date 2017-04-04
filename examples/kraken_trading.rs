@@ -80,17 +80,17 @@ fn main() {
 
     // Specify optional parameters with an empty str ("")
     // See documentation for more informations
-    my_api.add_standard_order(pair_to_buy,                  // name of the pair
-                              "buy",                        // type : buy/sell
-                              "limit",                      // order type : market/limit/...
-                              &buying_price.to_string(),    // price 1
-                              "",                           // price 2
-                              &volume.to_string(),          // volume
-                              "",                           // leverage
-                              "",                           // oflags (see doc)
-                              "",                           // starttm
-                              "",                           // expiretm
-                              "",                           // userref
-                              "");                          // validate
+    let _ = my_api.add_standard_order(pair_to_buy, // name of the pair
+                                      "buy", // type : buy/sell
+                                      "limit", // order type : market/limit/...
+                                      &buying_price.to_string(), // price 1
+                                      "", // price 2
+                                      &volume.to_string(), // volume
+                                      "", // leverage
+                                      "", // oflags (see doc)
+                                      "", // starttm
+                                      "", // expiretm
+                                      "", // userref
+                                      ""); // validate
     // In a real case example, you should check if any error occurs.
 }
