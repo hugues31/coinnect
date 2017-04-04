@@ -9,6 +9,7 @@ extern crate coinnect;
 use std::path::PathBuf;
 
 use coinnect::kraken::KrakenApi;
+use std::error::Error;
 
 fn main() {
     // We create a KrakenApi by loading a json file containing API configuration
@@ -17,7 +18,11 @@ fn main() {
     let mut my_api = KrakenApi::new_from_file("account_kraken", path);
 
     // First, get the list of all pair we can trade with EUR€ as quote
-    let pairs_request = my_api.get_tradable_asset_pairs("", "").unwrap();
+    // You could use a simple unwrap() or use match to recover from an error for example
+    let pairs_request = match my_api.get_tradable_asset_pairs("", "") {
+        Ok(pairs_request) => pairs_request,
+        Err(err) => panic!("Error : {:?}, description : {}", err, err.description())
+    };
     let list_all_pairs = pairs_request.get("result").unwrap().as_object().unwrap();
 
     let mut list_pairs_eur = Vec::new();
