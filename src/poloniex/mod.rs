@@ -1,5 +1,5 @@
 //! Use this module to interact with Poloniex exchange.
-//! Please see examples for more informations.
+//! See examples for more informations.
 
 use crypto::hmac::Hmac;
 use crypto::mac::Mac;

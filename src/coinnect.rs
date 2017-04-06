@@ -9,6 +9,9 @@ use std::path::PathBuf;
 use serde_json::value::Map;
 use serde_json::value::Value;
 
+use error::Error;
+use types::TickerInfo;
+
 #[derive(Debug)]
 pub struct Coinnect;
 
@@ -48,14 +51,7 @@ impl Coinnect {
 struct UnimplementedApi;
 
 impl ExchangeApi for UnimplementedApi {
-    fn public_query(&mut self, _: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-    fn private_query(&mut self, _: &HashMap<&str, &str>) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-
-    fn return_ticker(&mut self, _: Pair) -> Option<Map<String, Value>> {
+    fn ticker(&mut self, _pair: Option<Pair>) -> Result<TickerInfo, Error> {
         unimplemented!();
     }
     fn return_trade_history(&mut self, _: Pair) -> Option<Map<String, Value>> {

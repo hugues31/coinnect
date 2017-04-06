@@ -19,11 +19,11 @@ invest what you can't afford to loose. This is a personal project, I can not be
 held responsible for the library malfunction, which can lead to a loss of money.
 
 ### Exchange support:
-- [x] Poloniex
-- [x] Kraken
-- [x] Bitstamp (partial)
-- [ ] Whaleclub
-- [ ] ...
+| Exchange | Raw API supported | Generic API supported | Note |
+|:--------:|:-----------------:|:---------------------:|:----:|
+| Bitstamp | X |  | Not every method are implemented for now. |
+| Kraken | X | X | Generic API supports only Ticker for now. |
+| Poloniex | X |  |  |
 
 Feel free to make a PR to add support to your favorite exchange ;)
 
@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-coinnect = "0.1"
+coinnect = "0.2"
 ```
 
 and this to your crate root:
@@ -48,6 +48,11 @@ extern crate coinnect;
 ```
 
 For optional parameters, enter an empty &str ("") if you don't specify it.
+
+Since 0.2, you have access to a generic API to communicate across exchanges in
+the same way. Note that this functionality is under active development, changes
+constantly and not every Exchange is supported for now.
+For more info, look at ExchangeApi trait doc.
 
 ## Example
 

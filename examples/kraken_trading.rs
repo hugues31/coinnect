@@ -8,7 +8,7 @@ extern crate coinnect;
 
 use std::path::PathBuf;
 
-use coinnect::kraken::KrakenApi;
+use coinnect::kraken::api::KrakenApi;
 use std::error::Error;
 
 fn main() {

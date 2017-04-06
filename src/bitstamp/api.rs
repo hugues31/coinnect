@@ -17,8 +17,10 @@ use std::fs::File;
 
 use helpers;
 use bitstamp::utils;
+use error::Error;
 use exchange::ExchangeApi;
 use pair::Pair;
+use types::TickerInfo;
 
 header! {
     #[doc(hidden)]
@@ -106,9 +108,6 @@ impl BitstampApi {
         params.insert("customer_id", customer_id);
         BitstampApi::new(&params)
     }
-}
-
-impl ExchangeApi for BitstampApi {
 
     fn public_query(&mut self,
                     params: &HashMap<&str, &str>)
@@ -168,7 +167,9 @@ impl ExchangeApi for BitstampApi {
         response.read_to_string(&mut buffer).unwrap();
         utils::deserialize_json(buffer)
     }
+}
 
+impl ExchangeApi for BitstampApi {
     /// Sample output :
     ///
     /// ```ignore
@@ -181,17 +182,17 @@ impl ExchangeApi for BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    fn return_ticker(&mut self, pair: Pair) -> Option<Map<String, Value>> {
-
+    fn ticker(&mut self, pair: Option<Pair>) -> Result<TickerInfo, Error> {
         let currency_pair = match pair {
-            Pair::BTC_USD => "btcusd",
+            Some(Pair::BTC_USD) => "btcusd",
             _  => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
         params.insert("pair", currency_pair);
         params.insert("method", "ticker");
-        self.public_query(&params)
+        self.public_query(&params);
+        panic!("Request was sent but no func to translate to a TickerInfo was written yet :)");
     }
 
     /// Sample output :

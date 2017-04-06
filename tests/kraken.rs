@@ -2,7 +2,7 @@
 mod kraken_tests {
     extern crate coinnect;
 
-    use self::coinnect::kraken::KrakenApi;
+    use self::coinnect::kraken::api::KrakenApi;
 
     /// IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
