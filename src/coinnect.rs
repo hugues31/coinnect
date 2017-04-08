@@ -46,12 +46,18 @@ impl Coinnect {
     /// structure:
     ///
     /// For this example, you could use load your Bitstamp account with
-    /// `new_from_file(Exchange::Bitstamp, Path::new("/keys.json"))`
-    pub fn new_from_file(exchange: Exchange, path: PathBuf) -> Box<ExchangeApi> {
+    /// `new_from_file(Exchange::Bitstamp, "account_bitstamp", Path::new("/keys.json"))`
+    pub fn new_from_file(exchange: Exchange, config_name: &str, path: PathBuf) -> Box<ExchangeApi> {
         match exchange {
-            Exchange::Bitstamp => Box::new(BitstampApi::new_from_file("account_bitstamp", path)),
-            Exchange::Kraken => Box::new(UnimplementedApi),
-            Exchange::Poloniex => Box::new(UnimplementedApi),
+            Exchange::Bitstamp => {
+                Box::new(BitstampApi::new_from_file(config_name, path))
+            },
+            Exchange::Kraken => {
+                Box::new(UnimplementedApi)
+            },
+            Exchange::Poloniex => {
+                Box::new(UnimplementedApi)
+            },
         }
     }
 }

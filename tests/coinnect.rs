@@ -8,7 +8,7 @@ mod coinnect_tests {
 
     #[test]
     fn can_create_new_api_connection_to_bitstamp() {
-        let api: Box<ExchangeApi> = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let api: Box<ExchangeApi> = Coinnect::new(Exchange::Bitstamp, "bs_api_key", "bs_api_secret", Some("bs_cust_id"));
 
         assert_eq!(format!("{:?}", api), "BitstampApi { \
                                                 last_request: 0, \
@@ -36,7 +36,7 @@ mod coinnect_tests {
 
     #[test]
     fn coinnect_can_get_a_ticker_from_bitstamp() {
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_api_key", "bs_api_secret", Some("bs_cust_id"));
         let ticker = api.ticker(Pair::BTC_USD);
 
         assert!( ticker.unwrap().timestamp != 0 );
@@ -44,20 +44,20 @@ mod coinnect_tests {
 
     #[test]
     fn coinnect_should_return_an_order_book_from_bitstamp() {
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_api_key", "bs_api_secret", Some("bs_cust_id"));
         let order_book = api.return_order_book(Pair::BTC_USD);
         assert!( order_book.is_some() );
     }
     #[test]
     fn order_book_should_have_bids() {
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_api_key", "bs_api_secret", Some("bs_cust_id"));
         let result = api.return_order_book(Pair::BTC_USD);
         assert!( result.unwrap().contains_key("bids") );
     }
 
     #[test]
     fn should_return_the_trade_history_for_btc_usd_from_bitstamp() {
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
+        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_api_key", "bs_api_secret", Some("bs_cust_id"));
         let result = api.return_trade_history(Pair::BTC_USD);
 
         assert_eq!( result.is_some(), false );
@@ -68,7 +68,7 @@ mod coinnect_tests {
     fn balance_should_have_usd_btc_fee() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
-        let mut api = Coinnect::new_from_file(Exchange::Bitstamp , path);
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path);
         let result = api.return_balances(Pair::BTC_USD).unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();

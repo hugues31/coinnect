@@ -35,28 +35,28 @@ mod bitstamp_tests {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
         let result = api.ticker(Pair::BTC_USD);
-        assert!(result.unwrap().ticker[0].last_trade_price != 0.0);
+        assert!(result.unwrap().last_trade_price != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_high() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
         let result = api.ticker(Pair::BTC_USD);
-        assert!(result.unwrap().ticker[0].highest_bid != 0.0);
+        assert!(result.unwrap().highest_bid != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_low() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
         let result = api.ticker(Pair::BTC_USD);
-        assert!(result.unwrap().ticker[0].lowest_ask != 0.0);
+        assert!(result.unwrap().lowest_ask != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_volume() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
         let result = api.ticker(Pair::BTC_USD);
-        assert!(result.unwrap().ticker[0].volume.unwrap() != 0.0);
+        assert!(result.unwrap().volume.unwrap() != 0.0);
     }
 
     #[test]
