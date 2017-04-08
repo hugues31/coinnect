@@ -3,11 +3,13 @@ name = "coinnect"
 version = "0.2.0"
 license = "MIT"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal"]
-description = "A Rust library to connect to various crypto-currencies exchanges."
+description = """
+A Rust library to connect to various crypto-currenciesexchanges.
+"""
 documentation = "https://docs.rs/coinnect/"
 homepage = "https://github.com/hugues31/coinnect"
 repository = "https://github.com/hugues31/coinnect"
-keywords = [ "crypto", "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
+keywords = [ "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
 
 [[example]]
@@ -23,7 +25,7 @@ name = "generic_api"
 path = "examples/generic_api.rs"
 
 [dependencies]
-hyper = "0.10.4"
+hyper = "0.10.6"
 serde_json = "0.9"
 time = "0.1.36"
 rust-crypto = "0.2"
