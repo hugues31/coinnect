@@ -1,13 +1,13 @@
 [package]
 name = "coinnect"
 version = "0.2.0"
-license = "Apache-2.0/MIT"
-authors = ["Hugues Gaillard <hugues.gaillard@me.com>"]
+license = "MIT"
+authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal"]
 description = "A Rust library to connect to various crypto-currencies exchanges."
 documentation = "https://docs.rs/coinnect/"
 homepage = "https://github.com/hugues31/coinnect"
 repository = "https://github.com/hugues31/coinnect"
-keywords = [ "crypto", "bitcoin", "trading", "poloniex", "kraken" ]
+keywords = [ "crypto", "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
 
 [[example]]

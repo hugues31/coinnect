@@ -2,7 +2,7 @@
 ===========
 [![crates.io](https://img.shields.io/crates/v/coinnect.svg)](https://crates.io/crates/coinnect)
 [![doc.rs](https://docs.rs/coinnect/badge.svg)](https://docs.rs/coinnect/)
-![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 
 Coinnect is a Rust library aiming to provide a complete access to REST APIs for
@@ -11,19 +11,19 @@ exchanges).
 All methods consume HTTPS api. The purpose of this crate is not to stream data
 (you should use websocket/FIX in that case).
 
-The project is dual licensed under the terms of the Apache License, Version 2.0,
-and the MIT License.
 
 **WARNING:**  This library is highly experimental at the moment. Please do not
 invest what you can't afford to loose. This is a personal project, I can not be
 held responsible for the library malfunction, which can lead to a loss of money.
 
+*The project is licensed under the terms of the MIT License.*
+
 ### Exchange support:
 | Exchange | Raw API supported | Generic API supported | Note |
 |:--------:|:-----------------:|:---------------------:|:----:|
-| Bitstamp | X |  | Not every method are implemented for now. |
-| Kraken | X | X | Generic API supports only Ticker for now. |
-| Poloniex | X |  |  |
+| Bitstamp | X |   | Not every method are implemented for now. |
+| Kraken   | X | X | Generic API supports only Ticker for now. |
+| Poloniex | X |   |  |
 
 Feel free to make a PR to add support to your favorite exchange ;)
 
@@ -47,7 +47,8 @@ and this to your crate root:
 extern crate coinnect;
 ```
 
-For optional parameters, enter an empty &str ("") if you don't specify it.
+For optional parameters, most methods require an empty str (`""`) if you don't
+want to specify them.
 
 Since 0.2, you have access to a generic API to communicate across exchanges in
 the same way. Note that this functionality is under active development, changes
@@ -89,7 +90,7 @@ For more examples, please see [examples](examples/).
 
 Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
-will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
+will be licensed according to the terms given in [LICENSE](LICENSE).
 
 ## Disclaimer
 This SOFTWARE PRODUCT is provided by THE PROVIDER "as is" and "with all faults."
