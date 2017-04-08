@@ -20,7 +20,7 @@ use bitstamp::utils;
 use error::Error;
 use exchange::ExchangeApi;
 use pair::Pair;
-use types::TickerInfo;
+use types::Ticker;
 
 header! {
     #[doc(hidden)]
@@ -182,9 +182,9 @@ impl ExchangeApi for BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    fn ticker(&mut self, pair: Option<Pair>) -> Result<TickerInfo, Error> {
+    fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error> {
         let currency_pair = match pair {
-            Some(Pair::BTC_USD) => "btcusd",
+            Pair::BTC_USD => "btcusd",
             _  => panic!("Unknown pair"),
         };
 

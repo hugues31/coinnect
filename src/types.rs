@@ -1,24 +1,26 @@
-//! Types definition used for handling returned data
+//! Types definition used for handling returned data when generic API is used.
 
 use pair::Pair;
 
 type Price = f64;
 type Volume = f64;
 
-pub struct TickerInfo {
-    /// unix timestamp in ms (when the response was received)
-    timestamp: i64,
-    ticker: Vec<Ticker>,
+#[derive(Debug)]
+pub struct Ticker {
+    /// UNIX timestamp in ms (when the response was received)
+    pub timestamp: i64,
+    /// The Pair corresponding to the Ticker returned
+    pub pair: Pair,
+    /// Last trade price found in the history
+    pub last_trade_price: Price,
+    /// Lowest ask price found in Orderbook
+    pub lowest_ask: Price,
+    /// Highest bid price found in Orderbook
+    pub highest_bid: Price,
+    /// Last 24 hours volume
+    pub volume: Option<Volume>, // Bittrex does not support Volume for ticker so volume could be None
 }
 
-pub struct Ticker {
-    pair: Pair,
-    last_trade_price: Price,
-    lowest_ask: Price,
-    highest_bid: Price,
-    /// Last 24 hours volume
-    volume: Option<Volume>, // Bittrex does not support Volume for ticker so volume could be None
-}
 
 /*
 pub struct Orderbook {

@@ -37,16 +37,9 @@ mod coinnect_tests {
     #[test]
     fn coinnect_can_get_a_ticker_from_bitstamp() {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let ticker = api.return_ticker(Pair::BTC_USD);
+        let ticker = api.ticker(Pair::BTC_USD);
 
-        assert!( ticker.is_some() );
-    }
-    #[test]
-    fn coinnect_ticker_from_bitstamp_should_have_the_correct_last() {
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-        let ticker = api.return_ticker(Pair::BTC_USD);
-
-        assert!( ticker.unwrap().contains_key("last") );
+        assert!( ticker.unwrap().timestamp != 0 );
     }
 
     #[test]
@@ -60,20 +53,6 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
         let result = api.return_order_book(Pair::BTC_USD);
         assert!( result.unwrap().contains_key("bids") );
-    }
-
-    #[test]
-    fn public_query_should_be_able_to_return_the_trade_history_for_btc_usd_from_bitstamp() {
-        use std::collections::HashMap;
-
-        let mut api = Coinnect::new(Exchange::Bitstamp, "bs_cust_id", "bs_api_key", "bs_api_secret");
-
-        let mut params = HashMap::new();
-        params.insert("pair", "btcusd");
-        params.insert("method", "transactions");
-        let result = api.public_query(&params);
-
-        assert_eq!( result.is_some(), false );
     }
 
     #[test]

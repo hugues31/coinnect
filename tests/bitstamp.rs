@@ -26,72 +26,37 @@ mod bitstamp_tests {
     fn can_get_real_bitstamp_tick() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert_eq!(result.is_some(), true);
+        let result = api.ticker(Pair::BTC_USD);
+        assert_eq!(result.is_ok(), true);
     }
 
     #[test]
     fn ticker_should_have_the_correct_last() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("last"));
+        let result = api.ticker(Pair::BTC_USD);
+        assert!(result.unwrap().ticker[0].last_trade_price != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_high() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("high"));
+        let result = api.ticker(Pair::BTC_USD);
+        assert!(result.unwrap().ticker[0].highest_bid != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_low() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("low"));
-    }
-    #[test]
-    fn ticker_should_have_the_correct_vwap() {
-        let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("vwap"));
+        let result = api.ticker(Pair::BTC_USD);
+        assert!(result.unwrap().ticker[0].lowest_ask != 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_volume() {
         let params = HashMap::new();
         let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("volume"));
-    }
-    #[test]
-    fn ticker_should_have_the_correct_bid() {
-        let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("bid"));
-    }
-    #[test]
-    fn ticker_should_have_the_correct_ask() {
-        let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("ask"));
-    }
-    #[test]
-    fn ticker_should_have_the_correct_timestamp() {
-        let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("timestamp"));
-    }
-    #[test]
-    fn ticker_should_have_the_correct_open() {
-        let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.return_ticker(Pair::BTC_USD);
-        assert!(result.unwrap().contains_key("open"));
+        let result = api.ticker(Pair::BTC_USD);
+        assert!(result.unwrap().ticker[0].volume.unwrap() != 0.0);
     }
 
     #[test]
@@ -156,18 +121,6 @@ mod bitstamp_tests {
             utils::build_signature(nonce, customer_id, api_key, api_secret),
             expected_signature
         );
-    }
-
-    #[test]
-    fn should_return_the_trade_history_for_btc_usd_from_public_query() {
-        let mut params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-
-        params.insert("pair", "btcusd");
-        params.insert("method", "transactions");
-        let result = api.public_query(&params);
-
-        assert_eq!( result.is_some(), false );
     }
 
     #[test]

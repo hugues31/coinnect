@@ -1,6 +1,6 @@
 //! This module contains enum Error.
 //! Error type represents all possible errors that can occur when dealing
-//! with the generic or the dedicated-exchange API
+//! with the generic or any dedicated-exchange API
 
 use std::error;
 use std::fmt;
@@ -13,6 +13,7 @@ pub enum Error {
     InvalidArguments,
     RateLimitExceeded,
     PairUnsupported,
+    ExchangeSpecificError(String),
     UndefinedError,
 }
 
@@ -25,6 +26,7 @@ impl error::Error for Error {
             Error::InvalidArguments => "Arguments passed do not conform to the protocol.",
             Error::RateLimitExceeded => "API call rate limit exceeded.",
             Error::PairUnsupported => "This pair is not supported.",
+            Error::ExchangeSpecificError(ref s) => s,
             Error::UndefinedError => "An unknown error occurred.",
         }
     }

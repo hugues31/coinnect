@@ -14,6 +14,7 @@ pub enum Pair {
     ETH_EUR,
     ETH_USD,
     EUR_USD,
+    DASH_BTC,
     ICN_BTC,
     ICN_ETH,
     LTC_BTC,
