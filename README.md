@@ -18,7 +18,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 
 *The project is licensed under the terms of the MIT License.*
 
-### Exchange support:
+### Exchanges support:
 | Exchange | Raw API supported | Generic API supported | Note |
 |:--------:|:-----------------:|:---------------------:|:----:|
 | Bitstamp | X |   | Not every method are implemented for now. |
@@ -85,6 +85,38 @@ fn main() {
 ```
 
 For more examples, please see [examples](examples/).
+
+## Testing
+You can run the tests suite with `cargo test` for testing non private data
+requests (this will ignore tests related to private requests).
+You can use `cargo test --features "bitstamp_private_tests"` to run private
+tests related to bitstamp exchange for example.
+Before running private tests, make sure you have a `keys_real.json` file at the
+root with the following structure :
+```json
+{
+    "account_kraken": {
+        "api_key"   : "123456789ABCDEF",
+        "api_secret": "ABC&EF?abcdef"
+    },
+    "account_poloniex": {
+        "api_key"   : "XYXY-XYXY-XYXY-XY",
+        "api_secret": "A0A0B1B1C2C2"
+    },
+    "account_bitstamp": {
+        "api_key"    : "XYXY-XYXY-XYXY-XY",
+        "api_secret" : "A0A0B1B1C2C2",
+        "customer_id": "123456"
+    }
+}
+```
+You must insert your real API keys, otherwise private tests may failed. No
+action is performed if you run the tests : no test will open position, or
+withdraw, etc.
+Tests only check for correct authentication method and correct parsing.
+You can examine the [tests](tests) folder just to be sure and look at the
+[Cargo.toml](Cargo.toml) file for a complete list of features.
+
 
 ## Contribution
 

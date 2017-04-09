@@ -192,7 +192,7 @@ impl ExchangeApi for BitstampApi {
         params.insert("pair", currency_pair);
         params.insert("method", "ticker");
         self.public_query(&params);
-        panic!("Request was sent but no func to translate to a TickerInfo was written yet :)");
+        panic!("Request was sent but no func to translate to a Ticker was written yet :)");
     }
 
     /// Sample output :

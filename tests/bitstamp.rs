@@ -134,6 +134,7 @@ mod bitstamp_tests {
 
     // IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
+    #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
     fn balance_should_have_usd_btc_fee() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");

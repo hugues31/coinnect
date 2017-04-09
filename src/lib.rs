@@ -5,9 +5,10 @@
 //! All methods consume HTTPS api. The purpose of this crate is not
 //! to stream data (you should use websocket/FIX in that case).
 //!
-//! For optional parameters, enter an empty &str ("") if you don't specify it.
+//! For optional parameters, most methods require an empty str (`""`) if you don't want to specify
+//! them.
 //!
-//! ### Exchange support:
+//! ### Exchanges support:
 //! - [x] Poloniex
 //! - [x] Kraken
 //! - [x] Bitstamp (partial)

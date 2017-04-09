@@ -12,6 +12,12 @@ repository = "https://github.com/hugues31/coinnect"
 keywords = [ "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
 
+[features]
+default = []
+bitstamp_private_tests = []
+kraken_private_tests = []
+poloniex_private_tests = []
+
 [[example]]
 name = "simple"
 path = "examples/simple.rs"
