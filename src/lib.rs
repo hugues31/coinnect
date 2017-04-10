@@ -36,6 +36,3 @@ mod helpers;
 pub mod bitstamp;
 pub mod poloniex;
 pub mod kraken;
-
-#[cfg(test)]
-mod tests {}
