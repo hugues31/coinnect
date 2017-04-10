@@ -15,12 +15,10 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::fs::File;
 
+use error;
 use helpers;
 use bitstamp::utils;
-use error::Error;
-use exchange::ExchangeApi;
 use pair::Pair;
-use types::Ticker;
 
 header! {
     #[doc(hidden)]
@@ -111,7 +109,7 @@ impl BitstampApi {
 
     fn public_query(&mut self,
                     params: &HashMap<&str, &str>)
-                    -> Option<Map<String, Value>> {
+                    -> Result<Map<String, Value>, error::Error> {
 
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
@@ -138,7 +136,7 @@ impl BitstampApi {
     /// ```
     fn private_query(&mut self,
                      params: &HashMap<&str, &str>)
-                     -> Option<Map<String, Value>> {
+                     -> Result<Map<String, Value>, error::Error> {
 
         let method: &str = params.get("method").unwrap();
         let pair: &str = params.get("pair").unwrap();
@@ -167,9 +165,7 @@ impl BitstampApi {
         response.read_to_string(&mut buffer).unwrap();
         utils::deserialize_json(buffer)
     }
-}
 
-impl ExchangeApi for BitstampApi {
     /// Sample output :
     ///
     /// ```ignore
@@ -182,7 +178,7 @@ impl ExchangeApi for BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error> {
+    pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
             _  => panic!("Unknown pair"),
@@ -191,8 +187,7 @@ impl ExchangeApi for BitstampApi {
         let mut params = HashMap::new();
         params.insert("pair", currency_pair);
         params.insert("method", "ticker");
-        self.public_query(&params);
-        panic!("Request was sent but no func to translate to a Ticker was written yet :)");
+        self.public_query(&params)
     }
 
     /// Sample output :
@@ -201,7 +196,7 @@ impl ExchangeApi for BitstampApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+    pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
@@ -222,7 +217,7 @@ impl ExchangeApi for BitstampApi {
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
     /// "total":"0.04978"}, ... ]
     /// ```
-    fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+    pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
@@ -243,7 +238,7 @@ impl ExchangeApi for BitstampApi {
     /// ```ignore
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>> {
+    pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",

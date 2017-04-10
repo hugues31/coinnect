@@ -1,7 +1,6 @@
 //! This module contains Pair enum.
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum Pair {
     BTC_EUR,

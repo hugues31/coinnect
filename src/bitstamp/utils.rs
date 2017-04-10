@@ -9,6 +9,7 @@ use serde_json::value::Map;
 use std::thread;
 use std::time::Duration;
 
+use error;
 use helpers;
 
 pub fn block_or_continue(last_request: i64) {
@@ -43,12 +44,15 @@ pub fn build_url(method: &str, pair: &str) -> String {
     "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + &pair + "/"
 }
 
-pub fn deserialize_json(json_string: String) -> Option<Map<String, Value>> {
-    let data: Value = serde_json::from_str(&json_string).unwrap();
+pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
+    let data: Value = match serde_json::from_str(&json_string){
+        Ok(data) => data,
+        Err(_) => return Err(error::Error::BadParse)
+    };
 
     match data.as_object() {
-        Some(value) => Some(value.clone()),
-        None => None,
+        Some(value) => Ok(value.clone()),
+        None => Err(error::Error::BadParse),
     }
 }
 
