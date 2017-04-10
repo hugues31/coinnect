@@ -17,8 +17,9 @@ pub struct Ticker {
     pub lowest_ask: Price,
     /// Highest bid price found in Orderbook
     pub highest_bid: Price,
+    // Bittrex does not support Volume for ticker so volume could be None
     /// Last 24 hours volume
-    pub volume: Option<Volume>, // Bittrex does not support Volume for ticker so volume could be None
+    pub volume: Option<Volume>,
 }
 
 

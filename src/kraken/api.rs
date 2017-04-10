@@ -115,7 +115,7 @@ impl KrakenApi {
         self.block_or_continue();
         let mut response = match self.http_client.get(&url).send() {
             Ok(response) => response,
-            Err(_)  => return Err(error::Error::ServiceUnavailable)
+            Err(_) => return Err(error::Error::ServiceUnavailable),
         };
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
@@ -150,9 +150,9 @@ impl KrakenApi {
             .body(&postdata)
             .headers(custom_header)
             .send() {
-                Ok(res) => res,
-                Err(_) => return Err(error::Error::ServiceUnavailable),
-            };
+            Ok(res) => res,
+            Err(_) => return Err(error::Error::ServiceUnavailable),
+        };
 
         let mut buffer = String::new();
         res.read_to_string(&mut buffer).unwrap();
@@ -284,7 +284,9 @@ impl KrakenApi {
     /// h = high array(<today>, <last 24 hours>),
     /// o = today's opening price
     /// ```
-    pub fn get_ticker_information(&mut self, pair: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_ticker_information(&mut self,
+                                  pair: &str)
+                                  -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         self.public_query("Ticker", &mut params)
@@ -335,7 +337,10 @@ impl KrakenApi {
     ///     asks = ask side array of array entries(<price>, <volume>, <timestamp>)
     ///     bids = bid side array of array entries(<price>, <volume>, <timestamp>)
     /// ```
-    pub fn get_order_book(&mut self, pair: &str, count: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_order_book(&mut self,
+                          pair: &str,
+                          count: &str)
+                          -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("count", count);
@@ -357,7 +362,10 @@ impl KrakenApi {
     /// <miscellaneous>)
     /// last = id to be used as since when polling for new trade data
     /// ```
-    pub fn get_recent_trades(&mut self, pair: &str, since: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_recent_trades(&mut self,
+                             pair: &str,
+                             since: &str)
+                             -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("since", since);
@@ -417,7 +425,10 @@ impl KrakenApi {
     /// ml = margin level = (equity / initial margin) * 100
     /// ```
     /// Note: Rates used for the floating valuation is the midpoint of the best bid and ask prices
-    pub fn get_trade_balance(&mut self, aclass: &str, asset: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_trade_balance(&mut self,
+                             aclass: &str,
+                             asset: &str)
+                             -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -480,7 +491,10 @@ impl KrakenApi {
     /// a scale of 2.
     /// Similarly, if the asset pair's pricing scale is 5, the scale will remain as 5, even if the
     /// underlying currency has a scale of 8.
-    pub fn get_open_orders(&mut self, trades: &str, userref: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_open_orders(&mut self,
+                           trades: &str,
+                           userref: &str)
+                           -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("trades", trades);
         params.insert("userref", userref);
@@ -631,7 +645,10 @@ impl KrakenApi {
     /// ```ignore
     /// <trade_txid> = trade info.  See Get trades history
     /// ```
-    pub fn query_trades_info(&mut self, txid: &str, trades: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn query_trades_info(&mut self,
+                             txid: &str,
+                             trades: &str)
+                             -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("txid", txid);
         params.insert("trades", trades);
@@ -667,7 +684,10 @@ impl KrakenApi {
     ///
     /// Note: Unless otherwise stated, costs, fees, prices, and volumes are in the asset pair's
     /// scale, not the currency's scale.
-    pub fn get_open_positions(&mut self, txid: &str, docalcs: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_open_positions(&mut self,
+                              txid: &str,
+                              docalcs: &str)
+                              -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("txid", txid);
         params.insert("docalcs", docalcs);
@@ -768,7 +788,10 @@ impl KrakenApi {
     /// Note: If an asset pair is on a maker/taker fee schedule, the taker side is given in "fees"
     /// and maker side in "fees_maker". For pairs not on maker/taker, they will only be given in
     /// "fees".
-    pub fn get_trade_volume(&mut self, pair: &str, fee_info: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_trade_volume(&mut self,
+                            pair: &str,
+                            fee_info: &str)
+                            -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("fee-info", fee_info);
@@ -921,7 +944,10 @@ impl KrakenApi {
     /// fee = amount of fees that will be paid
     /// address-setup-fee = whether or not method has an address setup fee (optional)
     /// ```
-    pub fn get_deposit_methods(&mut self, aclass: &str, asset: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_deposit_methods(&mut self,
+                               aclass: &str,
+                               asset: &str)
+                               -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);

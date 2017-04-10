@@ -21,7 +21,7 @@ fn main() {
     // You could use a simple unwrap() or use match to recover from an error for example
     let pairs_request = match my_api.get_tradable_asset_pairs("", "") {
         Ok(pairs_request) => pairs_request,
-        Err(err) => panic!("Error : {:?}, description : {}", err, err.description())
+        Err(err) => panic!("Error : {:?}, description : {}", err, err.description()),
     };
     let list_all_pairs = pairs_request.get("result").unwrap().as_object().unwrap();
 

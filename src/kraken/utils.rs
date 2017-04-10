@@ -74,7 +74,7 @@ pub fn get_pair_enum(pair: String) -> Option<Pair> {
 pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
     let data: Value = match serde_json::from_str(&json_string) {
         Ok(data) => data,
-        Err(_) => return Err(error::Error::BadParse)
+        Err(_) => return Err(error::Error::BadParse),
     };
 
     match data.as_object() {
@@ -85,7 +85,7 @@ pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
-pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, error::Error>{
+pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, error::Error> {
     let error_array = match response.get("error") {
         Some(array) => array.as_array().unwrap(),
         None => return Err(error::Error::BadParse),

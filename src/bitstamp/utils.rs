@@ -14,15 +14,18 @@ use helpers;
 
 pub fn block_or_continue(last_request: i64) {
     let threshold = 1000; // 600 requests per 10 mins = 1 request per second
-    let delay = helpers::get_unix_timestamp_ms() -
-        last_request;
+    let delay = helpers::get_unix_timestamp_ms() - last_request;
     if delay < threshold {
         let duration_ms = Duration::from_millis(delay as u64);
         thread::sleep(duration_ms);
     }
 }
 
-pub fn build_signature(nonce: String, customer_id: String, api_key: String, api_secret: String) -> String {
+pub fn build_signature(nonce: String,
+                       customer_id: String,
+                       api_key: String,
+                       api_secret: String)
+                       -> String {
     const C: &'static [u8] = b"0123456789ABCDEF";
 
     let message = nonce + &customer_id + &api_key;
@@ -45,9 +48,9 @@ pub fn build_url(method: &str, pair: &str) -> String {
 }
 
 pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
-    let data: Value = match serde_json::from_str(&json_string){
+    let data: Value = match serde_json::from_str(&json_string) {
         Ok(data) => data,
-        Err(_) => return Err(error::Error::BadParse)
+        Err(_) => return Err(error::Error::BadParse),
     };
 
     match data.as_object() {
@@ -62,6 +65,3 @@ pub fn generate_nonce(fixed_nonce: Option<String>) -> String {
         None => helpers::get_unix_timestamp_ms().to_string(),
     }
 }
-
-
-

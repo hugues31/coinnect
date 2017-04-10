@@ -106,10 +106,12 @@ impl PoloniexApi {
         }
     }
 
-    fn deserialize_json(&mut self, json_string: String) -> Result<Map<String, Value>, error::Error> {
+    fn deserialize_json(&mut self,
+                        json_string: String)
+                        -> Result<Map<String, Value>, error::Error> {
         let data: Value = match serde_json::from_str(&json_string) {
             Ok(data) => data,
-            Err(_) => return Err(error::Error::BadParse)
+            Err(_) => return Err(error::Error::BadParse),
         };
 
         match data.as_object() {
@@ -130,7 +132,7 @@ impl PoloniexApi {
         self.block_or_continue();
         let mut response = match self.http_client.get(&url).send() {
             Ok(response) => response,
-            Err(_)  => return Err(error::Error::ServiceUnavailable)
+            Err(_) => return Err(error::Error::ServiceUnavailable),
         };
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
@@ -166,9 +168,9 @@ impl PoloniexApi {
             .body(&post_data)
             .headers(custom_header)
             .send() {
-                Ok(response) => response,
-                Err(_) => return Err(error::Error::ServiceUnavailable),
-            };
+            Ok(response) => response,
+            Err(_) => return Err(error::Error::ServiceUnavailable),
+        };
         self.last_request = helpers::get_unix_timestamp_ms();
 
         let mut buffer = String::new();
@@ -278,7 +280,9 @@ impl PoloniexApi {
     /// {"offers":[{"rate":"0.00200000","amount":"64.66305732","rangeMin":2,"rangeMax":8}, ... ],
     /// "demands":[{"rate":"0.00170000","amount":"26.54848841","rangeMin":2,"rangeMax":2}, ... ]}
     /// ```
-    pub fn return_loan_orders(&mut self, currency: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_loan_orders(&mut self,
+                              currency: &str)
+                              -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.public_query("returnLoanOrders", &params)
@@ -332,7 +336,9 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"response":"CKXbbs8FAVbtEa397gJHSutmrdrBrhUMxe"}
     /// ```
-    pub fn generate_new_address(&mut self, currency: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn generate_new_address(&mut self,
+                                currency: &str)
+                                -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("generateNewAddress", &params)
@@ -384,7 +390,9 @@ impl PoloniexApi {
     /// "amount":"100","total":"2.5"},
     /// {"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}], ... }
     /// ```
-    pub fn return_open_orders(&mut self, currency_pair: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_open_orders(&mut self,
+                              currency_pair: &str)
+                              -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("returnOpenOrders", &params)
@@ -444,7 +452,9 @@ impl PoloniexApi {
     /// "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000",
     /// "date": "2016-03-14 01:04:36"}, ...]
     /// ```
-    pub fn return_order_trades(&mut self, order_number: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_order_trades(&mut self,
+                               order_number: &str)
+                               -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("returnOrderTrades", &params)
@@ -510,7 +520,10 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"orderNumber":"239574176","resultingTrades":{"BTC_BTS":[]}}
     /// ```
-    pub fn move_order(&mut self, order_number: &str, rate: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn move_order(&mut self,
+                      order_number: &str,
+                      rate: &str)
+                      -> Result<Map<String, Value>, error::Error> {
         // TODO: add optional parameters
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
@@ -694,7 +707,9 @@ impl PoloniexApi {
     /// {"amount":"40.94717831","total":"-0.09671314","basePrice":"0.00236190",
     /// "liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
     /// ```
-    pub fn get_margin_position(&mut self, currency_pair: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn get_margin_position(&mut self,
+                               currency_pair: &str)
+                               -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("getMarginPosition", &params)
@@ -713,7 +728,9 @@ impl PoloniexApi {
     /// {"amount":"24.00289920","date":"2015-05-10 22:38:49","rate":"0.00235321",
     /// "total":"0.05648386","tradeID":"1213347","type":"sell"}]}}
     /// ```
-    pub fn close_margin_position(&mut self, currency_pair: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn close_margin_position(&mut self,
+                                 currency_pair: &str)
+                                 -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("closeMarginPosition", &params)
@@ -750,7 +767,9 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"message":"Loan offer canceled."}
     /// ```
-    pub fn cancel_loan_offer(&mut self, order_number: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn cancel_loan_offer(&mut self,
+                             order_number: &str)
+                             -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("cancelLoanOffer", &params)
@@ -818,7 +837,9 @@ impl PoloniexApi {
     /// ```ignore
     /// {"success":1,"message":0}
     /// ```
-    pub fn toggle_auto_renew(&mut self, order_number: &str) -> Result<Map<String, Value>, error::Error> {
+    pub fn toggle_auto_renew(&mut self,
+                             order_number: &str)
+                             -> Result<Map<String, Value>, error::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("toggleAutoRenew", &params)

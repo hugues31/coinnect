@@ -16,5 +16,6 @@ fn main() {
     let mut my_api = Coinnect::new(Kraken, "api_key", "api_secret", None);
     let ticker = my_api.ticker(ETC_BTC);
 
-    println!("ETC_BTC last trade price is {}.", ticker.unwrap().last_trade_price);
+    println!("ETC_BTC last trade price is {}.",
+             ticker.unwrap().last_trade_price);
 }

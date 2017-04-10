@@ -17,7 +17,9 @@ use helpers;
 impl ExchangeApi for KrakenApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error> {
         let pair_name = utils::get_pair_string(&pair);
-        if pair_name.is_none() {return Err(Error::PairUnsupported)};
+        if pair_name.is_none() {
+            return Err(Error::PairUnsupported);
+        };
         let pair_name = pair_name.unwrap();
         let raw_response = self.get_ticker_information(&pair_name)?;
 

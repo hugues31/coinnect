@@ -11,15 +11,13 @@ mod bitstamp_tests {
 
     #[test]
     fn build_url_should_return_the_a_url() {
-        assert_eq!(
-            utils::build_url("ticker", "btcusd"),
-            "https://www.bitstamp.net/api/v2/ticker/btcusd/");
+        assert_eq!(utils::build_url("ticker", "btcusd"),
+                   "https://www.bitstamp.net/api/v2/ticker/btcusd/");
     }
     #[test]
     fn build_url_should_return_the_url_for_transactions_for_btc_usd() {
-        assert_eq!(
-            utils::build_url("transactions", "btcusd"),
-            "https://www.bitstamp.net/api/v2/transactions/btcusd/");
+        assert_eq!(utils::build_url("transactions", "btcusd"),
+                   "https://www.bitstamp.net/api/v2/transactions/btcusd/");
     }
 
     #[test]
@@ -116,11 +114,10 @@ mod bitstamp_tests {
         let customer_id = "123456".to_string();
         let api_key = "1234567890ABCDEF1234567890ABCDEF".to_string();
         let api_secret = "1234567890ABCDEF1234567890ABCDEF".to_string();
-        let expected_signature = "7D7C4168D49CBC2620A45EF00EAA228C1287561F1C1F94172272E1231A8ADF6B".to_string();
-        assert_eq!(
-            utils::build_signature(nonce, customer_id, api_key, api_secret),
-            expected_signature
-        );
+        let expected_signature = "7D7C4168D49CBC2620A45EF00EAA228C1287561F1C1F94172272E1231A8ADF6B"
+            .to_string();
+        assert_eq!(utils::build_signature(nonce, customer_id, api_key, api_secret),
+                   expected_signature);
     }
 
     #[test]

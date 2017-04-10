@@ -155,11 +155,12 @@ impl BitstampApi {
         post_params.insert("nonce", &nonce);
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(&post_params);
-        let mut response = self.http_client.post(&url)
-                            .header(ContentType::form_url_encoded())
-                            .body(&post_data)
-                            .send()
-                            .unwrap();
+        let mut response = self.http_client
+            .post(&url)
+            .header(ContentType::form_url_encoded())
+            .body(&post_data)
+            .send()
+            .unwrap();
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
@@ -181,7 +182,7 @@ impl BitstampApi {
     pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
-            _  => panic!("Unknown pair"),
+            _ => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
@@ -200,7 +201,7 @@ impl BitstampApi {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
-            _  => panic!("Unknown pair"),
+            _ => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
@@ -221,7 +222,7 @@ impl BitstampApi {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
-            _  => panic!("Unknown pair"),
+            _ => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
@@ -242,7 +243,7 @@ impl BitstampApi {
 
         let currency_pair = match pair {
             Pair::BTC_USD => "btcusd",
-            _  => panic!("Unknown pair"),
+            _ => panic!("Unknown pair"),
         };
 
         let mut params = HashMap::new();
