@@ -20,14 +20,14 @@ impl ExchangeApi for PoloniexApi {
             Some(name) => name,
             None => return Err(Error::PairUnsupported),
         };
-        //let raw_response = self.get_ticker_information(&pair_name)?;
+        let raw_response = self.return_ticker()?;
 
-        //let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(raw_response)?;
 
-        let price = 0.0;
-        let ask = 0.0;
-        let bid = 0.0;
-        let vol = 0.0;
+        let price = result[*pair_name]["last"].as_str().unwrap().parse::<f64>().unwrap();
+        let ask = result[*pair_name]["lowestAsk"].as_str().unwrap().parse::<f64>().unwrap();
+        let bid = result[*pair_name]["highestBid"].as_str().unwrap().parse::<f64>().unwrap();
+        let vol = result[*pair_name]["quoteVolume"].as_str().unwrap().parse::<f64>().unwrap();
 
         Ok(Ticker {
             timestamp: helpers::get_unix_timestamp_ms(),

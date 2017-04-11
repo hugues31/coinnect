@@ -38,7 +38,23 @@ mod coinnect_tests {
                                     Some("bs_cust_id"));
         let ticker = api.ticker(Pair::BTC_USD);
 
-        assert!(ticker.unwrap().timestamp != 0);
+        assert!(ticker.unwrap().last_trade_price != 0.0);
+    }
+
+    #[test]
+    fn coinnect_can_get_a_ticker_from_kraken() {
+        let mut api = Coinnect::new(Exchange::Kraken, "api_key", "api_secret", None);
+        let ticker = api.ticker(Pair::BTC_EUR);
+
+        assert!(ticker.unwrap().last_trade_price != 0.0);
+    }
+
+    #[test]
+    fn coinnect_can_get_a_ticker_from_poloniex() {
+        let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None);
+        let ticker = api.ticker(Pair::BTC_ETH);
+        panic!("Price is : {}", ticker.unwrap().last_trade_price);
+        assert!(ticker.unwrap().last_trade_price != 0.0);
     }
 
     // IMPORTANT: Real keys are needed in order to retrieve the balance

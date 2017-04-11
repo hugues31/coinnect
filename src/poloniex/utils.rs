@@ -44,20 +44,13 @@ pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
 pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, error::Error> {
-    let error_array = match response.get("error") {
-        Some(array) => array.as_array().unwrap(),
-        None => return Err(error::Error::BadParse),
+    let error_msg = match response.get("error") {
+        Some(error) => error.as_str().unwrap(),
+        None => return Ok(response.clone()),
     };
-    if error_array.is_empty() {
-        return Ok(response.get("result").unwrap().as_object().unwrap().clone());
-    }
-    let error_msg = error_array[0].as_str().unwrap().to_string();
 
     match error_msg.as_ref() {
-        "EService:Unavailable" => Err(error::Error::ServiceUnavailable),
-        "EOrder:Rate limit exceeded" => Err(error::Error::RateLimitExceeded),
-        "EQuery:Unknown asset pair" => Err(error::Error::PairUnsupported),
-        "EGeneral:Invalid arguments" => Err(error::Error::InvalidArguments),
+        "Invalid command." => Err(error::Error::InvalidArguments),
         other => Err(error::Error::ExchangeSpecificError(other.to_string())),
     }
 }

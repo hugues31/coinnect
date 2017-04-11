@@ -13,7 +13,7 @@ use exchange::{Exchange, ExchangeApi};
 use pair::Pair;
 use bitstamp::api::BitstampApi;
 use kraken::api::KrakenApi;
-
+use poloniex::api::PoloniexApi;
 
 #[derive(Debug)]
 pub struct Coinnect;
@@ -38,7 +38,7 @@ impl Coinnect {
 
             Exchange::Kraken => Box::new(KrakenApi::new(api_key, api_secret)),
 
-            Exchange::Poloniex => Box::new(UnimplementedApi),
+            Exchange::Poloniex => Box::new(PoloniexApi::new(api_key, api_secret)),
         }
     }
 

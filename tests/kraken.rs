@@ -6,6 +6,7 @@ mod kraken_tests {
 
     /// IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
+    #[cfg_attr(not(feature = "kraken_private_tests"), ignore)]
     fn balance_should_return_a_result() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
