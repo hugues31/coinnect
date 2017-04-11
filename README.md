@@ -21,9 +21,9 @@ held responsible for the library malfunction, which can lead to a loss of money.
 ### Exchanges support:
 | Exchange | Raw API supported | Generic API supported | Note |
 |:--------:|:-----------------:|:---------------------:|:----:|
-| Bitstamp | X |   | Not every method are implemented for now. Generic API supports only Ticker for now. |
+| Bitstamp | X | X | Not every method are implemented for now. Generic API supports only Ticker for now. |
 | Kraken   | X | X | Generic API supports only Ticker for now. |
-| Poloniex | X |   | Generic API supports only Ticker for now. |
+| Poloniex | X | X | Generic API supports only Ticker for now. |
 
 Feel free to make a PR to add support to your favorite exchange ;)
 
