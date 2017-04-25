@@ -11,7 +11,7 @@ use hyper::Client;
 use hyper::header;
 use hyper::net::HttpsConnector;
 
-use rustc_serialize::base64::{STANDARD, ToBase64, FromBase64};
+use data_encoding::BASE64;
 
 use serde_json;
 use serde_json::Value;
@@ -172,10 +172,10 @@ impl KrakenApi {
             concatenated.push(elem);
         }
 
-        let hmac_key = self.api_secret.from_base64().unwrap();
+        let hmac_key = BASE64.decode(self.api_secret.as_bytes()).unwrap();
         let mut hmac = Hmac::new(Sha512::new(), &hmac_key);
         hmac.input(&concatenated);
-        hmac.result().code().to_base64(STANDARD)
+        BASE64.encode(hmac.result().code())
     }
 
     /// Result: Server's time

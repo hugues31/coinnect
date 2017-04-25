@@ -10,7 +10,7 @@ use hyper::Client;
 use hyper::header;
 use hyper::net::HttpsConnector;
 
-use rustc_serialize::hex::ToHex;
+use data_encoding::HEXLOWER;
 
 use serde_json;
 use serde_json::Value;
@@ -141,7 +141,7 @@ impl PoloniexApi {
         let mut hmac = Hmac::new(Sha512::new(), self.api_secret.as_bytes());
         hmac.input(post_data.as_bytes());
 
-        let sign = hmac.result().code().to_hex();
+        let sign = HEXLOWER.encode(hmac.result().code());
 
         let mut custom_header = header::Headers::new();
         custom_header.set(KeyHeader(self.api_key.to_owned()));
