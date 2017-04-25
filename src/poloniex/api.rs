@@ -124,7 +124,7 @@ impl PoloniexApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return utils::deserialize_json(buffer);
+        utils::deserialize_json(buffer)
     }
 
     fn private_query(&mut self,
@@ -162,7 +162,7 @@ impl PoloniexApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return utils::deserialize_json(buffer);
+        utils::deserialize_json(buffer)
     }
 
     /// Sample output :

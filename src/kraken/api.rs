@@ -120,7 +120,7 @@ impl KrakenApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return utils::deserialize_json(buffer);
+        utils::deserialize_json(buffer)
     }
 
     fn private_query(&mut self,
@@ -156,7 +156,7 @@ impl KrakenApi {
 
         let mut buffer = String::new();
         res.read_to_string(&mut buffer).unwrap();
-        return utils::deserialize_json(buffer);
+        utils::deserialize_json(buffer)
     }
 
     fn create_signature(&self, urlpath: String, postdata: &str, nonce: &str) -> String {

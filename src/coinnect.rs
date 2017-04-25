@@ -4,13 +4,8 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde_json::value::Map;
-use serde_json::value::Value;
 
-use error::Error;
-use types::Ticker;
 use exchange::{Exchange, ExchangeApi};
-use pair::Pair;
 use bitstamp::api::BitstampApi;
 use kraken::api::KrakenApi;
 use poloniex::api::PoloniexApi;
@@ -50,27 +45,8 @@ impl Coinnect {
     pub fn new_from_file(exchange: Exchange, config_name: &str, path: PathBuf) -> Box<ExchangeApi> {
         match exchange {
             Exchange::Bitstamp => Box::new(BitstampApi::new_from_file(config_name, path)),
-            Exchange::Kraken => Box::new(UnimplementedApi),
-            Exchange::Poloniex => Box::new(UnimplementedApi),
+            Exchange::Kraken => Box::new(KrakenApi::new_from_file(config_name, path)),
+            Exchange::Poloniex => Box::new(PoloniexApi::new_from_file(config_name, path)),
         }
-    }
-}
-
-
-#[derive(Debug)]
-struct UnimplementedApi;
-
-impl ExchangeApi for UnimplementedApi {
-    fn ticker(&mut self, _pair: Pair) -> Result<Ticker, Error> {
-        unimplemented!();
-    }
-    fn return_trade_history(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-    fn return_order_book(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-    fn return_balances(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        unimplemented!();
     }
 }

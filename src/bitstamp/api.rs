@@ -120,7 +120,7 @@ impl BitstampApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer).unwrap();
-        return utils::deserialize_json(buffer);
+        utils::deserialize_json(buffer)
     }
 
     ///
