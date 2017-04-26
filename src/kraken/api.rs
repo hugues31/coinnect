@@ -46,6 +46,7 @@ pub struct KrakenApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
+    otp: Option<String>, // two-factor password (if two-factor enabled, otherwise not required)
     http_client: Client,
 }
 
@@ -60,6 +61,7 @@ impl KrakenApi {
             last_request: 0,
             api_key: api_key.to_string(),
             api_secret: api_secret.to_string(),
+            otp: None,
             http_client: Client::with_connector(connector),
         }
     }
@@ -93,6 +95,11 @@ impl KrakenApi {
         let api_secret = json_obj.get("api_secret").unwrap().as_str().unwrap();
 
         KrakenApi::new(api_key, api_secret)
+    }
+
+    /// Use to provide your two-factor password (if two-factor enabled, otherwise not required)
+    pub fn set_two_pass_auth(&mut self, otp: String) {
+        self.otp = Some(otp);
     }
 
     fn block_or_continue(&self) {
@@ -136,6 +143,10 @@ impl KrakenApi {
 
         let mut params = params.clone(); // TODO: Remove .clone()
         params.insert("nonce", &nonce);
+
+        if let Some(ref password) = self.otp {
+            params.insert("otp", &password);
+        }
 
         let postdata = helpers::url_encode_hashmap(&params);
 
