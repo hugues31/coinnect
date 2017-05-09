@@ -1,9 +1,6 @@
 TODO
 ====
 
-- [ ] Add tests
-- [ ] remove 'unsafe' unwrap()
-- [ ] implement two-factor auth
-- [ ] Add Option type for optional parameter
+- [ ] Implement two-factor auth for supported exchanges
 - [ ] Add links to the documentation (Kraken use external links for example)
-- [ ] remove .clone() for params in Kraken & Poloniex (1 private + 1 public, 2x)
+- [ ] Remove .clone() for params in Kraken & Poloniex

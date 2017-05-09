@@ -1,14 +1,22 @@
 [package]
 name = "coinnect"
-version = "0.1.5"
-license = "Apache-2.0/MIT"
-authors = ["Hugues Gaillard <hugues.gaillard@me.com>"]
-description = "A Rust library to connect to various crypto-currencies exchanges."
+version = "0.2.2"
+license = "MIT"
+authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal"]
+description = """
+A Rust library to connect to various crypto-currencies exchanges.
+"""
 documentation = "https://docs.rs/coinnect/"
 homepage = "https://github.com/hugues31/coinnect"
 repository = "https://github.com/hugues31/coinnect"
-keywords = [ "crypto", "bitcoin", "trading", "poloniex", "kraken" ]
+keywords = [ "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
+
+[features]
+default = []
+bitstamp_private_tests = []
+kraken_private_tests = []
+poloniex_private_tests = []
 
 [[example]]
 name = "simple"
@@ -18,10 +26,16 @@ path = "examples/simple.rs"
 name = "kraken_trading"
 path = "examples/kraken_trading.rs"
 
+[[example]]
+name = "generic_api"
+path = "examples/generic_api.rs"
+
 [dependencies]
-hyper = "0.10.4"
-serde_json = "0.9"
-time = "0.1.36"
+hyper = "0.10.9"
+serde_json = "1.0.0"
+time = "0.1.37"
 rust-crypto = "0.2"
-rustc-serialize = "0.3"
 hyper-native-tls = "0.2.2"
+lazy_static = "0.2"
+bidir-map = "0.3.2"
+data-encoding = "2.0.0-rc.1"

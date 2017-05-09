@@ -1,16 +1,17 @@
 //! ![Coinnect](https://raw.githubusercontent.com/hugues31/coinnect/master/coinnect.png)
 //!
 //! Coinnect is a Rust library aiming to provide a complete access to REST APIs for various
-//! crypto-currencies exchanges. All methods consume HTTPS api. TThe purpose of this crate is not
+//! crypto-currencies exchanges (see below for a list of supported exchanges).
+//! All methods consume HTTPS api. The purpose of this crate is not
 //! to stream data (you should use websocket/FIX in that case).
 //!
-//! Currently only Poloniex and Kraken are supported but other exchanges will be added soon.
+//! For optional parameters, most methods require an empty str (`""`) if you don't want to specify
+//! them.
 //!
-//! For optional parameters, enter an empty &str ("") if you don't specify it.
-//!
-//! ### Exchange support:
+//! ### Exchanges support:
 //! - [x] Poloniex
 //! - [x] Kraken
+//! - [x] Bitstamp (partial)
 //!
 //! # WARNING
 //! This library is highly experimental at the moment. Please do not invest what you
@@ -21,13 +22,20 @@
 extern crate hyper;
 extern crate crypto;
 extern crate hyper_native_tls;
-extern crate rustc_serialize;
 extern crate serde_json;
 extern crate time;
+#[macro_use]
+extern crate lazy_static;
+extern crate bidir_map;
+extern crate data_encoding;
 
-pub mod poloniex;
-pub mod kraken;
+pub mod coinnect;
+pub mod exchange;
+pub mod error;
+pub mod pair;
+pub mod types;
 mod helpers;
 
-#[cfg(test)]
-mod tests {}
+pub mod bitstamp;
+pub mod poloniex;
+pub mod kraken;

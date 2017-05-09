@@ -1,30 +1,30 @@
 ![Coinnect](https://raw.githubusercontent.com/hugues31/coinnect/master/coinnect.png)
 ===========
 [![crates.io](https://img.shields.io/crates/v/coinnect.svg)](https://crates.io/crates/coinnect)
+[![Build Status](https://travis-ci.org/hugues31/coinnect.svg?branch=master)](https://travis-ci.org/hugues31/coinnect)
 [![doc.rs](https://docs.rs/coinnect/badge.svg)](https://docs.rs/coinnect/)
-![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 
 Coinnect is a Rust library aiming to provide a complete access to REST APIs for
-various crypto-currencies exchanges.
-Currently only Poloniex and Kraken are supported but other exchanges will be
-added soon.
+various crypto-currencies exchanges (see below for a list of supported
+exchanges).
 All methods consume HTTPS api. The purpose of this crate is not to stream data
 (you should use websocket/FIX in that case).
 
-The project is dual licensed under the terms of the Apache License, Version 2.0,
-and the MIT License.
 
 **WARNING:**  This library is highly experimental at the moment. Please do not
 invest what you can't afford to loose. This is a personal project, I can not be
 held responsible for the library malfunction, which can lead to a loss of money.
 
-### Exchange support:
-- [x] Poloniex
-- [x] Kraken
-- [ ] Bitstamp
-- [ ] Whaleclub
-- [ ] ...
+*The project is licensed under the terms of the MIT License.*
+
+### Exchanges support:
+| Exchange | Raw API supported | Generic API supported | Note |
+|:--------:|:-----------------:|:---------------------:|:----:|
+| Bitstamp | X | X | Not every method are implemented for now. Generic API supports only Ticker for now. |
+| Kraken   | X | X | Generic API supports only Ticker for now. |
+| Poloniex | X | X | Generic API supports only Ticker for now. |
 
 Feel free to make a PR to add support to your favorite exchange ;)
 
@@ -39,7 +39,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-coinnect = "0.1"
+coinnect = "0.2"
 ```
 
 and this to your crate root:
@@ -48,11 +48,17 @@ and this to your crate root:
 extern crate coinnect;
 ```
 
-For optional parameters, enter an empty &str ("") if you don't specify it.
+For optional parameters, most methods require an empty str (`""`) if you don't
+want to specify them.
+
+Since 0.2, you have access to a generic API to communicate across exchanges in
+the same way. Note that this functionality is under active development, changes
+constantly and not every Exchange is supported for now.
+For more info, look at ExchangeApi trait doc.
 
 ## Example
 
-The example below show you how to connect to Poloniex
+The example below shows you how to connect to Poloniex
 
 ```rust
 extern crate coinnect;
@@ -79,11 +85,45 @@ fn main() {
 
 ```
 
+For more examples, please see [examples](examples/).
+
+## Testing
+You can run the tests suite with `cargo test` for testing non private data
+requests (this will ignore tests related to private requests).
+You can use `cargo test --features "bitstamp_private_tests"` to run private
+tests related to bitstamp exchange for example.
+Before running private tests, make sure you have a `keys_real.json` file at the
+root with the following structure :
+```json
+{
+    "account_kraken": {
+        "api_key"   : "123456789ABCDEF",
+        "api_secret": "ABC&EF?abcdef"
+    },
+    "account_poloniex": {
+        "api_key"   : "XYXY-XYXY-XYXY-XY",
+        "api_secret": "A0A0B1B1C2C2"
+    },
+    "account_bitstamp": {
+        "api_key"    : "XYXY-XYXY-XYXY-XY",
+        "api_secret" : "A0A0B1B1C2C2",
+        "customer_id": "123456"
+    }
+}
+```
+You must insert your real API keys, otherwise private tests may failed. No
+action is performed if you run the tests : no test will open position, or
+withdraw, etc.
+Tests only check for correct authentication method and correct parsing.
+You can examine the [tests](tests) folder just to be sure and look at the
+[Cargo.toml](Cargo.toml) file for a complete list of features.
+
+
 ## Contribution
 
 Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
-will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
+will be licensed according to the terms given in [LICENSE](LICENSE).
 
 ## Disclaimer
 This SOFTWARE PRODUCT is provided by THE PROVIDER "as is" and "with all faults."
