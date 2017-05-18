@@ -36,9 +36,9 @@ pub struct Orderbook {
 }
 
 impl Orderbook {
-    /// Convenient function that returns the median price from the orderbook
+    /// Convenient function that returns the average price from the orderbook
     /// Return None if Orderbook is empty
-    /// `Median price = (lowest ask + highest bid)/2`
+    /// `Average price = (lowest ask + highest bid)/2`
     pub fn avg_price(&self) -> Option<Price> {
         if self.asks.is_empty() || self.bids.is_empty() {
             return None;

@@ -37,6 +37,37 @@ impl ExchangeApi for PoloniexApi {
     }
 
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error> {
-        unimplemented!();
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+        let raw_response = self.return_order_book(pair_name, "1000")?;  // 1000 entries max
+
+        let result = utils::parse_result(raw_response)?;
+
+        let mut ask_offers = Vec::new();
+        let mut bid_offers = Vec::new();
+
+        let ask_array = result["asks"].as_array().unwrap();
+        let bid_array = result["bids"].as_array().unwrap();
+
+        for ask in ask_array {
+            let price = ask[0].as_str().unwrap().parse::<f64>().unwrap();
+            let volume = ask[1].as_f64().unwrap();
+            ask_offers.push((price, volume));
+        }
+
+        for bid in bid_array {
+            let price = bid[0].as_str().unwrap().parse::<f64>().unwrap();
+            let volume = bid[1].as_f64().unwrap();
+            bid_offers.push((price, volume));
+        }
+
+        Ok(Orderbook {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            asks: ask_offers,
+            bids: bid_offers,
+        })
     }
 }

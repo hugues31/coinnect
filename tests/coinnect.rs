@@ -61,6 +61,15 @@ mod coinnect_tests {
     fn coinnect_can_get_an_orderbook_from_kraken() {
         let mut api = Coinnect::new(Exchange::Kraken, "api_key", "api_secret", None);
         let orderbook = api.orderbook(Pair::BTC_EUR);
+
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+    }
+
+    #[test]
+    fn coinnect_can_get_an_orderbook_from_poloniex() {
+        let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None);
+        let orderbook = api.orderbook(Pair::BTC_ETH);
+
         assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
     }
 }
