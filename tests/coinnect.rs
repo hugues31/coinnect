@@ -57,20 +57,10 @@ mod coinnect_tests {
         assert_ne!(ticker.unwrap().last_trade_price, 0.0);
     }
 
-    // IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
-    #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
-    fn balance_should_have_usd_btc_fee() {
-        use std::path::PathBuf;
-        let path = PathBuf::from("./keys_real.json");
-        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path);
-        let result = api.return_balances(Pair::BTC_USD).unwrap();
-        let result_looking_for_usd = result.clone();
-        let result_looking_for_btc = result.clone();
-        let result_looking_for_fee = result.clone();
-
-        assert!(result_looking_for_usd.contains_key("usd_balance"));
-        assert!(result_looking_for_btc.contains_key("btc_balance"));
-        assert!(result_looking_for_fee.contains_key("fee"));
+    fn coinnect_can_get_an_orderbook_from_kraken() {
+        let mut api = Coinnect::new(Exchange::Kraken, "api_key", "api_secret", None);
+        let orderbook = api.orderbook(Pair::BTC_EUR);
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
     }
 }

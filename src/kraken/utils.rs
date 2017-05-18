@@ -36,6 +36,10 @@ lazy_static! {
         m.insert(ETH_USD_d, "XETHZUSD.d");
         m.insert(ETH_USD,   "XETHZUSD");
         m.insert(ETH_XBT_d, "XETHXXBT.d");
+        m.insert(GNO_BTC,   "GNOXBT");
+        m.insert(GNO_ETH,   "GNOETH");
+        m.insert(GNO_EUR,   "GNOEUR");
+        m.insert(GNO_USD,   "GNOUSD");
         m.insert(ICN_BTC,   "XICNXXBT");
         m.insert(ICN_ETH,   "XICNXETH");
         m.insert(LTC_BTC,   "XLTCXXBT");

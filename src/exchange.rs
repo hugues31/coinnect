@@ -1,13 +1,10 @@
 //! This module contains Exchange enum.
 
-use serde_json::value::Map;
-use serde_json::value::Value;
-
 use std::fmt::Debug;
 
 use error::Error;
 use pair::Pair;
-use types::Ticker;
+use types::{Ticker, Orderbook};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -18,11 +15,9 @@ pub enum Exchange {
 }
 
 pub trait ExchangeApi: Debug {
-    /// Return a Ticker for the Pair specified.
+    /// Return a Ticker for the specified Pair.
     fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error>;
 
-    fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>>;
-    fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>>;
-    fn return_balances(&mut self, pair: Pair) -> Option<Map<String, Value>>;
-    // fn balances(&mut self, pair: Option<Asset>) -> Result<Vec<Asset, Volume>, Error>;
+    /// Return an Orderbook for the specified Pair.
+    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error>;
 }

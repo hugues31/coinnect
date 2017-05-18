@@ -2,15 +2,12 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Bitstamp offers.
 
-use serde_json::Value;
-use serde_json::value::Map;
-
 use exchange::ExchangeApi;
 use bitstamp::api::BitstampApi;
 
 use error::Error;
 use pair::Pair;
-use types::Ticker;
+use types::{Ticker, Orderbook};
 use helpers;
 
 impl ExchangeApi for BitstampApi {
@@ -32,13 +29,8 @@ impl ExchangeApi for BitstampApi {
             volume: Some(vol),
         })
     }
-    fn return_trade_history(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-    fn return_order_book(&mut self, _: Pair) -> Option<Map<String, Value>> {
-        unimplemented!();
-    }
-    fn return_balances(&mut self, _: Pair) -> Option<Map<String, Value>> {
+
+    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error> {
         unimplemented!();
     }
 }

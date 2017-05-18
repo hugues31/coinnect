@@ -12,9 +12,13 @@ exchanges).
 All methods consume HTTPS api. The purpose of this crate is not to stream data
 (you should use websocket/FIX in that case).
 
+You basically have 2 choices to retrieve data : use the raw API provided by the
+platform you target or use the generic Coinnect API, which is more user-friendly
+and safe. Ideally, use the raw API when the Coinnect API could not retrieve the
+data/perform the action you want.
 
 **WARNING:**  This library is highly experimental at the moment. Please do not
-invest what you can't afford to loose. This is a personal project, I can not be
+invest what you can't afford to lose. This is a personal project, I cannot be
 held responsible for the library malfunction, which can lead to a loss of money.
 
 *The project is licensed under the terms of the MIT License.*
@@ -22,9 +26,14 @@ held responsible for the library malfunction, which can lead to a loss of money.
 ### Exchanges support:
 | Exchange | Raw API supported | Generic API supported | Note |
 |:--------:|:-----------------:|:---------------------:|:----:|
-| Bitstamp | X | X | Not every method are implemented for now. Generic API supports only Ticker for now. |
-| Kraken   | X | X | Generic API supports only Ticker for now. |
-| Poloniex | X | X | Generic API supports only Ticker for now. |
+| Bitstamp | X | X | Not every method is implemented for now.|
+| Kraken   | X | X | - |
+| Poloniex | X | X | - |
+
+Generic API supports:
+ - Ticker
+ - Orderbook
+ - ... more to come!
 
 Feel free to make a PR to add support to your favorite exchange ;)
 
@@ -48,13 +57,12 @@ and this to your crate root:
 extern crate coinnect;
 ```
 
-For optional parameters, most methods require an empty str (`""`) if you don't
-want to specify them.
+For optional parameters, most methods require an empty str (`""`) or
+Option (None) if you don't want to specify them.
 
 Since 0.2, you have access to a generic API to communicate across exchanges in
-the same way. Note that this functionality is under active development, changes
-constantly and not every Exchange is supported for now.
-For more info, look at ExchangeApi trait doc.
+the same way. Note that this functionality is under active development.
+For more informations, look at ExchangeApi trait doc.
 
 ## Example
 
@@ -111,7 +119,7 @@ root with the following structure :
     }
 }
 ```
-You must insert your real API keys, otherwise private tests may failed. No
+You must insert your real API keys, otherwise private tests may fail. No
 action is performed if you run the tests : no test will open position, or
 withdraw, etc.
 Tests only check for correct authentication method and correct parsing.
