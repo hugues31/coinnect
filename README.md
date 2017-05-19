@@ -1,6 +1,7 @@
 ![Coinnect](https://raw.githubusercontent.com/hugues31/coinnect/master/coinnect.png)
 ===========
 [![crates.io](https://img.shields.io/crates/v/coinnect.svg)](https://crates.io/crates/coinnect)
+[![Downloads from crates.io](https://img.shields.io/crates/d/coinnect.svg)](https://crates.io/crates/coinnect)
 [![Build Status](https://travis-ci.org/hugues31/coinnect.svg?branch=master)](https://travis-ci.org/hugues31/coinnect)
 [![doc.rs](https://docs.rs/coinnect/badge.svg)](https://docs.rs/coinnect/)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
