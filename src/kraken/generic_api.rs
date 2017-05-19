@@ -7,7 +7,7 @@ use kraken::api::KrakenApi;
 
 use error::Error;
 use pair::Pair;
-use types::{Ticker, Orderbook};
+use types::*;
 use kraken::utils;
 use helpers;
 
@@ -44,7 +44,7 @@ impl ExchangeApi for KrakenApi {
             None => return Err(Error::PairUnsupported),
         };
 
-        let raw_response = self.get_order_book(&pair_name, "1000")?;    // 1000 entries max
+        let raw_response = self.get_order_book(&pair_name, "1000")?; // 1000 entries max
 
         let result = utils::parse_result(raw_response)?;
 
@@ -71,6 +71,62 @@ impl ExchangeApi for KrakenApi {
             pair: pair,
             asks: ask_offers,
             bids: bid_offers,
+        })
+    }
+
+    fn add_order(&mut self,
+                 order_type: OrderType,
+                 pair: Pair,
+                 quantity: Volume,
+                 price: Option<Price>)
+                 -> Result<OrderInfo, Error> {
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let direction = match order_type {
+            OrderType::BuyLimit  => "buy",
+            OrderType::BuyMarket => "buy",
+            OrderType::SellLimit => "sell",
+            OrderType::SellMarket => "sell",
+        };
+
+        let order_type_str = match order_type {
+            OrderType::BuyLimit => "limit",
+            OrderType::SellLimit => "limit",
+            OrderType::BuyMarket => "market",
+            OrderType::SellMarket => "market",
+        };
+
+        let mut price_str = "".to_string();
+        if price.is_some() { price_str = price.unwrap().to_string() };
+
+        let raw_response = self.add_standard_order(&pair_name,
+            direction,
+            order_type_str,
+            &price_str,
+            "",
+            &quantity.to_string(),
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+            )?;
+
+        let result = utils::parse_result(raw_response)?;
+
+        let mut txids = Vec::new();
+
+        for id in result["txid"].as_array().unwrap() {
+            txids.push(id.as_str().unwrap().to_string());
+        }
+
+        Ok(OrderInfo{
+            timestamp: helpers::get_unix_timestamp_ms(),
+            identifier: txids,
         })
     }
 }

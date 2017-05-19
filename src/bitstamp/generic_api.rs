@@ -7,7 +7,7 @@ use bitstamp::api::BitstampApi;
 
 use error::Error;
 use pair::Pair;
-use types::{Ticker, Orderbook};
+use types::*;
 use helpers;
 
 impl ExchangeApi for BitstampApi {
@@ -31,6 +31,15 @@ impl ExchangeApi for BitstampApi {
     }
 
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error> {
+        unimplemented!();
+    }
+
+    fn add_order(&mut self,
+                 order_type: OrderType,
+                 pair: Pair,
+                 quantity: Volume,
+                 price: Option<Price>)
+                 -> Result<OrderInfo, Error> {
         unimplemented!();
     }
 }

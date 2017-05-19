@@ -108,6 +108,8 @@ pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, 
         "EOrder:Rate limit exceeded" => Err(error::Error::RateLimitExceeded),
         "EQuery:Unknown asset pair" => Err(error::Error::PairUnsupported),
         "EGeneral:Invalid arguments" => Err(error::Error::InvalidArguments),
+        "EOrder:Insufficient funds" => Err(error::Error::InsufficientFunds),
+        "EOrder:Order minimum not met" => Err(error::Error::InsufficientOrderSize),
         other => Err(error::Error::ExchangeSpecificError(other.to_string())),
     }
 }

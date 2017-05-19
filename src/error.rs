@@ -5,7 +5,7 @@
 use std::error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     ServiceUnavailable,
     BadParse,
@@ -13,6 +13,8 @@ pub enum Error {
     InvalidArguments,
     RateLimitExceeded,
     PairUnsupported,
+    InsufficientFunds,
+    InsufficientOrderSize,
     ExchangeSpecificError(String),
     UndefinedError,
 }
@@ -26,6 +28,8 @@ impl error::Error for Error {
             Error::InvalidArguments => "Arguments passed do not conform to the protocol.",
             Error::RateLimitExceeded => "API call rate limit exceeded.",
             Error::PairUnsupported => "This pair is not supported.",
+            Error::InsufficientFunds => "Account has not the required funds to make this order",
+            Error::InsufficientOrderSize => "Minimum order value has not been reached",
             Error::ExchangeSpecificError(ref s) => s,
             Error::UndefinedError => "An unknown error occurred.",
         }

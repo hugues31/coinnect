@@ -7,7 +7,7 @@ use poloniex::api::PoloniexApi;
 
 use error::Error;
 use pair::Pair;
-use types::{Ticker, Orderbook};
+use types::*;
 use poloniex::utils;
 use helpers;
 
@@ -41,7 +41,7 @@ impl ExchangeApi for PoloniexApi {
             Some(name) => name,
             None => return Err(Error::PairUnsupported),
         };
-        let raw_response = self.return_order_book(pair_name, "1000")?;  // 1000 entries max
+        let raw_response = self.return_order_book(pair_name, "1000")?; // 1000 entries max
 
         let result = utils::parse_result(raw_response)?;
 
@@ -69,5 +69,14 @@ impl ExchangeApi for PoloniexApi {
             asks: ask_offers,
             bids: bid_offers,
         })
+    }
+
+    fn add_order(&mut self,
+                 order_type: OrderType,
+                 pair: Pair,
+                 quantity: Volume,
+                 price: Option<Price>)
+                 -> Result<OrderInfo, Error> {
+        unimplemented!();
     }
 }

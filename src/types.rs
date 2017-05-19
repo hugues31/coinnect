@@ -22,8 +22,7 @@ pub struct Ticker {
     pub volume: Option<Volume>,
 }
 
-
-
+#[derive(Debug)]
 pub struct Orderbook {
     /// UNIX timestamp in ms (when the response was received)
     pub timestamp: i64,
@@ -47,3 +46,19 @@ impl Orderbook {
     }
 }
 
+#[derive(Debug)]
+pub struct OrderInfo {
+    /// UNIX timestamp in ms (when the response was received)
+    pub timestamp: i64,
+    /// This identifiers list is specific to the platform you use. You must store it somewhere if you want
+    /// to modify/cancel the order later
+    pub identifier: Vec<String>,
+}
+
+#[derive(Debug)]
+pub enum OrderType {
+    BuyLimit,
+    SellLimit,
+    BuyMarket,
+    SellMarket,
+}
