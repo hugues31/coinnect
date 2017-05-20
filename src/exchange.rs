@@ -22,8 +22,11 @@ pub trait ExchangeApi: Debug {
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error>;
 
     /// Place an order directly to the exchange.
-    /// Quantity is in base currency. So if you want to buy 1 Bitcoin for X€ (pair BTC_EUR),
-    /// base currency is BTC and quote currency is EUR. So quantity = 1.
+    /// Quantity is in quote currency. So if you want to buy 1 Bitcoin for X€ (pair BTC_EUR),
+    /// base currency (right member in the pair) is BTC and quote/counter currency is BTC (left
+    /// member in the pair).
+    /// So quantity = 1.
+    ///
     /// A good practice is to store the return type (OrderInfo) somewhere since it can later be used
     /// to modify or cancel the order.
     fn add_order(&mut self,

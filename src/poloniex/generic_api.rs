@@ -77,6 +77,34 @@ impl ExchangeApi for PoloniexApi {
                  quantity: Volume,
                  price: Option<Price>)
                  -> Result<OrderInfo, Error> {
-        unimplemented!();
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        // The trick is to use minimal (0.0) and "maximum" (999..) price to simulate market order
+        let raw_response = match order_type {
+            OrderType::BuyLimit => {
+                self.buy(pair_name,
+                         &price.unwrap().to_string(),
+                         &quantity.to_string())
+            }
+            OrderType::BuyMarket => {
+                self.buy(pair_name, "9999999999999999999", &quantity.to_string())
+            }
+            OrderType::SellLimit => {
+                self.sell(pair_name,
+                          &price.unwrap().to_string(),
+                          &quantity.to_string())
+            }
+            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string()),
+        }?;
+
+        let result = utils::parse_result(raw_response)?;
+
+        Ok(OrderInfo {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            identifier: vec![result["orderNumber"].as_f64().unwrap().to_string()],
+        })
     }
 }

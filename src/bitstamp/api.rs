@@ -15,10 +15,12 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::fs::File;
 
-use error;
-use helpers;
 use bitstamp::utils;
+use error;
+use error::Error;
+use helpers;
 use pair::Pair;
+use types::*;
 
 header! {
     #[doc(hidden)]
@@ -180,13 +182,13 @@ impl BitstampApi {
     /// ... }
     /// ```
     pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
-        let currency_pair = match pair {
-            Pair::BTC_USD => "btcusd",
-            _ => panic!("Unknown pair"),
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
         };
 
-        let mut params = HashMap::new();
-        params.insert("pair", currency_pair);
+        let mut params: HashMap<&str, &str> = HashMap::new();
+        params.insert("pair", &pair_name);
         params.insert("method", "ticker");
         self.public_query(&params)
     }
@@ -198,15 +200,14 @@ impl BitstampApi {
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
     pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
-
-        let currency_pair = match pair {
-            Pair::BTC_USD => "btcusd",
-            _ => panic!("Unknown pair"),
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
         };
 
-        let mut params = HashMap::new();
+        let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("method", "order_book");
-        params.insert("pair", currency_pair);
+        params.insert("pair", &pair_name);
         self.public_query(&params)
     }
 
@@ -219,14 +220,13 @@ impl BitstampApi {
     /// "total":"0.04978"}, ... ]
     /// ```
     pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
-
-        let currency_pair = match pair {
-            Pair::BTC_USD => "btcusd",
-            _ => panic!("Unknown pair"),
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
         };
 
-        let mut params = HashMap::new();
-        params.insert("pair", currency_pair);
+        let mut params: HashMap<&str, &str> = HashMap::new();
+        params.insert("pair", &pair_name);
         params.insert("method", "transactions");
         self.public_query(&params)
     }
@@ -240,15 +240,146 @@ impl BitstampApi {
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
     pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
-
-        let currency_pair = match pair {
-            Pair::BTC_USD => "btcusd",
-            _ => panic!("Unknown pair"),
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
         };
 
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", currency_pair);
+        params.insert("pair", &pair_name);
+        self.private_query(&params)
+    }
+
+    /// Add a buy limit order to the exchange
+    /// limit_price	: If the order gets executed, a new sell order will be placed,
+    /// with "limit_price" as its price.
+    /// daily_order (Optional) : Opens buy limit order which will be canceled
+    /// at 0:00 UTC unless it already has been executed. Possible value: True
+    pub fn buy_limit(&mut self,
+                     pair: Pair,
+                     amount: Volume,
+                     price: Price,
+                     price_limit: Option<Price>,
+                     daily_order: Option<bool>)
+                     -> Result<Map<String, Value>, error::Error> {
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let amount_string = amount.to_string();
+        let price_string = price.to_string();
+        let price_limit_string = match price_limit {
+            Some(limit) => limit.to_string(),
+            None => "".to_string(),
+        };
+
+        let mut params = HashMap::new();
+        params.insert("method", "buy");
+        params.insert("pair", &pair_name);
+
+        params.insert("amount", &amount_string);
+        params.insert("price", &price_string);
+        params.insert("limit_price", &price_limit_string);
+        if daily_order.is_some() {
+            let daily_order_str = match daily_order.unwrap() {
+                true => "True",
+                false => "",    // False is not a possible value
+            };
+            params.insert("daily_order", daily_order_str);
+        }
+
+        self.private_query(&params)
+    }
+
+    /// Add a sell limit order to the exchange
+    /// limit_price	: If the order gets executed, a new sell order will be placed,
+    /// with "limit_price" as its price.
+    /// daily_order (Optional) : Opens sell limit order which will be canceled
+    /// at 0:00 UTC unless it already has been executed. Possible value: True
+    pub fn sell_limit(&mut self,
+                      pair: Pair,
+                      amount: Volume,
+                      price: Price,
+                      price_limit: Option<Price>,
+                      daily_order: Option<bool>)
+                      -> Result<Map<String, Value>, error::Error> {
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let amount_string = amount.to_string();
+        let price_string = price.to_string();
+        let price_limit_string = match price_limit {
+            Some(limit) => limit.to_string(),
+            None => "".to_string(),
+        };
+
+        let mut params = HashMap::new();
+        params.insert("method", "sell");
+        params.insert("pair", &pair_name);
+
+        params.insert("amount", &amount_string);
+        params.insert("price", &price_string);
+        params.insert("limit_price", &price_limit_string);
+        if daily_order.is_some() {
+            let daily_order_str = match daily_order.unwrap() {
+                true => "True",
+                false => "",    // False is not a possible value
+            };
+            params.insert("daily_order", daily_order_str);
+        }
+
+        self.private_query(&params)
+    }
+
+    /// Add a market buy order to the exchange
+    /// By placing a market order you acknowledge that the execution of your order depends
+    /// on the market conditions and that these conditions may be subject to sudden changes
+    /// that cannot be foreseen.
+    pub fn buy_market(&mut self,
+                      pair: Pair,
+                      amount: Volume)
+                      -> Result<Map<String, Value>, error::Error> {
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let amount_string = amount.to_string();
+
+        let mut params = HashMap::new();
+        params.insert("method", "buy/market");
+        params.insert("pair", &pair_name);
+
+        params.insert("amount", &amount_string);
+
+        self.private_query(&params)
+    }
+
+    /// Add a market sell order to the exchange
+    /// By placing a market order you acknowledge that the execution of your order depends
+    /// on the market conditions and that these conditions may be subject to sudden changes
+    /// that cannot be foreseen.
+    pub fn sell_market(&mut self,
+                       pair: Pair,
+                       amount: Volume)
+                       -> Result<Map<String, Value>, error::Error> {
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let amount_string = amount.to_string();
+
+        let mut params = HashMap::new();
+        params.insert("method", "sell/market");
+        params.insert("pair", &pair_name);
+
+        params.insert("amount", &amount_string);
+
         self.private_query(&params)
     }
 }

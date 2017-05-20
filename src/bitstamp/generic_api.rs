@@ -4,7 +4,7 @@
 
 use exchange::ExchangeApi;
 use bitstamp::api::BitstampApi;
-
+use bitstamp::utils;
 use error::Error;
 use pair::Pair;
 use types::*;
@@ -40,6 +40,21 @@ impl ExchangeApi for BitstampApi {
                  quantity: Volume,
                  price: Option<Price>)
                  -> Result<OrderInfo, Error> {
-        unimplemented!();
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(Error::PairUnsupported),
+        };
+
+        let result = match order_type {
+            OrderType::BuyLimit => self.buy_limit(pair, quantity, price.unwrap(), None, None),
+            OrderType::BuyMarket => self.buy_market(pair, quantity),
+            OrderType::SellLimit => self.sell_limit(pair, quantity, price.unwrap(), None, None),
+            OrderType::SellMarket => self.sell_market(pair, quantity),
+        };
+
+        Ok(OrderInfo {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            identifier: vec![result.unwrap()["id"].as_str().unwrap().to_string()],
+        })
     }
 }

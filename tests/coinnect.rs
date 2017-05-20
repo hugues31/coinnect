@@ -56,7 +56,7 @@ mod coinnect_tests {
     #[test]
     fn coinnect_can_get_a_ticker_from_poloniex() {
         let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None);
-        let ticker = api.ticker(Pair::BTC_ETH);
+        let ticker = api.ticker(Pair::ETH_BTC);
 
         assert_ne!(ticker.unwrap().last_trade_price, 0.0);
     }
@@ -72,7 +72,7 @@ mod coinnect_tests {
     #[test]
     fn coinnect_can_get_an_orderbook_from_poloniex() {
         let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None);
-        let orderbook = api.orderbook(Pair::BTC_ETH);
+        let orderbook = api.orderbook(Pair::ETH_BTC);
 
         assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
     }
@@ -84,6 +84,28 @@ mod coinnect_tests {
         let mut api = Coinnect::new_from_file(Exchange::Kraken, "account_kraken", path);
         // following request should return an error since Kraken minimum order size is 0.01
         let orderinfo = api.add_order(OrderType::BuyLimit, Pair::BTC_EUR, 0.00001, Some(1000.58));
+
+        assert_eq!(orderinfo.unwrap_err(), error::Error::InsufficientOrderSize)
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "poloniex_private_tests"), ignore)]
+    fn coinnect_can_add_order_from_poloniex() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Poloniex, "account_poloniex", path);
+        // following request should return an error
+        let orderinfo = api.add_order(OrderType::BuyLimit, Pair::ETH_BTC, 0.00001, Some(1000.58));
+
+        assert_eq!(orderinfo.unwrap_err(), error::Error::InsufficientOrderSize)
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
+    fn coinnect_can_add_order_from_bitstamp() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path);
+        // following request should return an error
+        let orderinfo = api.add_order(OrderType::BuyLimit, Pair::EUR_USD, 0.00001, Some(1000.58));
 
         assert_eq!(orderinfo.unwrap_err(), error::Error::InsufficientOrderSize)
     }

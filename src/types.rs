@@ -50,12 +50,12 @@ impl Orderbook {
 pub struct OrderInfo {
     /// UNIX timestamp in ms (when the response was received)
     pub timestamp: i64,
-    /// This identifiers list is specific to the platform you use. You must store it somewhere if you want
-    /// to modify/cancel the order later
+    /// This identifiers list is specific to the platform you use. You must store it somewhere if
+    /// you want to modify/cancel the order later
     pub identifier: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum OrderType {
     BuyLimit,
     SellLimit,

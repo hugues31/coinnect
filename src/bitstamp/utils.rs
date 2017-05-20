@@ -1,3 +1,4 @@
+use bidir_map::BidirMap;
 use crypto::sha2::Sha256;
 use crypto::hmac::Hmac;
 use crypto::mac::Mac;
@@ -11,6 +12,33 @@ use std::time::Duration;
 
 use error;
 use helpers;
+use pair::Pair;
+use pair::Pair::*;
+
+lazy_static! {
+    static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
+        let mut m = BidirMap::new();
+        m.insert(BTC_USD, "btcusd");
+        m.insert(BTC_EUR, "btceur");
+        m.insert(EUR_USD, "eurusd");
+        m.insert(XRP_USD, "xrpusd");
+        m.insert(XRP_EUR, "xrpeur");
+        m.insert(XRP_BTC, "xrpbtc");
+        m
+    };
+}
+
+/// Return the name associated to pair used by Bitstamp
+/// If the Pair is not supported, None is returned.
+pub fn get_pair_string(pair: &Pair) -> Option<&&str> {
+    PAIRS_STRING.get_by_first(pair)
+}
+
+/// Return the Pair enum associated to the string used by Bitstamp
+/// If the Pair is not supported, None is returned.
+pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
+    PAIRS_STRING.get_by_second(&pair)
+}
 
 pub fn block_or_continue(last_request: i64) {
     let threshold = 1000; // 600 requests per 10 mins = 1 request per second

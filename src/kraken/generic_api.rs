@@ -86,7 +86,7 @@ impl ExchangeApi for KrakenApi {
         };
 
         let direction = match order_type {
-            OrderType::BuyLimit  => "buy",
+            OrderType::BuyLimit => "buy",
             OrderType::BuyMarket => "buy",
             OrderType::SellLimit => "sell",
             OrderType::SellMarket => "sell",
@@ -100,21 +100,22 @@ impl ExchangeApi for KrakenApi {
         };
 
         let mut price_str = "".to_string();
-        if price.is_some() { price_str = price.unwrap().to_string() };
+        if price.is_some() {
+            price_str = price.unwrap().to_string()
+        };
 
         let raw_response = self.add_standard_order(&pair_name,
-            direction,
-            order_type_str,
-            &price_str,
-            "",
-            &quantity.to_string(),
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-            )?;
+                                direction,
+                                order_type_str,
+                                &price_str,
+                                "",
+                                &quantity.to_string(),
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                "")?;
 
         let result = utils::parse_result(raw_response)?;
 
@@ -124,7 +125,7 @@ impl ExchangeApi for KrakenApi {
             txids.push(id.as_str().unwrap().to_string());
         }
 
-        Ok(OrderInfo{
+        Ok(OrderInfo {
             timestamp: helpers::get_unix_timestamp_ms(),
             identifier: txids,
         })
