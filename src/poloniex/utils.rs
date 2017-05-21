@@ -3,7 +3,7 @@ use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
-use error;
+use error::*;
 use pair::Pair;
 use pair::Pair::*;
 
@@ -28,29 +28,33 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
 
-pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
+pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>> {
     let data: Value = match serde_json::from_str(&json_string) {
         Ok(data) => data,
-        Err(_) => return Err(error::Error::BadParse),
+        Err(_) => return Err(ErrorKind::BadParse.into()),
     };
 
     match data.as_object() {
         Some(value) => Ok(value.clone()),
-        None => Err(error::Error::BadParse),
+        None => Err(ErrorKind::BadParse.into()),
     }
 }
 
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
-pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, error::Error> {
+pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>> {
     let error_msg = match response.get("error") {
-        Some(error) => error.as_str().unwrap(),
+        Some(error) => {
+            error
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat("error".to_string()))?
+        }
         None => return Ok(response.clone()),
     };
 
     match error_msg.as_ref() {
-        "Invalid command." => Err(error::Error::InvalidArguments),
-        other => Err(error::Error::ExchangeSpecificError(other.to_string())),
+        "Invalid command." => Err(ErrorKind::InvalidArguments.into()),
+        other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
     }
 }

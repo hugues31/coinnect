@@ -10,7 +10,7 @@ mod kraken_tests {
     fn balance_should_return_a_result() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
-        let mut api = KrakenApi::new_from_file("account_kraken", path);
+        let mut api = KrakenApi::new_from_file("account_kraken", path).unwrap();
         let result = api.get_account_balance();
 
         assert!(result.unwrap().contains_key("result"));

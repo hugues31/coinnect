@@ -23,36 +23,35 @@ mod bitstamp_tests {
     #[test]
     fn can_get_real_bitstamp_tick() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        let result = api.ticker(Pair::BTC_USD);
-        assert_eq!(result.is_ok(), true);
+        let mut api = BitstampApi::new(&params).unwrap();
+        api.ticker(Pair::BTC_USD).unwrap();
     }
 
     #[test]
     fn ticker_should_have_the_correct_last() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.ticker(Pair::BTC_USD);
         assert_ne!(result.unwrap().last_trade_price, 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_high() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.ticker(Pair::BTC_USD);
         assert_ne!(result.unwrap().highest_bid, 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_low() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.ticker(Pair::BTC_USD);
         assert_ne!(result.unwrap().lowest_ask, 0.0);
     }
     #[test]
     fn ticker_should_have_the_correct_volume() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.ticker(Pair::BTC_USD);
         assert_ne!(result.unwrap().volume.unwrap(), 0.0);
     }
@@ -60,7 +59,7 @@ mod bitstamp_tests {
     #[test]
     fn should_return_an_order_book() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.return_order_book(Pair::BTC_USD);
         assert_eq!(result.is_ok(), true);
     }
@@ -68,21 +67,21 @@ mod bitstamp_tests {
     #[test]
     fn order_book_should_have_a_timestamp() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.return_order_book(Pair::BTC_USD);
         assert!(result.unwrap().contains_key("timestamp"));
     }
     #[test]
     fn order_book_should_have_bids() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.return_order_book(Pair::BTC_USD);
         assert!(result.unwrap().contains_key("bids"));
     }
     #[test]
     fn order_book_should_have_asks() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.return_order_book(Pair::BTC_USD);
         assert!(result.unwrap().contains_key("bids"));
     }
@@ -90,14 +89,18 @@ mod bitstamp_tests {
     #[test]
     fn order_book_should_have_asks_for_btcusd() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        assert!(api.return_order_book(Pair::BTC_USD).unwrap().contains_key("asks"));
+        let mut api = BitstampApi::new(&params).unwrap();
+        assert!(api.return_order_book(Pair::BTC_USD)
+                    .unwrap()
+                    .contains_key("asks"));
     }
     #[test]
     fn order_book_should_have_asks_for_btceur() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
-        assert!(api.return_order_book(Pair::BTC_USD).unwrap().contains_key("asks"));
+        let mut api = BitstampApi::new(&params).unwrap();
+        assert!(api.return_order_book(Pair::BTC_USD)
+                    .unwrap()
+                    .contains_key("asks"));
     }
 
     #[test]
@@ -116,14 +119,14 @@ mod bitstamp_tests {
         let api_secret = "1234567890ABCDEF1234567890ABCDEF".to_string();
         let expected_signature = "7D7C4168D49CBC2620A45EF00EAA228C1287561F1C1F94172272E1231A8ADF6B"
             .to_string();
-        assert_eq!(utils::build_signature(nonce, customer_id, api_key, api_secret),
+        assert_eq!(utils::build_signature(nonce, customer_id, api_key, api_secret).unwrap(),
                    expected_signature);
     }
 
     #[test]
     fn should_return_the_trade_history_for_btc_usd() {
         let params = HashMap::new();
-        let mut api = BitstampApi::new(&params);
+        let mut api = BitstampApi::new(&params).unwrap();
         let result = api.return_trade_history(Pair::BTC_USD);
 
         assert_eq!(result.is_ok(), false);
@@ -135,7 +138,7 @@ mod bitstamp_tests {
     fn balance_should_have_usd_btc_fee() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
-        let mut api = BitstampApi::new_from_file("account_bitstamp", path);
+        let mut api = BitstampApi::new_from_file("account_bitstamp", path).unwrap();
         let result = api.return_balances(Pair::BTC_USD).unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();

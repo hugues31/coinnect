@@ -3,7 +3,7 @@ use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
-use error;
+use error::*;
 use pair::Pair;
 use pair::Pair::*;
 
@@ -75,35 +75,50 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
 
-pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
+pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>> {
     let data: Value = match serde_json::from_str(&json_string) {
         Ok(data) => data,
-        Err(_) => return Err(error::Error::BadParse),
+        Err(_) => return Err(ErrorKind::BadParse.into()),
     };
 
     match data.as_object() {
         Some(value) => Ok(value.clone()),
-        None => Err(error::Error::BadParse),
+        None => Err(ErrorKind::BadParse.into()),
     }
 }
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
-pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>, error::Error> {
+pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>> {
     let error_array = match response.get("error") {
-        Some(array) => array.as_array().unwrap(),
-        None => return Err(error::Error::BadParse),
+        Some(array) => {
+            array
+                .as_array()
+                .ok_or(ErrorKind::InvalidFieldFormat("error".to_string()))?
+        }
+        None => return Err(ErrorKind::BadParse.into()),
     };
     if error_array.is_empty() {
-        return Ok(response.get("result").unwrap().as_object().unwrap().clone());
+        return Ok(response
+                      .get("result")
+                      .ok_or(ErrorKind::MissingField("result".to_string()))?
+                      .as_object()
+                      .ok_or(ErrorKind::InvalidFieldFormat("result".to_string()))?
+                      .clone());
     }
-    let error_msg = error_array[0].as_str().unwrap().to_string();
+    let error_msg = error_array[0]
+        .as_str()
+        .ok_or(ErrorKind::InvalidFieldFormat(error_array[0].to_string()))?
+        .to_string();
 
+    //TODO: Parse correctly the reason for "EService:Unavailable".
     match error_msg.as_ref() {
-        "EService:Unavailable" => Err(error::Error::ServiceUnavailable),
-        "EOrder:Rate limit exceeded" => Err(error::Error::RateLimitExceeded),
-        "EQuery:Unknown asset pair" => Err(error::Error::PairUnsupported),
-        "EGeneral:Invalid arguments" => Err(error::Error::InvalidArguments),
-        other => Err(error::Error::ExchangeSpecificError(other.to_string())),
+        "EService:Unavailable" => {
+            Err(ErrorKind::ServiceUnavailable("Unknown...".to_string()).into())
+        }
+        "EOrder:Rate limit exceeded" => Err(ErrorKind::RateLimitExceeded.into()),
+        "EQuery:Unknown asset pair" => Err(ErrorKind::PairUnsupported.into()),
+        "EGeneral:Invalid arguments" => Err(ErrorKind::InvalidArguments.into()),
+        other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
     }
 }

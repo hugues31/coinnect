@@ -15,7 +15,7 @@ fn main() {
     // We create a KrakenApi by loading a json file containing API configuration
     // (see documentation for more info)
     let path = PathBuf::from("keys_real.json");
-    let mut my_api = KrakenApi::new_from_file("account_kraken", path);
+    let mut my_api = KrakenApi::new_from_file("account_kraken", path).unwrap();
 
     // First, get the list of all pair we can trade with EUR€ as quote
     // You could use a simple unwrap() or use match to recover from an error for example
@@ -23,13 +23,23 @@ fn main() {
         Ok(pairs_request) => pairs_request,
         Err(err) => panic!("Error : {:?}, description : {}", err, err.description()),
     };
-    let list_all_pairs = pairs_request.get("result").unwrap().as_object().unwrap();
+    let list_all_pairs = pairs_request
+        .get("result")
+        .unwrap()
+        .as_object()
+        .unwrap();
 
     let mut list_pairs_eur = Vec::new();
 
     for pair in list_all_pairs {
         // The map structure is explained in documentation
-        let quote = pair.1.as_object().unwrap().get("quote").unwrap().as_str().unwrap();
+        let quote = pair.1
+            .as_object()
+            .unwrap()
+            .get("quote")
+            .unwrap()
+            .as_str()
+            .unwrap();
         if quote == "ZEUR" {
             let name = pair.0;
             list_pairs_eur.push(name);
@@ -46,12 +56,20 @@ fn main() {
 
     // Convert Vec into comma separated values String
     let eur_pairs = format!("{:?}", list_pairs_eur);
-    let eur_pairs = eur_pairs.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
+    let eur_pairs = eur_pairs
+        .replace("\"", "")
+        .replace("[", "")
+        .replace("]", "")
+        .replace(" ", "");
 
 
     // Get ticker
     let ticker_request = my_api.get_ticker_information(&eur_pairs).unwrap();
-    let list_ticker = ticker_request.get("result").unwrap().as_object().unwrap();
+    let list_ticker = ticker_request
+        .get("result")
+        .unwrap()
+        .as_object()
+        .unwrap();
 
     let mut pair_to_buy = "";
     let mut pair_price_var = 0.0;
@@ -62,9 +80,19 @@ fn main() {
 
         // WARNING: Kraken uses quotes to encapsulate floating value
         let pair_info = pair.1.as_object().unwrap();
-        let open_price = pair_info.get("o").unwrap().as_str().unwrap().parse::<f64>().unwrap();
+        let open_price = pair_info
+            .get("o")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse::<f64>()
+            .unwrap();
         let close_price_array = pair_info.get("c").unwrap().as_array().unwrap();
-        let close_price = close_price_array[0].as_str().unwrap().parse::<f64>().unwrap();
+        let close_price = close_price_array[0]
+            .as_str()
+            .unwrap()
+            .parse::<f64>()
+            .unwrap();
 
         let price_var = (close_price / open_price - 1.0) * 100.0;
 

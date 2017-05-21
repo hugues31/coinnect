@@ -5,7 +5,7 @@ use serde_json::value::Value;
 
 use std::fmt::Debug;
 
-use error::Error;
+use error::*;
 use pair::Pair;
 use types::Ticker;
 
@@ -19,7 +19,7 @@ pub enum Exchange {
 
 pub trait ExchangeApi: Debug {
     /// Return a Ticker for the Pair specified.
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error>;
+    fn ticker(&mut self, pair: Pair) -> Result<Ticker>;
 
     fn return_order_book(&mut self, pair: Pair) -> Option<Map<String, Value>>;
     fn return_trade_history(&mut self, pair: Pair) -> Option<Map<String, Value>>;

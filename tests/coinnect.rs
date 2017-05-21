@@ -11,7 +11,8 @@ mod coinnect_tests {
         let api: Box<ExchangeApi> = Coinnect::new(Exchange::Bitstamp,
                                                   "bs_api_key",
                                                   "bs_api_secret",
-                                                  Some("bs_cust_id"));
+                                                  Some("bs_cust_id"))
+                .unwrap();
 
         assert_eq!(format!("{:?}", api),
                    "BitstampApi { last_request: 0, api_key: \"bs_api_key\", api_secret: \
@@ -35,7 +36,8 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Bitstamp,
                                     "bs_api_key",
                                     "bs_api_secret",
-                                    Some("bs_cust_id"));
+                                    Some("bs_cust_id"))
+                .unwrap();
         let ticker = api.ticker(Pair::BTC_USD);
 
         assert_ne!(ticker.unwrap().last_trade_price, 0.0);
@@ -43,7 +45,7 @@ mod coinnect_tests {
 
     #[test]
     fn coinnect_can_get_a_ticker_from_kraken() {
-        let mut api = Coinnect::new(Exchange::Kraken, "api_key", "api_secret", None);
+        let mut api = Coinnect::new(Exchange::Kraken, "api_key", "api_secret", None).unwrap();
         let ticker = api.ticker(Pair::BTC_EUR);
 
         assert_ne!(ticker.unwrap().last_trade_price, 0.0);
@@ -51,7 +53,7 @@ mod coinnect_tests {
 
     #[test]
     fn coinnect_can_get_a_ticker_from_poloniex() {
-        let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None);
+        let mut api = Coinnect::new(Exchange::Poloniex, "api_key", "api_secret", None).unwrap();
         let ticker = api.ticker(Pair::BTC_ETH);
 
         assert_ne!(ticker.unwrap().last_trade_price, 0.0);
@@ -63,7 +65,8 @@ mod coinnect_tests {
     fn balance_should_have_usd_btc_fee() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
-        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path);
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path)
+            .unwrap();
         let result = api.return_balances(Pair::BTC_USD).unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();

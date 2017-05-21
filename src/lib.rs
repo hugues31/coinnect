@@ -18,6 +18,8 @@
 //! can't afford to loose. This is a personal project, I can not be held responsible for
 //! the library malfunction, which can lead to a loss of money.
 
+#![recursion_limit="128"]
+
 #[macro_use]
 extern crate hyper;
 extern crate crypto;
@@ -28,6 +30,8 @@ extern crate time;
 extern crate lazy_static;
 extern crate bidir_map;
 extern crate data_encoding;
+#[macro_use]
+extern crate error_chain;
 
 pub mod coinnect;
 pub mod exchange;
