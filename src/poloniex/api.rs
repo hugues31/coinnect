@@ -96,19 +96,20 @@ impl PoloniexApi {
 
         let data: Value = serde_json::from_str(&buffer)?;
         let json_obj = data.as_object()
-            .ok_or("Invalid JSON format.")?
+            .ok_or_else(|| "Invalid JSON format.")?
             .get(config_name)
-            .ok_or(ErrorKind::MissingField(config_name.to_string()))?;
+            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
         let api_key = json_obj
             .get("api_key")
-            .ok_or(ErrorKind::MissingField("api_key".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
             .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret = json_obj
-            .get("api_secret")
-            .ok_or(ErrorKind::MissingField("api_secret".to_string()))?
-            .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
+        let api_secret =
+            json_obj
+                .get("api_secret")
+                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
 
         Ok(PoloniexApi::new(api_key, api_secret)?)
     }
@@ -139,7 +140,7 @@ impl PoloniexApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     fn private_query(&mut self,
@@ -177,7 +178,7 @@ impl PoloniexApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     /// Sample output :

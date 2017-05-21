@@ -20,23 +20,23 @@ impl ExchangeApi for BitstampApi {
 
         let price = result["last"]
             .as_str()
-            .ok_or(ErrorKind::MissingField("last".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("last".to_string()))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat("last".to_string()))?;
 
         let ask = result["ask"]
             .as_str()
-            .ok_or(ErrorKind::MissingField("ask".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("ask".to_string()))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat("ask".to_string()))?;
         let bid = result["bid"]
             .as_str()
-            .ok_or(ErrorKind::MissingField("bid".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("bid".to_string()))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat("bid".to_string()))?;
         let vol = result["volume"]
             .as_str()
-            .ok_or(ErrorKind::MissingField("volume".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("volume".to_string()))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat("volume".to_string()))?;
 
@@ -93,7 +93,9 @@ impl ExchangeApi for BitstampApi {
                timestamp: helpers::get_unix_timestamp_ms(),
                identifier: vec![result?["id"]
                                     .as_str()
-                                    .ok_or(ErrorKind::MissingField("id".to_string()))?
+                                    .ok_or_else(|| {
+                                                    ErrorKind::MissingField("id".to_string())
+                                                })?
                                     .to_string()],
            })
     }

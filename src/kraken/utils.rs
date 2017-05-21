@@ -86,8 +86,8 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
 
-pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>> {
-    let data: Value = match serde_json::from_str(&json_string) {
+pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
+    let data: Value = match serde_json::from_str(json_string) {
         Ok(data) => data,
         Err(_) => return Err(ErrorKind::BadParse.into()),
     };
@@ -100,26 +100,26 @@ pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>> {
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
-pub fn parse_result(response: Map<String, Value>) -> Result<Map<String, Value>> {
+pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>> {
     let error_array = match response.get("error") {
         Some(array) => {
             array
                 .as_array()
-                .ok_or(ErrorKind::InvalidFieldFormat("error".to_string()))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("error".to_string()))?
         }
         None => return Err(ErrorKind::BadParse.into()),
     };
     if error_array.is_empty() {
         return Ok(response
                       .get("result")
-                      .ok_or(ErrorKind::MissingField("result".to_string()))?
+                      .ok_or_else(|| ErrorKind::MissingField("result".to_string()))?
                       .as_object()
-                      .ok_or(ErrorKind::InvalidFieldFormat("result".to_string()))?
+                      .ok_or_else(|| ErrorKind::InvalidFieldFormat("result".to_string()))?
                       .clone());
     }
     let error_msg = error_array[0]
         .as_str()
-        .ok_or(ErrorKind::InvalidFieldFormat(error_array[0].to_string()))?
+        .ok_or_else(|| ErrorKind::InvalidFieldFormat(error_array[0].to_string()))?
         .to_string();
 
     //TODO: Parse correctly the reason for "EService:Unavailable".

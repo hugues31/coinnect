@@ -18,28 +18,28 @@ impl ExchangeApi for KrakenApi {
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let raw_response = self.get_ticker_information(&pair_name)?;
+        let raw_response = self.get_ticker_information(pair_name)?;
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         let price = result[*pair_name]["c"][0]
             .as_str()
-            .ok_or(ErrorKind::MissingField(format!("{}.c", pair_name)))?
+            .ok_or_else(|| ErrorKind::MissingField(format!("{}.c", pair_name)))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.c", pair_name)))?;
         let ask = result[*pair_name]["a"][0]
             .as_str()
-            .ok_or(ErrorKind::MissingField(format!("{}.a", pair_name)))?
+            .ok_or_else(|| ErrorKind::MissingField(format!("{}.a", pair_name)))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.a", pair_name)))?;
         let bid = result[*pair_name]["b"][0]
             .as_str()
-            .ok_or(ErrorKind::MissingField(format!("{}.b", pair_name)))?
+            .ok_or_else(|| ErrorKind::MissingField(format!("{}.b", pair_name)))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.b", pair_name)))?;
         let vol = result[*pair_name]["v"][1]
             .as_str()
-            .ok_or(ErrorKind::MissingField(format!("{}.v", pair_name)))?
+            .ok_or_else(|| ErrorKind::MissingField(format!("{}.v", pair_name)))?
             .parse::<f64>()
             .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.v", pair_name)))?;
 
@@ -60,9 +60,9 @@ impl ExchangeApi for KrakenApi {
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let raw_response = self.get_order_book(&pair_name, "1000")?; // 1000 entries max
+        let raw_response = self.get_order_book(pair_name, "1000")?; // 1000 entries max
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
@@ -70,21 +70,27 @@ impl ExchangeApi for KrakenApi {
         let ask_array =
             result[*pair_name]["asks"]
                 .as_array()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}.asks", result[*pair_name])))?;
+                .ok_or_else(|| {
+                                ErrorKind::InvalidFieldFormat(format!("{}.asks",
+                                                                      result[*pair_name]))
+                            })?;
         let bid_array =
             result[*pair_name]["bids"]
                 .as_array()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}.bids", result[*pair_name])))?;
+                .ok_or_else(|| {
+                                ErrorKind::InvalidFieldFormat(format!("{}.bids",
+                                                                      result[*pair_name]))
+                            })?;
 
         for ask in ask_array {
             let price = ask[0]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
             let volume = ask[1]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
@@ -93,12 +99,12 @@ impl ExchangeApi for KrakenApi {
         for bid in bid_array {
             let price = bid[0]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
             let volume = bid[1]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
 
@@ -125,17 +131,13 @@ impl ExchangeApi for KrakenApi {
         };
 
         let direction = match order_type {
-            OrderType::BuyLimit => "buy",
-            OrderType::BuyMarket => "buy",
-            OrderType::SellLimit => "sell",
-            OrderType::SellMarket => "sell",
+            OrderType::BuyLimit | OrderType::SellLimit => "limit",
+            OrderType::BuyMarket | OrderType::SellMarket => "market",
         };
 
         let order_type_str = match order_type {
-            OrderType::BuyLimit => "limit",
-            OrderType::SellLimit => "limit",
-            OrderType::BuyMarket => "market",
-            OrderType::SellMarket => "market",
+            OrderType::BuyLimit | OrderType::SellLimit => "limit",
+            OrderType::BuyMarket | OrderType::SellMarket => "market",
         };
 
         let mut price_str = "".to_string();
@@ -143,7 +145,7 @@ impl ExchangeApi for KrakenApi {
             price_str = price.unwrap().to_string()
         };
 
-        let raw_response = self.add_standard_order(&pair_name,
+        let raw_response = self.add_standard_order(pair_name,
                                                    direction,
                                                    order_type_str,
                                                    &price_str,
@@ -156,17 +158,18 @@ impl ExchangeApi for KrakenApi {
                                                    "",
                                                    "")?;
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         let mut txids = Vec::new();
 
-        let list_id = result["txid"]
-            .as_array()
-            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["txid"])))?;
+        let list_id =
+            result["txid"]
+                .as_array()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["txid"])))?;
 
         for id in list_id {
             txids.push(id.as_str()
-                           .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", id)))?
+                           .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", id)))?
                            .to_string());
         }
 

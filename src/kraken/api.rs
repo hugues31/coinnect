@@ -1,6 +1,8 @@
 //! Use this module to interact with the raw-original API provided by Kraken.
 //! WARNING: Special attention should be paid to error management: parsing number, etc.
 
+#![allow(too_many_arguments)]
+
 use crypto::digest::Digest;
 use crypto::hmac::Hmac;
 use crypto::mac::Mac;
@@ -96,19 +98,20 @@ impl KrakenApi {
 
         let data: Value = serde_json::from_str(&buffer)?;
         let json_obj = data.as_object()
-            .ok_or("Invalid JSON format.")?
+            .ok_or_else(|| "Invalid JSON format.")?
             .get(config_name)
-            .ok_or(ErrorKind::MissingField(config_name.to_string()))?;
+            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
         let api_key = json_obj
             .get("api_key")
-            .ok_or(ErrorKind::MissingField("api_key".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
             .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret = json_obj
-            .get("api_secret")
-            .ok_or(ErrorKind::MissingField("api_secret".to_string()))?
-            .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
+        let api_secret =
+            json_obj
+                .get("api_secret")
+                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
 
         Ok(KrakenApi::new(api_key, api_secret)?)
     }
@@ -133,7 +136,7 @@ impl KrakenApi {
                     -> Result<Map<String, Value>> {
         helpers::strip_empties(params);
         let url = "https://api.kraken.com/0/public/".to_string() + method + "?" +
-                  &helpers::url_encode_hashmap(&params);
+                  &helpers::url_encode_hashmap(params);
 
         self.block_or_continue();
         //TODO: Handle correctly http errors with error_chain.
@@ -144,7 +147,7 @@ impl KrakenApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     fn private_query(&mut self,
@@ -162,7 +165,7 @@ impl KrakenApi {
         params.insert("nonce", &nonce);
 
         if let Some(ref password) = self.otp {
-            params.insert("otp", &password);
+            params.insert("otp", password);
         }
 
         let postdata = helpers::url_encode_hashmap(&params);
@@ -184,7 +187,7 @@ impl KrakenApi {
 
         let mut buffer = String::new();
         res.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     fn create_signature(&self, urlpath: String, postdata: &str, nonce: &str) -> Result<String> {

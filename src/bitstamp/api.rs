@@ -102,24 +102,26 @@ impl BitstampApi {
 
         let data: Value = serde_json::from_str(&buffer)?;
         let json_obj = data.as_object()
-            .ok_or(ErrorKind::BadParse)?
+            .ok_or_else(|| ErrorKind::BadParse)?
             .get(config_name)
-            .ok_or(ErrorKind::MissingField(config_name.to_string()))?;
+            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
         let api_key = json_obj
             .get("api_key")
-            .ok_or(ErrorKind::MissingField("api_key".to_string()))?
+            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
             .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret = json_obj
-            .get("api_secret")
-            .ok_or(ErrorKind::MissingField("api_secret".to_string()))?
-            .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
-        let customer_id = json_obj
-            .get("customer_id")
-            .ok_or(ErrorKind::MissingField("customer_id".to_string()))?
-            .as_str()
-            .ok_or(ErrorKind::InvalidFieldFormat("customer_id".to_string()))?;
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
+        let api_secret =
+            json_obj
+                .get("api_secret")
+                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
+        let customer_id =
+            json_obj
+                .get("customer_id")
+                .ok_or_else(|| ErrorKind::MissingField("customer_id".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("customer_id".to_string()))?;
 
         let mut params = HashMap::new();
         params.insert("api_key", api_key);
@@ -131,8 +133,12 @@ impl BitstampApi {
 
     fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
-        let method: &str = params.get("method").ok_or("Missing \"method\" field.")?;
-        let pair: &str = params.get("pair").ok_or("Missing \"pair\" field.")?;
+        let method: &str = params
+            .get("method")
+            .ok_or_else(|| "Missing \"method\" field.")?;
+        let pair: &str = params
+            .get("pair")
+            .ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         utils::block_or_continue(self.last_request);
@@ -140,7 +146,7 @@ impl BitstampApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     ///
@@ -156,15 +162,17 @@ impl BitstampApi {
     /// ```
     fn private_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
-        let method: &str = params.get("method").ok_or("Missing \"method\" field.")?;
-        let pair: &str = params.get("pair").ok_or("Missing \"pair\" field.")?;
+        let method: &str = params
+            .get("method")
+            .ok_or_else(|| "Missing \"method\" field.")?;
+        let pair: &str = params
+            .get("pair")
+            .ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         let nonce = utils::generate_nonce(None);
-        let signature = utils::build_signature(nonce.clone(),
-                                               self.customer_id.clone(),
-                                               self.api_key.clone(),
-                                               self.api_secret.clone())?;
+        let signature =
+            utils::build_signature(&nonce, &self.customer_id, &self.api_key, &self.api_secret)?;
 
         let copy_api_key = self.api_key.clone();
         let mut post_params: &mut HashMap<&str, &str> = &mut HashMap::new();
@@ -172,7 +180,7 @@ impl BitstampApi {
         post_params.insert("signature", &signature);
         post_params.insert("nonce", &nonce);
         helpers::strip_empties(&mut post_params);
-        let post_data = helpers::url_encode_hashmap(&post_params);
+        let post_data = helpers::url_encode_hashmap(post_params);
         let mut response = self.http_client
             .post(&url)
             .header(ContentType::form_url_encoded())
@@ -181,7 +189,7 @@ impl BitstampApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(buffer)
+        utils::deserialize_json(&buffer)
     }
 
     /// Sample output :
@@ -203,7 +211,7 @@ impl BitstampApi {
         };
 
         let mut params: HashMap<&str, &str> = HashMap::new();
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         params.insert("method", "ticker");
         self.public_query(&params)
     }
@@ -223,7 +231,7 @@ impl BitstampApi {
 
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("method", "order_book");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         self.public_query(&params)
     }
 
@@ -242,7 +250,7 @@ impl BitstampApi {
         };
 
         let mut params: HashMap<&str, &str> = HashMap::new();
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         params.insert("method", "transactions");
         self.public_query(&params)
     }
@@ -263,7 +271,7 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         self.private_query(&params)
     }
 
@@ -293,16 +301,13 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "buy");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
         if let Some(order) = daily_order {
-            let daily_order_str = match order {
-                true => "True",
-                false => "",    // False is not a possible value
-            };
+            let daily_order_str = if order { "True" } else { "" }; // False is not a possible value
             params.insert("daily_order", daily_order_str);
         }
 
@@ -335,16 +340,13 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "sell");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
         if let Some(order) = daily_order {
-            let daily_order_str = match order {
-                true => "True",
-                false => "",    // False is not a possible value
-            };
+            let daily_order_str = if order { "True" } else { "" }; // False is not a possible value
             params.insert("daily_order", daily_order_str);
         }
 
@@ -365,7 +367,7 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "buy/market");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
 
@@ -386,7 +388,7 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "sell/market");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
 

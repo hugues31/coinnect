@@ -1,6 +1,7 @@
 //! Use this module to create a generic API.
 
 
+#![allow(new_ret_no_self)]
 
 use std::collections::HashMap;
 use std::path::PathBuf;

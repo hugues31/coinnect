@@ -19,6 +19,10 @@
 //! the library malfunction, which can lead to a loss of money.
 
 #![recursion_limit="128"]
+// Allow lint customization.
+#![allow(unknown_lints)]
+// Avoid warning for the Crypto-currency about quotes.
+#![allow(doc_markdown)]
 
 #[macro_use]
 extern crate hyper;

@@ -19,30 +19,30 @@ impl ExchangeApi for PoloniexApi {
         };
         let raw_response = self.return_ticker()?;
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         let price =
             result[*pair_name]["last"]
                 .as_str()
-                .ok_or(ErrorKind::MissingField(format!("{}.last", pair_name)))?
+                .ok_or_else(|| ErrorKind::MissingField(format!("{}.last", pair_name)))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.last", pair_name)))?;
         let ask =
             result[*pair_name]["lowestAsk"]
                 .as_str()
-                .ok_or(ErrorKind::MissingField(format!("{}.lowestAsk", pair_name)))?
+                .ok_or_else(|| ErrorKind::MissingField(format!("{}.lowestAsk", pair_name)))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.lowestAsk", pair_name)))?;
         let bid =
             result[*pair_name]["highestBid"]
                 .as_str()
-                .ok_or(ErrorKind::MissingField(format!("{}.hightestBid", pair_name)))?
+                .ok_or_else(|| ErrorKind::MissingField(format!("{}.hightestBid", pair_name)))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.highestBid", pair_name)))?;
         let vol =
             result[*pair_name]["quoteVolume"]
                 .as_str()
-                .ok_or(ErrorKind::MissingField(format!("{}.quoteVolume", pair_name)))?
+                .ok_or_else(|| ErrorKind::MissingField(format!("{}.quoteVolume", pair_name)))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.quoteVolume", pair_name)))?;
 
@@ -63,40 +63,42 @@ impl ExchangeApi for PoloniexApi {
         };
         let raw_response = self.return_order_book(pair_name, "1000")?; // 1000 entries max
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
 
-        let ask_array = result["asks"]
-            .as_array()
-            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
-        let bid_array = result["bids"]
-            .as_array()
-            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let ask_array =
+            result["asks"]
+                .as_array()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let bid_array =
+            result["bids"]
+                .as_array()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
         for ask in ask_array {
             let price = ask[0]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
 
             let volume = ask[1]
                 .as_f64()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
             let price = bid[0]
                 .as_str()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
                 .parse::<f64>()
                 .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
             let volume = bid[1]
                 .as_f64()
-                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
             bid_offers.push((price, volume));
         }
 
@@ -146,13 +148,16 @@ impl ExchangeApi for PoloniexApi {
             OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string()),
         }?;
 
-        let result = utils::parse_result(raw_response)?;
+        let result = utils::parse_result(&raw_response)?;
 
         Ok(OrderInfo {
                timestamp: helpers::get_unix_timestamp_ms(),
                identifier: vec![result["orderNumber"]
                                     .as_f64()
-                                    .ok_or(ErrorKind::MissingField("orderNumber".to_string()))?
+                                    .ok_or_else(|| {
+                                                    ErrorKind::MissingField("orderNumber"
+                                                                                .to_string())
+                                                })?
                                     .to_string()],
            })
     }
