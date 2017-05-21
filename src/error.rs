@@ -76,5 +76,10 @@ error_chain!{
             description("InsufficientOrderSize")
                 display("Your order is not big enough.")
         }
+
+        MissingPrice{
+            description("MissingPrice")
+                display("No price specified.")
+        }
     }
 }

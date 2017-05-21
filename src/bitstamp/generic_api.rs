@@ -69,15 +69,32 @@ impl ExchangeApi for BitstampApi {
         //};
 
         let result = match order_type {
-            OrderType::BuyLimit => self.buy_limit(pair, quantity, price.unwrap(), None, None),
+            OrderType::BuyLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+
+                // Unwrap safe here with the check above.
+                self.buy_limit(pair, quantity, price.unwrap(), None, None)
+            }
             OrderType::BuyMarket => self.buy_market(pair, quantity),
-            OrderType::SellLimit => self.sell_limit(pair, quantity, price.unwrap(), None, None),
+            OrderType::SellLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+
+                // Unwrap safe here with the check above.
+                self.sell_limit(pair, quantity, price.unwrap(), None, None)
+            }
             OrderType::SellMarket => self.sell_market(pair, quantity),
         };
 
         Ok(OrderInfo {
                timestamp: helpers::get_unix_timestamp_ms(),
-               identifier: vec![result.unwrap()["id"].as_str().unwrap().to_string()],
+               identifier: vec![result?["id"]
+                                    .as_str()
+                                    .ok_or(ErrorKind::MissingField("id".to_string()))?
+                                    .to_string()],
            })
     }
 }

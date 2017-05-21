@@ -67,18 +67,41 @@ impl ExchangeApi for KrakenApi {
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
 
-        let ask_array = result[*pair_name]["asks"].as_array().unwrap();
-        let bid_array = result[*pair_name]["bids"].as_array().unwrap();
+        let ask_array =
+            result[*pair_name]["asks"]
+                .as_array()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}.asks", result[*pair_name])))?;
+        let bid_array =
+            result[*pair_name]["bids"]
+                .as_array()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}.bids", result[*pair_name])))?;
 
         for ask in ask_array {
-            let price = ask[0].as_str().unwrap().parse::<f64>().unwrap();
-            let volume = ask[1].as_str().unwrap().parse::<f64>().unwrap();
+            let price = ask[0]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
+            let volume = ask[1]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
-            let price = bid[0].as_str().unwrap().parse::<f64>().unwrap();
-            let volume = bid[1].as_str().unwrap().parse::<f64>().unwrap();
+            let price = bid[0]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
+            let volume = bid[1]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+
             bid_offers.push((price, volume));
         }
 
@@ -137,8 +160,14 @@ impl ExchangeApi for KrakenApi {
 
         let mut txids = Vec::new();
 
-        for id in result["txid"].as_array().unwrap() {
-            txids.push(id.as_str().unwrap().to_string());
+        let list_id = result["txid"]
+            .as_array()
+            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["txid"])))?;
+
+        for id in list_id {
+            txids.push(id.as_str()
+                           .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", id)))?
+                           .to_string());
         }
 
         Ok(OrderInfo {

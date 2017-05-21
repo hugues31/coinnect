@@ -298,8 +298,8 @@ impl BitstampApi {
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
-        if daily_order.is_some() {
-            let daily_order_str = match daily_order.unwrap() {
+        if let Some(order) = daily_order {
+            let daily_order_str = match order {
                 true => "True",
                 false => "",    // False is not a possible value
             };
@@ -340,8 +340,8 @@ impl BitstampApi {
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
-        if daily_order.is_some() {
-            let daily_order_str = match daily_order.unwrap() {
+        if let Some(order) = daily_order {
+            let daily_order_str = match order {
                 true => "True",
                 false => "",    // False is not a possible value
             };

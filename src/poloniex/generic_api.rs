@@ -68,18 +68,35 @@ impl ExchangeApi for PoloniexApi {
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
 
-        let ask_array = result["asks"].as_array().unwrap();
-        let bid_array = result["bids"].as_array().unwrap();
+        let ask_array = result["asks"]
+            .as_array()
+            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let bid_array = result["bids"]
+            .as_array()
+            .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
         for ask in ask_array {
-            let price = ask[0].as_str().unwrap().parse::<f64>().unwrap();
-            let volume = ask[1].as_f64().unwrap();
+            let price = ask[0]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
+
+            let volume = ask[1]
+                .as_f64()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
-            let price = bid[0].as_str().unwrap().parse::<f64>().unwrap();
-            let volume = bid[1].as_f64().unwrap();
+            let price = bid[0]
+                .as_str()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
+            let volume = bid[1]
+                .as_f64()
+                .ok_or(ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
             bid_offers.push((price, volume));
         }
 
@@ -104,7 +121,12 @@ impl ExchangeApi for PoloniexApi {
 
         // The trick is to use minimal (0.0) and "maximum" (999..) price to simulate market order
         let raw_response = match order_type {
+            // Unwrap safe here with the check above.
             OrderType::BuyLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+
                 self.buy(pair_name,
                          &price.unwrap().to_string(),
                          &quantity.to_string())
@@ -113,6 +135,10 @@ impl ExchangeApi for PoloniexApi {
                 self.buy(pair_name, "9999999999999999999", &quantity.to_string())
             }
             OrderType::SellLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+
                 self.sell(pair_name,
                           &price.unwrap().to_string(),
                           &quantity.to_string())
@@ -124,7 +150,10 @@ impl ExchangeApi for PoloniexApi {
 
         Ok(OrderInfo {
                timestamp: helpers::get_unix_timestamp_ms(),
-               identifier: vec![result["orderNumber"].as_f64().unwrap().to_string()],
+               identifier: vec![result["orderNumber"]
+                                    .as_f64()
+                                    .ok_or(ErrorKind::MissingField("orderNumber".to_string()))?
+                                    .to_string()],
            })
     }
 }
