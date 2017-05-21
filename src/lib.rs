@@ -18,6 +18,12 @@
 //! can't afford to loose. This is a personal project, I can not be held responsible for
 //! the library malfunction, which can lead to a loss of money.
 
+#![recursion_limit="128"]
+// Allow lint customization.
+#![allow(unknown_lints)]
+// Avoid warning for the Crypto-currency about quotes.
+#![allow(doc_markdown)]
+
 #[macro_use]
 extern crate hyper;
 extern crate crypto;
@@ -28,6 +34,8 @@ extern crate time;
 extern crate lazy_static;
 extern crate bidir_map;
 extern crate data_encoding;
+#[macro_use]
+extern crate error_chain;
 
 pub mod coinnect;
 pub mod exchange;

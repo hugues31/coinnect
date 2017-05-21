@@ -13,7 +13,7 @@ use coinnect::pair::Pair::*;
 fn main() {
     // We create a Coinnect Generic API
     // Since Kraken does not need customer_id field, we set it to None
-    let mut my_api = Coinnect::new(Kraken, "api_key", "api_secret", None);
+    let mut my_api = Coinnect::new(Kraken, "api_key", "api_secret", None).unwrap();
     let ticker = my_api.ticker(ETC_BTC);
 
     println!("ETC_BTC last trade price is {}.",

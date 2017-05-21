@@ -24,7 +24,7 @@ pub fn get_unix_timestamp_ms() -> i64 {
 pub fn strip_empties(x: &mut HashMap<&str, &str>) {
     let empties: Vec<_> = x.iter()
         .filter(|&(_, &v)| v.is_empty())
-        .map(|(k, _)| k.clone())
+        .map(|(k, _)| (*k).clone())
         .collect();
     for empty in empties {
         x.remove(&empty);

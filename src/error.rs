@@ -2,44 +2,84 @@
 //! Error type represents all possible errors that can occur when dealing
 //! with the generic or any dedicated-exchange API
 
-use std::error;
-use std::fmt;
 
-#[derive(Debug, PartialEq)]
-pub enum Error {
-    ServiceUnavailable,
-    BadParse,
-    InvalidLogin,
-    InvalidArguments,
-    RateLimitExceeded,
-    PairUnsupported,
-    InsufficientFunds,
-    InsufficientOrderSize,
-    ExchangeSpecificError(String),
-    UndefinedError,
-}
+use serde_json;
+use hyper;
+use data_encoding;
 
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::ServiceUnavailable => "Host could not be reached.",
-            Error::BadParse => "The response could not be parsed.",
-            Error::InvalidLogin => "Wrong API key or secret.",
-            Error::InvalidArguments => "Arguments passed do not conform to the protocol.",
-            Error::RateLimitExceeded => "API call rate limit exceeded.",
-            Error::PairUnsupported => "This pair is not supported.",
-            Error::InsufficientFunds => "Account has not the required funds to make this order",
-            Error::InsufficientOrderSize => "Minimum order value has not been reached",
-            Error::ExchangeSpecificError(ref s) => s,
-            Error::UndefinedError => "An unknown error occurred.",
-        }
+error_chain!{
+    types {
+        Error, ErrorKind, ResultExt, Result;
     }
-}
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            _ => error::Error::description(self).fmt(f),
+    foreign_links {
+        Json(serde_json::Error);
+        ParseFloat(::std::num::ParseFloatError);
+        ParseString(::std::string::FromUtf8Error);
+        Hyper(hyper::Error);
+        DataDecoding(data_encoding::DecodeError);
+        Io(::std::io::Error);
+    }
+
+    errors {
+        BadParse {
+            description("ParsingError")
+                display("The response could not be parsed.")
+        }
+
+        ServiceUnavailable(reason: String) {
+            description("ServiceUnavailable")
+                display("Host could not be reached: {}.", reason)
+        }
+
+        RateLimitExceeded {
+            description("RateLimitExceeded")
+                display("API call rate limit exceeded.")
+        }
+
+        PairUnsupported {
+            description("PairUnsupported")
+                display("This pair is not supported.")
+        }
+
+        InvalidArguments {
+            description("InvalidArguments")
+                display("Arguments passed do not conform to the protocol.")
+        }
+
+        ExchangeSpecificError(reason: String) {
+            description("ExchangeSpecificError")
+                display("Exchange error: {}", reason)
+        }
+
+        TlsError {
+            description("TlsError")
+                display("Fail to initialize TLS client.")
+        }
+
+        InvalidFieldFormat(field: String) {
+            description("InvalidFieldFormat")
+                display("Fail to parse field \"{}\".", field)
+        }
+
+        MissingField(field: String) {
+            description("MissingFiled")
+                display("Missing field \"{}\".", field)
+        }
+
+        InsufficientFunds {
+            description("InsufficientFunds")
+                display("You haven't enough founds.")
+        }
+
+        InsufficientOrderSize {
+            description("InsufficientOrderSize")
+                display("Your order is not big enough.")
+        }
+
+        MissingPrice{
+            description("MissingPrice")
+                display("No price specified.")
         }
     }
 }

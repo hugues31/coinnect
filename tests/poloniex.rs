@@ -10,7 +10,7 @@ mod poloniex_tests {
     fn balance_has_btc_key() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
-        let mut api = PoloniexApi::new_from_file("account_poloniex", path);
+        let mut api = PoloniexApi::new_from_file("account_poloniex", path).unwrap();
         let result = api.return_balances();
 
         assert!(result.unwrap().contains_key("BTC"));

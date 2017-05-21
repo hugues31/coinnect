@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use error::Error;
+use error::*;
 use pair::Pair;
 use types::*;
 
@@ -15,11 +15,11 @@ pub enum Exchange {
 }
 
 pub trait ExchangeApi: Debug {
-    /// Return a Ticker for the specified Pair.
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker, Error>;
+    /// Return a Ticker for the Pair specified.
+    fn ticker(&mut self, pair: Pair) -> Result<Ticker>;
 
     /// Return an Orderbook for the specified Pair.
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook, Error>;
+    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook>;
 
     /// Place an order directly to the exchange.
     /// Quantity is in quote currency. So if you want to buy 1 Bitcoin for X€ (pair BTC_EUR),
@@ -34,5 +34,5 @@ pub trait ExchangeApi: Debug {
                  pair: Pair,
                  quantity: Volume,
                  price: Option<Price>)
-                 -> Result<OrderInfo, Error>;
+                 -> Result<OrderInfo>;
 }

@@ -10,7 +10,7 @@ use serde_json::value::Map;
 use std::thread;
 use std::time::Duration;
 
-use error;
+use error::*;
 use helpers;
 use pair::Pair;
 use pair::Pair::*;
@@ -49,14 +49,14 @@ pub fn block_or_continue(last_request: i64) {
     }
 }
 
-pub fn build_signature(nonce: String,
-                       customer_id: String,
-                       api_key: String,
-                       api_secret: String)
-                       -> String {
+pub fn build_signature(nonce: &str,
+                       customer_id: &str,
+                       api_key: &str,
+                       api_secret: &str)
+                       -> Result<String> {
     const C: &'static [u8] = b"0123456789ABCDEF";
 
-    let message = nonce + &customer_id + &api_key;
+    let message = nonce.to_owned() + customer_id + api_key;
     let mut hmac = Hmac::new(Sha256::new(), api_secret.as_bytes());
 
     hmac.input(message.as_bytes());
@@ -68,22 +68,23 @@ pub fn build_signature(nonce: String,
         signature.push(C[(byte >> 4) as usize]);
         signature.push(C[(byte & 0xf) as usize]);
     }
-    String::from_utf8(signature).unwrap()
+    // TODO: Handle correctly the from_utf8 errors with error_chain.
+    Ok(String::from_utf8(signature)?)
 }
 
 pub fn build_url(method: &str, pair: &str) -> String {
-    "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + &pair + "/"
+    "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + pair + "/"
 }
 
-pub fn deserialize_json(json_string: String) -> Result<Map<String, Value>, error::Error> {
-    let data: Value = match serde_json::from_str(&json_string) {
+pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
+    let data: Value = match serde_json::from_str(json_string) {
         Ok(data) => data,
-        Err(_) => return Err(error::Error::BadParse),
+        Err(_) => return Err(ErrorKind::BadParse.into()),
     };
 
     match data.as_object() {
         Some(value) => Ok(value.clone()),
-        None => Err(error::Error::BadParse),
+        None => Err(ErrorKind::BadParse.into()),
     }
 }
 

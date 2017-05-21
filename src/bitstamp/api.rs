@@ -15,11 +15,10 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::fs::File;
 
-use bitstamp::utils;
-use error;
-use error::Error;
+use error::*;
 use helpers;
 use pair::Pair;
+use bitstamp::utils;
 use types::*;
 
 header! {
@@ -49,7 +48,7 @@ pub struct BitstampApi {
 
 impl BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    pub fn new(params: &HashMap<&str, &str>) -> BitstampApi {
+    pub fn new(params: &HashMap<&str, &str>) -> Result<BitstampApi> {
         let mut params = params.clone();
         helpers::strip_empties(&mut params);
 
@@ -59,16 +58,21 @@ impl BitstampApi {
         let api_secret = params.get("api_secret").unwrap_or(&empty_str);
         let customer_id = params.get("customer_id").unwrap_or(&empty_str);
 
-        let ssl = NativeTlsClient::new().unwrap();
+        //TODO: Handle correctly TLS errors with error_chain.
+        let ssl = match NativeTlsClient::new() {
+            Ok(res) => res,
+            Err(_) => return Err(ErrorKind::TlsError.into()),
+        };
+
         let connector = HttpsConnector::new(ssl);
 
-        BitstampApi {
-            last_request: 0,
-            api_key: api_key.to_string(),
-            api_secret: api_secret.to_string(),
-            customer_id: customer_id.to_string(),
-            http_client: Client::with_connector(connector),
-        }
+        Ok(BitstampApi {
+               last_request: 0,
+               api_key: api_key.to_string(),
+               api_secret: api_secret.to_string(),
+               customer_id: customer_id.to_string(),
+               http_client: Client::with_connector(connector),
+           })
     }
 
     /// Create a new BitstampApi from a json configuration file. This file must follow this
@@ -91,38 +95,58 @@ impl BitstampApi {
     /// ```
     /// For this example, you could use load your Bitstamp account with
     /// `new_from_file("account_bitstamp", Path::new("/keys.json"))`
-    pub fn new_from_file(config_name: &str, path: PathBuf) -> BitstampApi {
-        let mut f = File::open(&path).unwrap();
+    pub fn new_from_file(config_name: &str, path: PathBuf) -> Result<BitstampApi> {
+        let mut f = File::open(&path)?;
         let mut buffer = String::new();
-        f.read_to_string(&mut buffer).unwrap();
+        f.read_to_string(&mut buffer)?;
 
-        let data: Value = serde_json::from_str(&buffer).unwrap();
-        let json_obj = data.as_object().unwrap().get(config_name).unwrap();
-        let api_key = json_obj.get("api_key").unwrap().as_str().unwrap();
-        let api_secret = json_obj.get("api_secret").unwrap().as_str().unwrap();
-        let customer_id = json_obj.get("customer_id").unwrap().as_str().unwrap();
+        let data: Value = serde_json::from_str(&buffer)?;
+        let json_obj = data.as_object()
+            .ok_or_else(|| ErrorKind::BadParse)?
+            .get(config_name)
+            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
+        let api_key = json_obj
+            .get("api_key")
+            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
+            .as_str()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
+        let api_secret =
+            json_obj
+                .get("api_secret")
+                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
+        let customer_id =
+            json_obj
+                .get("customer_id")
+                .ok_or_else(|| ErrorKind::MissingField("customer_id".to_string()))?
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("customer_id".to_string()))?;
 
         let mut params = HashMap::new();
         params.insert("api_key", api_key);
         params.insert("api_secret", api_secret);
         params.insert("customer_id", customer_id);
-        BitstampApi::new(&params)
+
+        Ok(BitstampApi::new(&params)?)
     }
 
-    fn public_query(&mut self,
-                    params: &HashMap<&str, &str>)
-                    -> Result<Map<String, Value>, error::Error> {
+    fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
-        let method: &str = params.get("method").unwrap();
-        let pair: &str = params.get("pair").unwrap();
+        let method: &str = params
+            .get("method")
+            .ok_or_else(|| "Missing \"method\" field.")?;
+        let pair: &str = params
+            .get("pair")
+            .ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         utils::block_or_continue(self.last_request);
-        let mut response = self.http_client.get(&url).send().unwrap();
+        let mut response = self.http_client.get(&url).send()?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
-        response.read_to_string(&mut buffer).unwrap();
-        utils::deserialize_json(buffer)
+        response.read_to_string(&mut buffer)?;
+        utils::deserialize_json(&buffer)
     }
 
     ///
@@ -136,19 +160,19 @@ impl BitstampApi {
     /// let  result = api.private_query("balance", "btcusd");
     /// assert_eq!(true, true);
     /// ```
-    fn private_query(&mut self,
-                     params: &HashMap<&str, &str>)
-                     -> Result<Map<String, Value>, error::Error> {
+    fn private_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
-        let method: &str = params.get("method").unwrap();
-        let pair: &str = params.get("pair").unwrap();
+        let method: &str = params
+            .get("method")
+            .ok_or_else(|| "Missing \"method\" field.")?;
+        let pair: &str = params
+            .get("pair")
+            .ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         let nonce = utils::generate_nonce(None);
-        let signature = utils::build_signature(nonce.clone(),
-                                               self.customer_id.clone(),
-                                               self.api_key.clone(),
-                                               self.api_secret.clone());
+        let signature =
+            utils::build_signature(&nonce, &self.customer_id, &self.api_key, &self.api_secret)?;
 
         let copy_api_key = self.api_key.clone();
         let mut post_params: &mut HashMap<&str, &str> = &mut HashMap::new();
@@ -156,17 +180,16 @@ impl BitstampApi {
         post_params.insert("signature", &signature);
         post_params.insert("nonce", &nonce);
         helpers::strip_empties(&mut post_params);
-        let post_data = helpers::url_encode_hashmap(&post_params);
+        let post_data = helpers::url_encode_hashmap(post_params);
         let mut response = self.http_client
             .post(&url)
             .header(ContentType::form_url_encoded())
             .body(&post_data)
-            .send()
-            .unwrap();
+            .send()?;
 
         let mut buffer = String::new();
-        response.read_to_string(&mut buffer).unwrap();
-        utils::deserialize_json(buffer)
+        response.read_to_string(&mut buffer)?;
+        utils::deserialize_json(&buffer)
     }
 
     /// Sample output :
@@ -181,14 +204,14 @@ impl BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let mut params: HashMap<&str, &str> = HashMap::new();
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         params.insert("method", "ticker");
         self.public_query(&params)
     }
@@ -199,15 +222,16 @@ impl BitstampApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
+
         };
 
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("method", "order_book");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         self.public_query(&params)
     }
 
@@ -219,14 +243,14 @@ impl BitstampApi {
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
     /// "total":"0.04978"}, ... ]
     /// ```
-    pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let mut params: HashMap<&str, &str> = HashMap::new();
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         params.insert("method", "transactions");
         self.public_query(&params)
     }
@@ -239,15 +263,15 @@ impl BitstampApi {
     /// ```ignore
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>, error::Error> {
+    pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
         self.private_query(&params)
     }
 
@@ -262,10 +286,10 @@ impl BitstampApi {
                      price: Price,
                      price_limit: Option<Price>,
                      daily_order: Option<bool>)
-                     -> Result<Map<String, Value>, error::Error> {
+                     -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let amount_string = amount.to_string();
@@ -277,16 +301,13 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "buy");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
-        if daily_order.is_some() {
-            let daily_order_str = match daily_order.unwrap() {
-                true => "True",
-                false => "",    // False is not a possible value
-            };
+        if let Some(order) = daily_order {
+            let daily_order_str = if order { "True" } else { "" }; // False is not a possible value
             params.insert("daily_order", daily_order_str);
         }
 
@@ -304,10 +325,10 @@ impl BitstampApi {
                       price: Price,
                       price_limit: Option<Price>,
                       daily_order: Option<bool>)
-                      -> Result<Map<String, Value>, error::Error> {
+                      -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let amount_string = amount.to_string();
@@ -319,16 +340,13 @@ impl BitstampApi {
 
         let mut params = HashMap::new();
         params.insert("method", "sell");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
         params.insert("price", &price_string);
         params.insert("limit_price", &price_limit_string);
-        if daily_order.is_some() {
-            let daily_order_str = match daily_order.unwrap() {
-                true => "True",
-                false => "",    // False is not a possible value
-            };
+        if let Some(order) = daily_order {
+            let daily_order_str = if order { "True" } else { "" }; // False is not a possible value
             params.insert("daily_order", daily_order_str);
         }
 
@@ -339,20 +357,17 @@ impl BitstampApi {
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn buy_market(&mut self,
-                      pair: Pair,
-                      amount: Volume)
-                      -> Result<Map<String, Value>, error::Error> {
+    pub fn buy_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let amount_string = amount.to_string();
 
         let mut params = HashMap::new();
         params.insert("method", "buy/market");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
 
@@ -363,20 +378,17 @@ impl BitstampApi {
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn sell_market(&mut self,
-                       pair: Pair,
-                       amount: Volume)
-                       -> Result<Map<String, Value>, error::Error> {
+    pub fn sell_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
-            None => return Err(Error::PairUnsupported),
+            None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
         let amount_string = amount.to_string();
 
         let mut params = HashMap::new();
         params.insert("method", "sell/market");
-        params.insert("pair", &pair_name);
+        params.insert("pair", pair_name);
 
         params.insert("amount", &amount_string);
 
