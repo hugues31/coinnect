@@ -49,7 +49,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-coinnect = "0.2"
+coinnect = "0.3"
 ```
 
 and this to your crate root:
@@ -72,12 +72,12 @@ The example below shows you how to connect to Poloniex
 ```rust
 extern crate coinnect;
 
-use coinnect::poloniex::PoloniexApi;
+use coinnect::poloniex::api::PoloniexApi;
 
 fn main() {
     // We create a PoloniexApi by providing API key/secret
     // You can give an empty str if you only use public methods
-    let mut my_api = PoloniexApi::new("api_key", "api_secret");
+    let mut my_api = PoloniexApi::new("api_key", "api_secret").unwrap();
 
     // Let's look at the ticker!
     let list_coins = my_api.return_ticker().unwrap();
