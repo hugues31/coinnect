@@ -131,8 +131,8 @@ impl ExchangeApi for KrakenApi {
         };
 
         let direction = match order_type {
-            OrderType::BuyLimit | OrderType::SellLimit => "limit",
-            OrderType::BuyMarket | OrderType::SellMarket => "market",
+            OrderType::BuyLimit | OrderType::BuyMarket => "buy",
+            OrderType::SellLimit | OrderType::SellMarket => "sell",
         };
 
         let order_type_str = match order_type {
