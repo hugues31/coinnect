@@ -1,3 +1,6 @@
+
+#![warn(clone_double_ref)]
+
 use std::collections::HashMap;
 use time;
 
