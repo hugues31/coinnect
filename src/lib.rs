@@ -18,6 +18,10 @@
 //! can't afford to loose. This is a personal project, I can not be held responsible for
 //! the library malfunction, which can lead to a loss of money.
 
+// Move all the clippy warning in deny.
+#![deny(clippy)]
+
+// error_chain can make a lot of recursions.
 #![recursion_limit="128"]
 // Allow lint customization.
 #![allow(unknown_lints)]

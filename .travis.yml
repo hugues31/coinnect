@@ -1,1 +1,21 @@
 language: rust
+rust:
+  - stable
+
+matrix:
+  allow_failures:
+    - rust:
+      - nightly
+      - beta
+
+cache: cargo
+before_script:
+- export PATH="$PATH:$HOME/.cargo/bin"
+- which rustfmt || cargo install rustfmt
+- which cargo-audit || cargo install cargo-audit
+- which cargo-clippy || cargo install clippy
+script:
+- cargo fmt -- --write-mode=diff
+- cargo build
+- cargo test
+- cargo clippy
