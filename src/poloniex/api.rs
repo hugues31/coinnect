@@ -73,7 +73,7 @@ impl PoloniexApi {
     /// Create a new PoloniexApi from a json configuration file. This file must follow this
     /// structure:
     ///
-    /// ```ignore
+    /// ```json
     /// {
     ///     "account_kraken": {
     ///         "exchange"  : "kraken",
@@ -183,7 +183,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {
     /// "BTC_LTC":{
     /// "last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251",
@@ -200,7 +200,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC_LTC":{"BTC":"2.23248854","LTC":"87.10381314"},"BTC_NXT":{"BTC":"0.981616",
     /// "NXT":"14145"},
     /// ... "totalBTC":"81.89657704","totalLTC":"78.52083806"}
@@ -212,7 +212,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "isFrozen": 0, "seq": 18849}
     /// ```
@@ -228,7 +228,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140",
     /// "total":"0.01064"},
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
@@ -248,7 +248,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// [{"date":1405699200,"high":0.0045388,"low":0.00403001,"open":0.00404545,"close":0.00427592,
     /// "volume":44.11655644,"quoteVolume":10259.29079097,"weightedAverage":0.00430015}, ...]
     /// ```
@@ -268,7 +268,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {"1CR":{"maxDailyWithdrawal":10000,"txFee":0.01,"minConf":3,"disabled":0},
     /// "ABY":{"maxDailyWithdrawal":10000000,"txFee":0.01,"minConf":8,"disabled":0}, ... }
     /// ```
@@ -279,7 +279,7 @@ impl PoloniexApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {"offers":[{"rate":"0.00200000","amount":"64.66305732","rangeMin":2,"rangeMax":8}, ... ],
     /// "demands":[{"rate":"0.00170000","amount":"26.54848841","rangeMin":2,"rangeMax":2}, ... ]}
     /// ```
@@ -293,7 +293,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
     pub fn return_balances(&mut self) -> Result<Map<String, Value>> {
@@ -308,7 +308,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"LTC":{"available":"5.015","onOrders":"1.0025","btcValue":"0.078"},"NXT":{...}, ... }
     /// ```
     pub fn return_complete_balances(&mut self) -> Result<Map<String, Value>> {
@@ -321,7 +321,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC":"19YqztHmspv2egyD6jQM3yn81x5t5krVdJ","LTC":"LPgf9kjv9H1Vuh4XSaKhzBe8JHdou1WgUB",
     /// ... "ITC":"Press Generate.." ... }
     /// ```
@@ -334,7 +334,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"response":"CKXbbs8FAVbtEa397gJHSutmrdrBrhUMxe"}
     /// ```
     pub fn generate_new_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
@@ -349,7 +349,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"deposits":
     /// [{"currency":"BTC","address":"...","amount":"0.01006132","confirmations":10,
     /// "txid":"17f819a91369a9ff6c4a34216d434597cfc1b4a3d0489b46bd6f924137a47701",
@@ -378,12 +378,12 @@ impl PoloniexApi {
     ///
     /// Sample output for single market:
     ///
-    /// ```ignore
+    /// ```json
     /// [{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
     /// {"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}, ... ]
     /// ```
     ///
-    /// ```ignore
+    /// ```json
     /// Or, for all markets:
     /// {"BTC_1CR":[],"BTC_AC":[{"orderNumber":"120466","type":"sell","rate":"0.025",
     /// "amount":"100","total":"2.5"},
@@ -404,7 +404,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// [{ "globalTradeID": 25129732, "tradeID": "6325758", "date": "2016-04-05 08:08:40",
     /// "rate": "0.02565498", "amount": "0.10000000", "total": "0.00256549", "fee": "0.00200000",
     /// "orderNumber": "34225313575", "type": "sell", "category": "exchange" },
@@ -416,7 +416,7 @@ impl PoloniexApi {
     ///
     /// Or, for all markets:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC_MAID": [ { "globalTradeID": 29251512, "tradeID": "1385888",
     /// "date": "2016-05-03 01:29:55", "rate": "0.00014243", "amount": "353.74692925",
     /// "total": "0.05038417", "fee": "0.00200000", "orderNumber": "12603322113", "type": "buy",
@@ -444,7 +444,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// [{"globalTradeID": 20825863, "tradeID": 147142, "currencyPair": "BTC_XVC", "type": "buy",
     /// "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000",
     /// "date": "2016-03-14 01:04:36"}, ...]
@@ -461,7 +461,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732",
     /// "date":"2014-10-18 23:03:21", "rate":"0.00000173","total":"0.00058625","tradeID":"16164",
     /// "type":"buy"}]}
@@ -512,7 +512,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"orderNumber":"239574176","resultingTrades":{"BTC_BTS":[]}}
     /// ```
     pub fn move_order(&mut self, order_number: &str, rate: &str) -> Result<Map<String, Value>> {
@@ -530,7 +530,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"response":"Withdrew 2398 NXT."}
     /// ```
     pub fn withdraw(&mut self,
@@ -551,7 +551,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"makerFee": "0.00140000", "takerFee": "0.00240000", "thirtyDayVolume": "612.00248891",
     /// "nextTier": "1200.00000000"}
     /// ```
@@ -567,7 +567,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"exchange":{"BTC":"1.19042859","BTM":"386.52379392","CHA":"0.50000000",
     /// "DASH":"120.00000000", "STR":"3205.32958001", "VNL":"9673.22570147"},
     /// "margin":{"BTC":"3.90015637", "DASH":"250.00238240","XMR":"497.12028113"},
@@ -587,7 +587,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC_DASH":{"BTC":"8.50274777","DASH":"654.05752077"},"BTC_LTC":{"BTC":"8.50274777",
     /// "LTC":"1214.67825290"},"BTC_XMR":{"BTC":"8.50274777","XMR":"3696.84685650"}}
     /// ```
@@ -602,7 +602,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Transferred 2 BTC from exchange to margin account."}
     /// ```
     pub fn transfer_balance(&mut self,
@@ -625,7 +625,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"totalValue": "0.00346561","pl": "-0.00001220","lendingFees": "0.00000000",
     /// "netValue": "0.00345341","totalBorrowedValue": "0.00123220","currentMargin": "2.80263755"}
     /// ```
@@ -641,7 +641,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Margin order placed.","orderNumber":"154407998",
     /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
     /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"buy"}]}}
@@ -667,7 +667,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Margin order placed.","orderNumber":"154407998",
     /// "resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05",
     /// "rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"sell"}]}}
@@ -695,7 +695,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"amount":"40.94717831","total":"-0.09671314","basePrice":"0.00236190",
     /// "liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
     /// ```
@@ -711,7 +711,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Successfully closed margin position.",
     /// "resultingTrades":{"BTC_XMR":[{"amount":"7.09215901","date":"2015-05-10 22:38:49",
     /// "rate":"0.00235337","total":"0.01669047","tradeID":"1213346","type":"sell"},
@@ -729,7 +729,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Loan order placed.","orderID":10590}
     /// ```
     pub fn create_loan_offer(&mut self,
@@ -752,7 +752,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":"Loan offer canceled."}
     /// ```
     pub fn cancel_loan_offer(&mut self, order_number: &str) -> Result<Map<String, Value>> {
@@ -765,7 +765,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC":[{"id":10595,"rate":"0.00020000","amount":"3.00000000","duration":2,"autoRenew":1,
     /// "date":"2015-05-10 23:33:50"}],"LTC":[{"id":10598,"rate":"0.00002100",
     /// "amount":"10.00000000","duration":2,"autoRenew":1,"date":"2015-05-10 23:34:35"}]}
@@ -779,7 +779,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"provided":[{"id":75073,"currency":"LTC","rate":"0.00020000","amount":"0.72234880",
     /// "range":2,"autoRenew":0,"date":"2015-05-10 23:45:05","fees":"0.00006000"},
     /// {"id":74961,"currency":"LTC","rate":"0.00002000","amount":"4.43860711","range":2,
@@ -798,7 +798,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// [{ "id": 175589553, "currency": "BTC", "rate": "0.00057400", "amount": "0.04374404",
     /// "duration": "0.47610000", "interest": "0.00001196", "fee": "-0.00000179",
     /// "earned": "0.00001017", "open": "2016-09-28 06:47:26", "close": "2016-09-28 18:13:03" }]
@@ -820,7 +820,7 @@ impl PoloniexApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"success":1,"message":0}
     /// ```
     pub fn toggle_auto_renew(&mut self, order_number: &str) -> Result<Map<String, Value>> {

@@ -78,7 +78,7 @@ impl BitstampApi {
     /// Create a new BitstampApi from a json configuration file. This file must follow this
     /// structure:
     ///
-    /// ```ignore
+    /// ```json
     /// {
     ///     "account_kraken": {
     ///         "exchange"  : "kraken",
@@ -153,7 +153,7 @@ impl BitstampApi {
     ///
     /// #Examples
     ///
-    /// ```ignore
+    /// ```json
     /// extern crate coinnect;
     /// use coinnect::bitstamp::BitstampApi;
     /// let mut api = BitstampApi::new("", "");
@@ -194,7 +194,7 @@ impl BitstampApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {
     /// "BTC_LTC":{
     /// "last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251",
@@ -218,7 +218,7 @@ impl BitstampApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
@@ -237,7 +237,7 @@ impl BitstampApi {
 
     /// Sample output :
     ///
-    /// ```ignore
+    /// ```json
     /// [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140",
     /// "total":"0.01064"},
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
@@ -260,7 +260,7 @@ impl BitstampApi {
     ///
     /// Sample output:
     ///
-    /// ```ignore
+    /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
     pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>> {

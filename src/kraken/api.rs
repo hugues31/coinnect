@@ -74,7 +74,7 @@ impl KrakenApi {
 
     /// Create a new KrakenApi from a json configuration file. This file must follow this structure:
     ///
-    /// ```ignore
+    /// ```json
     /// {
     ///     "account_kraken": {
     ///         "exchange"  : "kraken",
@@ -211,7 +211,7 @@ impl KrakenApi {
 
     /// Result: Server's time
     ///
-    /// ```ignore
+    /// ```json
     /// unixtime =  as unix timestamp
     /// rfc1123 = as RFC 1123 time format
     /// ```
@@ -223,7 +223,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// info = info to retrieve (optional):
     ///     info = all info (default)
     /// aclass = asset class (optional):
@@ -233,7 +233,7 @@ impl KrakenApi {
     /// ```
     /// Result: array of asset names and their info:
     ///
-    /// ```ignore
+    /// ```json
     /// <asset_name> = asset name
     /// altname = alternate name
     /// aclass = asset class
@@ -254,7 +254,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// info = info to retrieve (optional):
     ///     info = all info (default)
     ///     leverage = leverage info
@@ -265,7 +265,7 @@ impl KrakenApi {
     ///
     /// Result: array of pair names and their info
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     ///     altname = alternate pair name
     ///     aclass_base = asset class of base component
@@ -297,13 +297,13 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = comma delimited list of asset pairs to get info on
     /// ```
     ///
     /// Result: array of pair names and their ticker info
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     /// a = ask array(<price>, <whole lot volume>, <lot volume>),
     /// b = bid array(<price>, <whole lot volume>, <lot volume>),
@@ -323,7 +323,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = asset pair to get OHLC data for
     /// interval = time frame interval in minutes (optional):
     /// 	1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
@@ -332,7 +332,7 @@ impl KrakenApi {
     ///
     /// Result: array of pair name and OHLC data
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     ///     array of array entries(<time>, <open>, <high>, <low>, <close>, <vwap>, <volume>,
     ///     <count>)
@@ -355,13 +355,13 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = asset pair to get market depth for
     /// count = maximum number of asks/bids (optional)
     /// ```
     /// Result: array of pair name and market depth
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     ///     asks = ask side array of array entries(<price>, <volume>, <timestamp>)
     ///     bids = bid side array of array entries(<price>, <volume>, <timestamp>)
@@ -376,13 +376,13 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = asset pair to get trade data for
     /// since = return trade data since given id (optional.  exclusive)
     /// ```
     /// Result: array of pair name and recent trade data
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     ///     array of array entries(<price>, <volume>, <time>, <buy/sell>, <market/limit>,
     /// <miscellaneous>)
@@ -397,14 +397,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = asset pair to get spread data for
     /// since = return spread data since given id (optional.  inclusive)
     /// ```
     ///
     /// Result: array of pair name and recent spread data
     ///
-    /// ```ignore
+    /// ```json
     /// <pair_name> = pair name
     ///     array of array entries(<time>, <bid>, <ask>)
     /// last = id to be used as since when polling for new spread data
@@ -429,14 +429,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = base asset used to determine balance (default = ZUSD)
     /// ```
     /// Result: array of trade balance info
     ///
-    /// ```ignore
+    /// ```json
     /// eb = equivalent balance (combined balance of all currencies)
     /// tb = trade balance (combined balance of all equity currencies)
     /// m = margin amount of open positions
@@ -457,14 +457,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// trades = whether or not to include trades in output (optional.  default = false)
     /// userref = restrict results to given user reference id (optional)
     /// ```
     ///
     /// Result: array of order info in open array with txid as the key
     ///
-    /// ```ignore
+    /// ```json
     /// refid = Referral order transaction id that created this order
     /// userref = user reference id
     /// status = status of order:
@@ -520,7 +520,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// trades = whether or not to include trades in output (optional.  default = false)
     /// userref = restrict results to given user reference id (optional)
     /// start = starting unix timestamp or order tx id of results (optional.  exclusive)
@@ -534,7 +534,7 @@ impl KrakenApi {
     ///
     /// Result: array of order info
     ///
-    /// ```ignore
+    /// ```json
     /// closed = array of order info.  See Get open orders.  Additional fields:
     ///     closetm = unix timestamp of when order was closed
     ///     reason = additional info on status (if any)
@@ -562,14 +562,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// trades = whether or not to include trades in output (optional.  default = false)
     /// userref = restrict results to given user reference id (optional)
     /// txid = comma delimited list of transaction ids to query info about (20 maximum)
     /// ```
     /// Result: associative array of orders info
     ///
-    /// ```ignore
+    /// ```json
     /// <order_txid> = order info.  See Get open orders/Get closed orders
     /// ```
     pub fn query_orders_info(&mut self,
@@ -586,7 +586,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// type = type of trade (optional)
     ///     all = all types (default)
     ///     any position = any position (open or closed)
@@ -601,7 +601,7 @@ impl KrakenApi {
     /// ```
     /// Result: array of trade info
     ///
-    /// ```ignore
+    /// ```json
     /// trades = array of trade info with txid as the key
     ///     ordertxid = order responsible for execution of trade
     ///     pair = asset pair
@@ -652,14 +652,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// txid = comma delimited list of transaction ids to query info about (20 maximum)
     /// trades = whether or not to include trades related to position in output (optional.
     /// default = false)
     /// ```
     // Result: associative array of trades info
     ///
-    /// ```ignore
+    /// ```json
     /// <trade_txid> = trade info.  See Get trades history
     /// ```
     pub fn query_trades_info(&mut self, txid: &str, trades: &str) -> Result<Map<String, Value>> {
@@ -670,13 +670,13 @@ impl KrakenApi {
     }
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// txid = comma delimited list of transaction ids to restrict output to
     /// docalcs = whether or not to include profit/loss calculations (optional.  default = false)
     /// ```
     /// Result: associative array of open position info
     ///
-    /// ```ignore
+    /// ```json
     /// <position_txid> = open position info
     ///     ordertxid = order responsible for execution of trade
     ///     pair = asset pair
@@ -707,7 +707,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = comma delimited list of assets to restrict output to (optional.  default = all)
@@ -723,7 +723,7 @@ impl KrakenApi {
     /// ```
     /// Result: associative array of ledgers info
     ///
-    /// ```ignore
+    /// ```json
     /// <ledger_id> = ledger info
     ///     refid = reference id
     ///     time = unx timestamp of ledger
@@ -755,12 +755,12 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// id = comma delimited list of ledger ids to query info about (20 maximum)
     /// ```
     /// Result: associative array of ledgers info
     ///
-    /// ```ignore
+    /// ```json
     /// <ledger_id> = ledger info.  See Get ledgers info
     /// ```
     pub fn query_ledgers(&mut self, id: &str) -> Result<Map<String, Value>> {
@@ -771,13 +771,13 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = comma delimited list of asset pairs to get fee info on (optional)
     /// fee-info = whether or not to include fee info in results (optional)
     /// ```
     /// Result: associative array
     ///
-    /// ```ignore
+    /// ```json
     /// currency = volume currency
     /// volume = current discount volume
     /// fees = array of asset pairs and fee tier info (if requested)
@@ -809,7 +809,7 @@ impl KrakenApi {
     // TODO: add optional closing order
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// pair = asset pair
     /// type = type of order (buy/sell)
     /// ordertype = order type:
@@ -853,7 +853,7 @@ impl KrakenApi {
     /// ```
     /// Result:
     ///
-    /// ```ignore
+    /// ```json
     /// descr = order description info
     ///     order = order description
     ///     close = conditional close order description (if conditional close set)
@@ -921,12 +921,12 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// txid = transaction id
     /// ```
     /// Result:
     ///
-    /// ```ignore
+    /// ```json
     /// count = number of orders canceled
     /// pending = if set, order(s) is/are pending cancellation
     /// ```
@@ -939,14 +939,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being deposited
     /// ```
     /// Result: associative array of deposit methods:
     ///
-    /// ```ignore
+    /// ```json
     /// method = name of deposit method
     /// limit = maximum net amount that can be deposited right now, or false if no limit
     /// fee = amount of fees that will be paid
@@ -961,7 +961,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being deposited
@@ -970,7 +970,7 @@ impl KrakenApi {
     /// ```
     /// Result: associative array of deposit addresses:
     ///
-    /// ```ignore
+    /// ```json
     /// address = deposit address
     /// expiretm = expiration time in unix timestamp, or 0 if not expiring
     /// new = whether or not address has ever been used
@@ -991,7 +991,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being deposited
@@ -999,7 +999,7 @@ impl KrakenApi {
     /// ```
     /// Result: array of array deposit status information:
     ///
-    /// ```ignore
+    /// ```json
     /// method = name of the deposit method used
     /// aclass = asset class
     /// asset = asset X-ISO4217-A3 code
@@ -1029,7 +1029,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being withdrawn
@@ -1038,7 +1038,7 @@ impl KrakenApi {
     /// ```
     /// Result: associative array of withdrawal info:
     ///
-    /// ```ignore
+    /// ```json
     /// method = name of the withdrawal method that will be used
     /// limit = maximum net amount that can be withdrawn right now
     /// fee = amount of fees that will be paid
@@ -1059,7 +1059,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being withdrawn
@@ -1068,7 +1068,7 @@ impl KrakenApi {
     /// ```
     /// Result: associative array of withdrawal transaction:
     ///
-    /// ```ignore
+    /// ```json
     /// refid = reference id
     /// ```
     pub fn withdraw_funds(&mut self,
@@ -1087,7 +1087,7 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being withdrawn
@@ -1095,7 +1095,7 @@ impl KrakenApi {
     /// ```
     /// Result: array of array withdrawal status information:
     ///
-    /// ```ignore
+    /// ```json
     /// method = name of the withdrawal method used
     /// aclass = asset class
     /// asset = asset X-ISO4217-A3 code
@@ -1128,14 +1128,14 @@ impl KrakenApi {
 
     /// Input:
     ///
-    /// ```ignore
+    /// ```json
     /// aclass = asset class (optional):
     ///     currency (default)
     /// asset = asset being withdrawn
     /// refid = withdrawal reference id
     /// ```
     /// Result:
-    /// ```ignore
+    /// ```json
     /// true on success
     /// ```
     ///
