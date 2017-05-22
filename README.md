@@ -34,6 +34,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 Generic API supports:
  - Ticker
  - Orderbook
+ - Add a new order
  - ... more to come!
 
 Feel free to make a PR to add support to your favorite exchange ;)
@@ -58,8 +59,8 @@ and this to your crate root:
 extern crate coinnect;
 ```
 
-For optional parameters, most methods require an empty str (`""`) or
-Option (None) if you don't want to specify them.
+For optional parameters, most methods require an empty `str` (`""`) or
+`Option` (`None`) if you don't want to specify them.
 
 Since 0.2, you have access to a generic API to communicate across exchanges in
 the same way. Note that this functionality is under active development.
