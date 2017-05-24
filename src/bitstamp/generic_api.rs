@@ -99,4 +99,14 @@ impl ExchangeApi for BitstampApi {
                                     .to_string()],
            })
     }
+
+    fn balances(&mut self) -> Result<Balances> {
+        let _raw_response = self.return_balances()?;
+
+        let mut balances = Balances::new();
+
+        balances.insert("BTC_USD".to_string(), 0.01_f64);
+
+        Ok(balances)
+    }
 }

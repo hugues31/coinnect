@@ -161,4 +161,8 @@ impl ExchangeApi for PoloniexApi {
                                     .to_string()],
            })
     }
+
+    fn balances(&mut self) -> Result<Balances> {
+        unimplemented!();
+    }
 }

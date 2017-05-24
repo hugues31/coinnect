@@ -80,6 +80,22 @@ mod coinnect_tests {
     }
 
     #[test]
+    fn coinnect_can_get_the_balances_from_bitstamp() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "api_key", "api_secret", None).unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.len() > 0)
+    }
+
+    #[test]
+    fn coinnect_can_get_at_least_a_possitive_balance_from_bitstamp() {
+        let mut api = Coinnect::new(Exchange::Bitstamp, "api_key", "api_secret", None).unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.get("BTC_USD").unwrap() > &0_f64)
+    }
+
+    #[test]
     #[cfg_attr(not(feature = "kraken_private_tests"), ignore)]
     fn coinnect_can_add_order_from_kraken() {
         let path = PathBuf::from("./keys_real.json");

@@ -263,15 +263,10 @@ impl BitstampApi {
     /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self, pair: Pair) -> Result<Map<String, Value>> {
-        let pair_name = match utils::get_pair_string(&pair) {
-            Some(name) => name,
-            None => return Err(ErrorKind::PairUnsupported.into()),
-        };
-
+    pub fn return_balances(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("method", "balance");
-        params.insert("pair", pair_name);
+        params.insert("pair", "");
         self.private_query(&params)
     }
 
