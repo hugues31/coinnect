@@ -1,17 +1,44 @@
 //! This module contains Exchange enum.
 
 use std::fmt::Debug;
+use std::convert::Into;
+use std::str::FromStr;
 
 use error::*;
 use pair::Pair;
 use types::*;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+
+
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Exchange {
     Bitstamp,
     Kraken,
     Poloniex,
+}
+
+impl Into<String> for Exchange {
+    fn into(self) -> String {
+        match self {
+            Exchange::Bitstamp => "Bitstamp".to_string(),
+            Exchange::Kraken => "Kraken".to_string(),
+            Exchange::Poloniex => "Poloniex".to_string(),
+        }
+    }
+}
+
+impl FromStr for Exchange {
+    type Err = Error;
+
+    fn from_str(input: &str) -> ::std::result::Result<Self, Self::Err> {
+        match input.to_lowercase().as_str() {
+            "bitstamp" => Ok(Exchange::Bitstamp),
+            "kraken" => Ok(Exchange::Kraken),
+            "poloniex" => Ok(Exchange::Poloniex),
+            _ => Err(ErrorKind::InvalidExchange(input.to_string()).into()),
+        }
+    }
 }
 
 pub trait ExchangeApi: Debug {

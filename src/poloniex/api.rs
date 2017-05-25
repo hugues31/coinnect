@@ -12,7 +12,6 @@ use hyper::net::HttpsConnector;
 
 use data_encoding::HEXLOWER;
 
-use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
@@ -20,12 +19,12 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::thread;
 use std::time::Duration;
-use std::path::PathBuf;
-use std::fs::File;
 
 use error::*;
 use helpers;
 
+use exchange::Exchange;
+use coinnect::Credentials;
 use poloniex::utils;
 
 header! {
@@ -54,7 +53,11 @@ pub struct PoloniexApi {
 
 impl PoloniexApi {
     /// Create a new PoloniexApi by providing an API key & API secret
-    pub fn new(api_key: &str, api_secret: &str) -> Result<PoloniexApi> {
+    pub fn new<C: Credentials>(creds: C) -> Result<PoloniexApi> {
+        if creds.exchange() != Exchange::Poloniex {
+            return Err(ErrorKind::InvalidConfigType(Exchange::Poloniex, creds.exchange()).into());
+        }
+
         //TODO: Handle correctly the TLS errors with error_chain.
         let ssl = match NativeTlsClient::new() {
             Ok(res) => res,
@@ -64,54 +67,10 @@ impl PoloniexApi {
 
         Ok(PoloniexApi {
                last_request: 0,
-               api_key: api_key.to_string(),
-               api_secret: api_secret.to_string(),
+               api_key: creds.get("api_key").unwrap_or_default(),
+               api_secret: creds.get("api_secret").unwrap_or_default(),
                http_client: Client::with_connector(connector),
            })
-    }
-
-    /// Create a new PoloniexApi from a json configuration file. This file must follow this
-    /// structure:
-    ///
-    /// ```json
-    /// {
-    ///     "account_kraken": {
-    ///         "exchange"  : "kraken",
-    ///         "api_key"   : "123456789ABCDEF",
-    ///         "api_secret": "ABC&EF?abcdef"
-    ///     },
-    ///     "account_poloniex": {
-    ///         "exchange"  : "poloniex",
-    ///         "api_key"   : "XYXY-XYXY-XYXY-XY",
-    ///         "api_secret": "A0A0B1B1C2C2"
-    ///     }
-    /// }
-    /// ```
-    /// For this example, you could use load your Poloniex account with
-    /// `new_from_file("account_poloniex", Path::new("/keys.json"))`
-    pub fn new_from_file(config_name: &str, path: PathBuf) -> Result<PoloniexApi> {
-        let mut f = File::open(&path)?;
-        let mut buffer = String::new();
-        f.read_to_string(&mut buffer)?;
-
-        let data: Value = serde_json::from_str(&buffer)?;
-        let json_obj = data.as_object()
-            .ok_or_else(|| "Invalid JSON format.")?
-            .get(config_name)
-            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
-        let api_key = json_obj
-            .get("api_key")
-            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
-            .as_str()
-            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret =
-            json_obj
-                .get("api_secret")
-                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
-
-        Ok(PoloniexApi::new(api_key, api_secret)?)
     }
 
     fn block_or_continue(&self) {

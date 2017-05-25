@@ -15,7 +15,6 @@ use hyper::net::HttpsConnector;
 
 use data_encoding::BASE64;
 
-use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
@@ -23,14 +22,14 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::thread;
 use std::time::Duration;
-use std::path::PathBuf;
-use std::fs::File;
 use std::str;
 use std::iter::repeat;
 
 use error::*;
 use helpers;
 
+use exchange::Exchange;
+use coinnect::Credentials;
 use kraken::utils;
 
 header! {
@@ -55,7 +54,11 @@ pub struct KrakenApi {
 
 impl KrakenApi {
     /// Create a new KrakenApi by providing an API key & API secret
-    pub fn new(api_key: &str, api_secret: &str) -> Result<KrakenApi> {
+    pub fn new<C: Credentials>(creds: C) -> Result<KrakenApi> {
+        if creds.exchange() != Exchange::Kraken {
+            return Err(ErrorKind::InvalidConfigType(Exchange::Kraken, creds.exchange()).into());
+        }
+
         // TODO: implement correctly the TLS error in error_chain.
         let ssl = match NativeTlsClient::new() {
             Ok(res) => res,
@@ -65,55 +68,13 @@ impl KrakenApi {
 
         Ok(KrakenApi {
                last_request: 0,
-               api_key: api_key.to_string(),
-               api_secret: api_secret.to_string(),
+               api_key: creds.get("api_key").unwrap_or_default(),
+               api_secret: creds.get("api_secret").unwrap_or_default(),
                otp: None,
                http_client: Client::with_connector(connector),
            })
     }
 
-    /// Create a new KrakenApi from a json configuration file. This file must follow this structure:
-    ///
-    /// ```json
-    /// {
-    ///     "account_kraken": {
-    ///         "exchange"  : "kraken",
-    ///         "api_key"   : "123456789ABCDEF",
-    ///         "api_secret": "ABC&EF?abcdef"
-    ///     },
-    ///     "account_poloniex": {
-    ///         "exchange"  : "poloniex",
-    ///         "api_key"   : "XYXY-XYXY-XYXY-XY",
-    ///         "api_secret": "A0A0B1B1C2C2"
-    ///     }
-    /// }
-    /// ```
-    /// For this example, you could use load your Kraken account with
-    /// `new_from_file("account_kraken", Path::new("/keys.json"))`
-    pub fn new_from_file(config_name: &str, path: PathBuf) -> Result<KrakenApi> {
-        let mut f = File::open(&path).chain_err(|| "Fail to open config file.")?;
-        let mut buffer = String::new();
-        f.read_to_string(&mut buffer)?;
-
-        let data: Value = serde_json::from_str(&buffer)?;
-        let json_obj = data.as_object()
-            .ok_or_else(|| "Invalid JSON format.")?
-            .get(config_name)
-            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
-        let api_key = json_obj
-            .get("api_key")
-            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
-            .as_str()
-            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret =
-            json_obj
-                .get("api_secret")
-                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
-
-        Ok(KrakenApi::new(api_key, api_secret)?)
-    }
 
     /// Use to provide your two-factor password (if two-factor enabled, otherwise not required)
     pub fn set_two_pass_auth(&mut self, otp: String) {
