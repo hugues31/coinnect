@@ -8,11 +8,12 @@ use serde_json::Value;
 
 use coinnect::Credentials;
 use exchange::Exchange;
+use helpers;
+use error::*;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
-use error::*;
 
 #[derive(Debug)]
 pub struct PoloniexCreds {
@@ -83,25 +84,10 @@ impl PoloniexCreds {
             .ok_or_else(|| ErrorKind::BadParse)?
             .get(name)
             .ok_or_else(|| ErrorKind::MissingField(name.to_string()))?;
-        let api_key = json_obj
-            .get("api_key")
-            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
-            .as_str()
-            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret =
-            json_obj
-                .get("api_secret")
-                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
+        let api_key = helpers::get_json_string(json_obj, "api_key")?;
+        let api_secret = helpers::get_json_string(json_obj, "api_secret")?;
         let exchange = {
-            let exchange_str =
-                json_obj
-                    .get("exchange")
-                    .ok_or_else(|| ErrorKind::MissingField("customer_id".to_string()))?
-                    .as_str()
-                    .ok_or_else(|| ErrorKind::InvalidFieldFormat("customer_id".to_string()))?;
-
+            let exchange_str = helpers::get_json_string(json_obj, "exchange")?;
             Exchange::from_str(exchange_str)
                 .chain_err(|| ErrorKind::InvalidFieldValue("exchange".to_string()))?
         };
