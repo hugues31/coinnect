@@ -34,6 +34,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 Generic API supports:
  - Ticker
  - Orderbook
+ - Balances
  - Add a new order
  - ... more to come!
 
