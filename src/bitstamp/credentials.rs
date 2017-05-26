@@ -90,6 +90,7 @@ impl BitstampCreds {
             .ok_or_else(|| ErrorKind::BadParse)?
             .get(name)
             .ok_or_else(|| ErrorKind::MissingField(name.to_string()))?;
+
         let api_key = helpers::get_json_string(json_obj, "api_key")?;
         let api_secret = helpers::get_json_string(json_obj, "api_secret")?;
         let customer_id = helpers::get_json_string(json_obj, "customer_id")?;

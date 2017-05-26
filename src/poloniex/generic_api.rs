@@ -21,30 +21,10 @@ impl ExchangeApi for PoloniexApi {
 
         let result = utils::parse_result(&raw_response)?;
 
-        let price =
-            result[*pair_name]["last"]
-                .as_str()
-                .ok_or_else(|| ErrorKind::MissingField(format!("{}.last", pair_name)))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.last", pair_name)))?;
-        let ask =
-            result[*pair_name]["lowestAsk"]
-                .as_str()
-                .ok_or_else(|| ErrorKind::MissingField(format!("{}.lowestAsk", pair_name)))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.lowestAsk", pair_name)))?;
-        let bid =
-            result[*pair_name]["highestBid"]
-                .as_str()
-                .ok_or_else(|| ErrorKind::MissingField(format!("{}.hightestBid", pair_name)))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.highestBid", pair_name)))?;
-        let vol =
-            result[*pair_name]["quoteVolume"]
-                .as_str()
-                .ok_or_else(|| ErrorKind::MissingField(format!("{}.quoteVolume", pair_name)))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.quoteVolume", pair_name)))?;
+        let price = helpers::from_json_float(&result[*pair_name]["last"], "last")?;
+        let ask = helpers::from_json_float(&result[*pair_name]["lowestAsk"], "lowestAsk")?;
+        let bid = helpers::from_json_float(&result[*pair_name]["highestBid"], "highestBid")?;
+        let vol = helpers::from_json_float(&result[*pair_name]["quoteVolume"], "quoteVolume")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),

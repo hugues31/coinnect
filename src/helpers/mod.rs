@@ -44,3 +44,11 @@ pub fn get_json_string<'a>(json_obj: &'a Value, key: &str) -> Result<&'a str> {
            .as_str()
            .ok_or_else(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
 }
+
+pub fn from_json_float(json_obj: &Value, key: &str) -> Result<f64> {
+    Ok(json_obj
+           .as_str()
+           .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?
+           .parse::<f64>()
+           .chain_err(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
+}
