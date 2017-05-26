@@ -111,7 +111,10 @@ mod coinnect_tests {
             .unwrap();
         let balances: Balances = api.balances().unwrap();
 
-        assert!(balances.get(&Currency::BTC).unwrap() > &0_f64)
+        assert!(balances.get(&Currency::BTC).unwrap() >= &0_f64);
+        assert!(balances.get(&Currency::EUR).unwrap() >= &0_f64);
+        assert!(balances.get(&Currency::USD).unwrap() >= &0_f64);
+        assert!(balances.get(&Currency::XRP).unwrap() >= &0_f64)
     }
 
     #[test]
