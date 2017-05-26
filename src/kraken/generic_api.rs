@@ -178,4 +178,8 @@ impl ExchangeApi for KrakenApi {
                identifier: txids,
            })
     }
+
+    fn balances(&mut self) -> Result<Balances> {
+        unimplemented!();
+    }
 }

@@ -1,9 +1,15 @@
 //! Types definition used for handling returned data when generic API is used.
 
+use std::collections::HashMap;
+
+use currency::Currency;
 use pair::Pair;
 
+pub type Amount = f64;
 pub type Price = f64;
 pub type Volume = f64;
+
+pub type Balances = HashMap<Currency, Amount>;
 
 #[derive(Debug)]
 pub struct Ticker {

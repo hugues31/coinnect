@@ -44,6 +44,7 @@ extern crate error_chain;
 pub mod coinnect;
 pub mod exchange;
 pub mod error;
+pub mod currency;
 pub mod pair;
 pub mod types;
 mod helpers;

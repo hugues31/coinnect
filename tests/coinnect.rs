@@ -7,6 +7,7 @@ mod coinnect_tests {
     use self::coinnect::coinnect::Coinnect;
     use self::coinnect::error::*;
     use self::coinnect::exchange::{Exchange, ExchangeApi};
+    use self::coinnect::currency::Currency;
     use self::coinnect::pair::Pair;
     use self::coinnect::types::*;
 
@@ -77,6 +78,28 @@ mod coinnect_tests {
         let orderbook = api.orderbook(Pair::ETH_BTC);
 
         assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
+    fn coinnect_can_get_the_balances_from_bitstamp() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.len() > 0)
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
+    fn coinnect_can_get_at_least_a_possitive_balance_from_bitstamp() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.get(&Currency::BTC).unwrap() > &0_f64)
     }
 
     #[test]

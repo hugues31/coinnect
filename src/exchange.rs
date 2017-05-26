@@ -35,4 +35,7 @@ pub trait ExchangeApi: Debug {
                  quantity: Volume,
                  price: Option<Price>)
                  -> Result<OrderInfo>;
+
+    /// Retrieve the current amounts of all the currencies that the account holds
+    fn balances(&mut self) -> Result<Balances>;
 }
