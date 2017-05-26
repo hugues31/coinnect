@@ -36,14 +36,14 @@ impl PoloniexCreds {
 
 
         //if api_key.is_empty() {
-        //warning!("No API key set for the Bistamp client");
+        //warning!("No API key set for the Bitstamp client");
         //}
         creds
             .data
             .insert("api_key".to_string(), api_key.to_string());
 
         //if api_secret.is_empty() {
-        //warning!("No API secret set for the Bistamp client");
+        //warning!("No API secret set for the Bitstamp client");
         //}
         creds
             .data
@@ -58,8 +58,8 @@ impl PoloniexCreds {
     ///
     /// ```json
     /// {
-    ///     "account_kraken": {
-    ///         "exchange"  : "kraken",
+    ///     "account_poloniex": {
+    ///         "exchange"  : "poloniex",
     ///         "api_key"   : "123456789ABCDEF",
     ///         "api_secret": "ABC&EF?abcdef"
     ///     },
