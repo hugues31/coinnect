@@ -22,26 +22,10 @@ impl ExchangeApi for KrakenApi {
 
         let result = utils::parse_result(&raw_response)?;
 
-        let price = result[*pair_name]["c"][0]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField(format!("{}.c", pair_name)))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.c", pair_name)))?;
-        let ask = result[*pair_name]["a"][0]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField(format!("{}.a", pair_name)))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.a", pair_name)))?;
-        let bid = result[*pair_name]["b"][0]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField(format!("{}.b", pair_name)))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.b", pair_name)))?;
-        let vol = result[*pair_name]["v"][1]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField(format!("{}.v", pair_name)))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}.v", pair_name)))?;
+        let price = helpers::from_json_float(&result[*pair_name]["c"][0], "c")?;
+        let ask = helpers::from_json_float(&result[*pair_name]["a"][0], "a")?;
+        let bid = helpers::from_json_float(&result[*pair_name]["b"][0], "b")?;
+        let vol = helpers::from_json_float(&result[*pair_name]["v"][0], "v")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),

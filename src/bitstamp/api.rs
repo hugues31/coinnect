@@ -1,19 +1,20 @@
 //! Use this module to interact with Bitstamp exchange.
 //! Please see examples for more informations.
 
+
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::header::ContentType;
 use hyper::net::HttpsConnector;
 
-use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
 use std::collections::HashMap;
 use std::io::Read;
-use std::path::PathBuf;
-use std::fs::File;
+
+use coinnect::Credentials;
+use exchange::Exchange;
 
 use error::*;
 use helpers;
@@ -48,15 +49,10 @@ pub struct BitstampApi {
 
 impl BitstampApi {
     /// Create a new BitstampApi by providing an API key & API secret
-    pub fn new(params: &HashMap<&str, &str>) -> Result<BitstampApi> {
-        let mut params = params.clone();
-        helpers::strip_empties(&mut params);
-
-        let empty_str: &str = "";
-
-        let api_key = params.get("api_key").unwrap_or(&empty_str);
-        let api_secret = params.get("api_secret").unwrap_or(&empty_str);
-        let customer_id = params.get("customer_id").unwrap_or(&empty_str);
+    pub fn new<C: Credentials>(creds: C) -> Result<BitstampApi> {
+        if creds.exchange() != Exchange::Bitstamp {
+            return Err(ErrorKind::InvalidConfigType(Exchange::Bitstamp, creds.exchange()).into());
+        }
 
         //TODO: Handle correctly TLS errors with error_chain.
         let ssl = match NativeTlsClient::new() {
@@ -66,69 +62,14 @@ impl BitstampApi {
 
         let connector = HttpsConnector::new(ssl);
 
+
         Ok(BitstampApi {
                last_request: 0,
-               api_key: api_key.to_string(),
-               api_secret: api_secret.to_string(),
-               customer_id: customer_id.to_string(),
+               api_key: creds.get("api_key").unwrap_or_default(),
+               api_secret: creds.get("api_secret").unwrap_or_default(),
+               customer_id: creds.get("customer_id").unwrap_or_default(),
                http_client: Client::with_connector(connector),
            })
-    }
-
-    /// Create a new BitstampApi from a json configuration file. This file must follow this
-    /// structure:
-    ///
-    /// ```json
-    /// {
-    ///     "account_kraken": {
-    ///         "exchange"  : "kraken",
-    ///         "api_key"   : "123456789ABCDEF",
-    ///         "api_secret": "ABC&EF?abcdef"
-    ///     },
-    ///     "account_bitstamp": {
-    ///         "exchange"   : "bitstamp",
-    ///         "api_key"    : "1234567890ABCDEF1234567890ABCDEF",
-    ///         "api_secret" : "1234567890ABCDEF1234567890ABCDEF",
-    ///         "customer_id": "123456"
-    ///     }
-    /// }
-    /// ```
-    /// For this example, you could use load your Bitstamp account with
-    /// `new_from_file("account_bitstamp", Path::new("/keys.json"))`
-    pub fn new_from_file(config_name: &str, path: PathBuf) -> Result<BitstampApi> {
-        let mut f = File::open(&path)?;
-        let mut buffer = String::new();
-        f.read_to_string(&mut buffer)?;
-
-        let data: Value = serde_json::from_str(&buffer)?;
-        let json_obj = data.as_object()
-            .ok_or_else(|| ErrorKind::BadParse)?
-            .get(config_name)
-            .ok_or_else(|| ErrorKind::MissingField(config_name.to_string()))?;
-        let api_key = json_obj
-            .get("api_key")
-            .ok_or_else(|| ErrorKind::MissingField("api_key".to_string()))?
-            .as_str()
-            .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_key".to_string()))?;
-        let api_secret =
-            json_obj
-                .get("api_secret")
-                .ok_or_else(|| ErrorKind::MissingField("api_secret".to_string()))?
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat("api_secret".to_string()))?;
-        let customer_id =
-            json_obj
-                .get("customer_id")
-                .ok_or_else(|| ErrorKind::MissingField("customer_id".to_string()))?
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat("customer_id".to_string()))?;
-
-        let mut params = HashMap::new();
-        params.insert("api_key", api_key);
-        params.insert("api_secret", api_secret);
-        params.insert("customer_id", customer_id);
-
-        Ok(BitstampApi::new(&params)?)
     }
 
     fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {

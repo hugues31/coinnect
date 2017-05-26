@@ -1,6 +1,9 @@
 
 #![warn(clone_double_ref)]
 
+use serde_json::Value;
+use error::*;
+
 use std::collections::HashMap;
 use time;
 
@@ -32,4 +35,20 @@ pub fn strip_empties(x: &mut HashMap<&str, &str>) {
     for empty in empties {
         x.remove(&empty);
     }
+}
+
+pub fn get_json_string<'a>(json_obj: &'a Value, key: &str) -> Result<&'a str> {
+    Ok(json_obj
+           .get(key)
+           .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?
+           .as_str()
+           .ok_or_else(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
+}
+
+pub fn from_json_float(json_obj: &Value, key: &str) -> Result<f64> {
+    Ok(json_obj
+           .as_str()
+           .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?
+           .parse::<f64>()
+           .chain_err(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
 }

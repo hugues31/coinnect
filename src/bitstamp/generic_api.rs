@@ -16,29 +16,10 @@ impl ExchangeApi for BitstampApi {
 
         let result = self.return_ticker(pair)?;
 
-        //let parse_as_float = |field: &str| field.parse::<f64>()?;
-
-        let price = result["last"]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField("last".to_string()))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat("last".to_string()))?;
-
-        let ask = result["ask"]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField("ask".to_string()))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat("ask".to_string()))?;
-        let bid = result["bid"]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField("bid".to_string()))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat("bid".to_string()))?;
-        let vol = result["volume"]
-            .as_str()
-            .ok_or_else(|| ErrorKind::MissingField("volume".to_string()))?
-            .parse::<f64>()
-            .chain_err(|| ErrorKind::InvalidFieldFormat("volume".to_string()))?;
+        let price = helpers::from_json_float(&result["last"], "last")?;
+        let ask = helpers::from_json_float(&result["ask"], "ask")?;
+        let bid = helpers::from_json_float(&result["bid"], "bid")?;
+        let vol = helpers::from_json_float(&result["volume"], "volume")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),

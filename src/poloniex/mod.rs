@@ -2,4 +2,8 @@
 
 pub mod api;
 pub mod generic_api;
+pub mod credentials;
 pub mod utils;
+
+pub use self::credentials::PoloniexCreds;
+pub use self::api::PoloniexApi;
