@@ -4,10 +4,10 @@
 
 use exchange::ExchangeApi;
 use bitstamp::api::BitstampApi;
+use bitstamp::utils;
 
 use error::*;
 use pair::Pair;
-use currency::Currency;
 use types::*;
 use helpers;
 
@@ -84,37 +84,24 @@ impl ExchangeApi for BitstampApi {
     /// Return the balances for each currency on the account
     fn balances(&mut self) -> Result<Balances> {
         let raw_response = self.return_balances()?;
+        let result = utils::parse_result(&raw_response)?;
 
         let mut balances = Balances::new();
 
-        for row in raw_response.iter() {
+        for (key, val) in result.iter() {
+            let currency = utils::get_currency_enum(key);
 
-            let currency = match row.0.as_str() {
-                "usd_balance" => Currency::USD,
-                "btc_balance" => Currency::BTC,
-                "eur_balance" => Currency::EUR,
-                "xrp_balance" => Currency::XRP,
-                //                "usd_reserved" => "usd_reserved",
-                //                "btc_reserved" => "btc_reserved",
-                //                "eur_reserved" => "eur_reserved",
-                //                "xrp_reserved" => "xrp_reserved",
-                //                "usd_available" => "usd_available",
-                //                "btc_available" => "btc_available",
-                //                "eur_available" => "eur_available",
-                //                "xrp_available" => "xrp_available",
-                //                "btcusd_fee" => "btcusd_fee",
-                //                "btceur_fee" => "btceur_fee",
-                //                "eurusd_fee" => "eurusd_fee",
-                //                "xrpusd_fee" => "xrpusd_fee",
-                //                "xrpeur_fee" => "xrpeur_fee",
-                //                "xrpbtc_fee" => "xrpbtc_fee",
-                //                "fee" => "fee",
-                _ => continue,
-            };
+            match currency {
+                Some(c) => {
+                    let amount = val.as_str()
+                        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?
+                        .parse::<f64>()
+                        .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?;
 
-            let amount = row.1.as_str().unwrap().parse::<f64>()?;
-
-            balances.insert(currency, amount);
+                    balances.insert(c, amount);
+                },
+                _ => ()
+            }
         }
 
         Ok(balances)

@@ -14,6 +14,7 @@ use error::*;
 use helpers;
 use pair::Pair;
 use pair::Pair::*;
+use currency::Currency;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -92,5 +93,38 @@ pub fn generate_nonce(fixed_nonce: Option<String>) -> String {
     match fixed_nonce {
         Some(v) => v,
         None => helpers::get_unix_timestamp_ms().to_string(),
+    }
+}
+
+/// If error array is null, return the result (encoded in a json object)
+/// else return the error string found in array
+pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>> {
+    let error_msg = match response.get("error") {
+        Some(error) => {
+            error
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat("error".to_string()))?
+        }
+        None => return Ok(response.clone()),
+    };
+
+    match error_msg.as_ref() {
+        "Invalid command." => Err(ErrorKind::InvalidArguments.into()),
+        "Invalid API key/secret pair." => Err(ErrorKind::BadCredentials.into()),
+        "Total must be at least 0.0001." => Err(ErrorKind::InsufficientOrderSize.into()),
+        other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
+    }
+}
+
+/// Return the currency enum associated with the
+/// string used by Poloniex. If no currency is found,
+/// return None
+pub fn get_currency_enum(currency: &str) -> Option<Currency> {
+    match currency {
+        "usd_balance" => Some(Currency::USD),
+        "btc_balance" => Some(Currency::BTC),
+        "eur_balance" => Some(Currency::EUR),
+        "xrp_balance" => Some(Currency::XRP),
+        _ => None,
     }
 }
