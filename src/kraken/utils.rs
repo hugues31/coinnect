@@ -127,6 +127,7 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
         "EService:Unavailable" => {
             Err(ErrorKind::ServiceUnavailable("Unknown...".to_string()).into())
         }
+        "EAPI:Invalid key" => Err(ErrorKind::BadCredentials.into()),
         "EOrder:Rate limit exceeded" => Err(ErrorKind::RateLimitExceeded.into()),
         "EQuery:Unknown asset pair" => Err(ErrorKind::PairUnsupported.into()),
         "EGeneral:Invalid arguments" => Err(ErrorKind::InvalidArguments.into()),

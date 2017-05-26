@@ -32,6 +32,11 @@ error_chain!{
                 display("Host could not be reached: {}.", reason)
         }
 
+        BadCredentials {
+            description("BadCredentials")
+                display("The informations provided do not allow authentication.")
+        }
+
         RateLimitExceeded {
             description("RateLimitExceeded")
                 display("API call rate limit exceeded.")

@@ -144,6 +144,7 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 
     match error_msg.as_ref() {
         "Invalid command." => Err(ErrorKind::InvalidArguments.into()),
+        "Invalid API key/secret pair." => Err(ErrorKind::BadCredentials.into()),
         "Total must be at least 0.0001." => Err(ErrorKind::InsufficientOrderSize.into()),
         other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
     }
