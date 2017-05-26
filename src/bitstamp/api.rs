@@ -136,9 +136,7 @@ impl BitstampApi {
         let method: &str = params
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
-        let pair: &str = params
-            .get("pair")
-            .ok_or_else(|| "Missing \"pair\" field.")?;
+        let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         utils::block_or_continue(self.last_request);
@@ -165,9 +163,7 @@ impl BitstampApi {
         let method: &str = params
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
-        let pair: &str = params
-            .get("pair")
-            .ok_or_else(|| "Missing \"pair\" field.")?;
+        let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
         let nonce = utils::generate_nonce(None);

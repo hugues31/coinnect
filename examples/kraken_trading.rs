@@ -23,11 +23,7 @@ fn main() {
         Ok(pairs_request) => pairs_request,
         Err(err) => panic!("Error : {:?}, description : {}", err, err.description()),
     };
-    let list_all_pairs = pairs_request
-        .get("result")
-        .unwrap()
-        .as_object()
-        .unwrap();
+    let list_all_pairs = pairs_request.get("result").unwrap().as_object().unwrap();
 
     let mut list_pairs_eur = Vec::new();
 
@@ -65,11 +61,7 @@ fn main() {
 
     // Get ticker
     let ticker_request = my_api.get_ticker_information(&eur_pairs).unwrap();
-    let list_ticker = ticker_request
-        .get("result")
-        .unwrap()
-        .as_object()
-        .unwrap();
+    let list_ticker = ticker_request.get("result").unwrap().as_object().unwrap();
 
     let mut pair_to_buy = "";
     let mut pair_price_var = 0.0;

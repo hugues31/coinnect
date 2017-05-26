@@ -3,6 +3,7 @@ use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
+use currency::Currency;
 use error::*;
 use pair::Pair;
 use pair::Pair::*;
@@ -145,5 +146,25 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
         "Invalid command." => Err(ErrorKind::InvalidArguments.into()),
         "Total must be at least 0.0001." => Err(ErrorKind::InsufficientOrderSize.into()),
         other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
+    }
+}
+
+/// Return the currency enum associated with the
+/// string used by Poloniex. If no currency is found,
+/// return None
+pub fn get_currency_enum(currency: &str) -> Option<Currency> {
+    match currency {
+        "AMP" => Some(Currency::AMP),
+        "BTC" => Some(Currency::BTC),
+        "ARDR" => Some(Currency::ARDR),
+        "ETH" => Some(Currency::ETH),
+        "ETC" => Some(Currency::ETC),
+        "LBC" => Some(Currency::LBC),
+        "XMR" => Some(Currency::XMR),
+        "XPM" => Some(Currency::XPM),
+        "XRP" => Some(Currency::XRP),
+        "XVC" => Some(Currency::XVC),
+        "ZEC" => Some(Currency::ZEC),
+        _ => None,
     }
 }

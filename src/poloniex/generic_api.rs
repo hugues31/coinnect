@@ -163,6 +163,19 @@ impl ExchangeApi for PoloniexApi {
     }
 
     fn balances(&mut self) -> Result<Balances> {
-        unimplemented!();
+        let raw_response = self.return_balances()?;
+        let result = utils::parse_result(&raw_response)?;
+
+        let mut balances = Balances::new();
+
+        for (key, val) in result.iter() {
+            let currency = utils::get_currency_enum(key);
+
+            if currency.is_some() {
+                let amount = val.as_str().unwrap().parse::<f64>()?;
+                balances.insert(currency.unwrap(), amount);
+            }
+        }
+        Ok(balances)
     }
 }

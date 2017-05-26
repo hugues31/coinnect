@@ -92,14 +92,42 @@ mod coinnect_tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "poloniex_private_tests"), ignore)]
+    fn coinnect_can_get_the_balances_from_poloniex() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Poloniex, "account_poloniex", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.len() > 0)
+    }
+
+    #[test]
     #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
-    fn coinnect_can_get_at_least_a_possitive_balance_from_bitstamp() {
+    fn coinnect_can_get_at_least_a_positive_balance_from_bitstamp() {
         let path = PathBuf::from("./keys_real.json");
         let mut api = Coinnect::new_from_file(Exchange::Bitstamp, "account_bitstamp", path)
             .unwrap();
         let balances: Balances = api.balances().unwrap();
 
         assert!(balances.get(&Currency::BTC).unwrap() > &0_f64)
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "poloniex_private_tests"), ignore)]
+    fn coinnect_can_get_at_least_a_positive_balance_from_poloniex() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Poloniex, "account_poloniex", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+        let mut is_positive = false;
+        for (_, balance) in &balances {
+            if balance > &0.0 {
+                is_positive = true;
+                break;
+            }
+        }
+        assert!(is_positive)
     }
 
     #[test]

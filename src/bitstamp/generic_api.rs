@@ -113,28 +113,25 @@ impl ExchangeApi for BitstampApi {
                 "btc_balance" => Currency::BTC,
                 "eur_balance" => Currency::EUR,
                 "xrp_balance" => Currency::XRP,
-//                "usd_reserved" => "usd_reserved",
-//                "btc_reserved" => "btc_reserved",
-//                "eur_reserved" => "eur_reserved",
-//                "xrp_reserved" => "xrp_reserved",
-//                "usd_available" => "usd_available",
-//                "btc_available" => "btc_available",
-//                "eur_available" => "eur_available",
-//                "xrp_available" => "xrp_available",
-//                "btcusd_fee" => "btcusd_fee",
-//                "btceur_fee" => "btceur_fee",
-//                "eurusd_fee" => "eurusd_fee",
-//                "xrpusd_fee" => "xrpusd_fee",
-//                "xrpeur_fee" => "xrpeur_fee",
-//                "xrpbtc_fee" => "xrpbtc_fee",
-//                "fee" => "fee",
+                //                "usd_reserved" => "usd_reserved",
+                //                "btc_reserved" => "btc_reserved",
+                //                "eur_reserved" => "eur_reserved",
+                //                "xrp_reserved" => "xrp_reserved",
+                //                "usd_available" => "usd_available",
+                //                "btc_available" => "btc_available",
+                //                "eur_available" => "eur_available",
+                //                "xrp_available" => "xrp_available",
+                //                "btcusd_fee" => "btcusd_fee",
+                //                "btceur_fee" => "btceur_fee",
+                //                "eurusd_fee" => "eurusd_fee",
+                //                "xrpusd_fee" => "xrpusd_fee",
+                //                "xrpeur_fee" => "xrpeur_fee",
+                //                "xrpbtc_fee" => "xrpbtc_fee",
+                //                "fee" => "fee",
                 _ => continue,
             };
 
-            let amount = row.1
-                .as_str()
-                .unwrap()
-                .parse::<f64>()?;
+            let amount = row.1.as_str().unwrap().parse::<f64>()?;
 
             balances.insert(currency, amount);
         }
