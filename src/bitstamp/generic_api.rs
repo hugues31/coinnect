@@ -7,7 +7,7 @@ use bitstamp::api::BitstampApi;
 
 use error::*;
 use pair::Pair;
-//use bitstamp::utils;
+use currency::Currency;
 use types::*;
 use helpers;
 
@@ -100,12 +100,44 @@ impl ExchangeApi for BitstampApi {
            })
     }
 
+    /// Return the balances for each currency on the account
     fn balances(&mut self) -> Result<Balances> {
-        let _raw_response = self.return_balances()?;
+        let raw_response = self.return_balances()?;
 
         let mut balances = Balances::new();
 
-        balances.insert("BTC_USD".to_string(), 0.01_f64);
+        for row in raw_response.iter() {
+
+            let currency = match row.0.as_str() {
+                "usd_balance" => Currency::USD,
+                "btc_balance" => Currency::BTC,
+                "eur_balance" => Currency::EUR,
+                "xrp_balance" => Currency::XRP,
+//                "usd_reserved" => "usd_reserved",
+//                "btc_reserved" => "btc_reserved",
+//                "eur_reserved" => "eur_reserved",
+//                "xrp_reserved" => "xrp_reserved",
+//                "usd_available" => "usd_available",
+//                "btc_available" => "btc_available",
+//                "eur_available" => "eur_available",
+//                "xrp_available" => "xrp_available",
+//                "btcusd_fee" => "btcusd_fee",
+//                "btceur_fee" => "btceur_fee",
+//                "eurusd_fee" => "eurusd_fee",
+//                "xrpusd_fee" => "xrpusd_fee",
+//                "xrpeur_fee" => "xrpeur_fee",
+//                "xrpbtc_fee" => "xrpbtc_fee",
+//                "fee" => "fee",
+                _ => continue,
+            };
+
+            let amount = row.1
+                .as_str()
+                .unwrap()
+                .parse::<f64>()?;
+
+            balances.insert(currency, amount);
+        }
 
         Ok(balances)
     }

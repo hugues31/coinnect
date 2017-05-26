@@ -135,17 +135,15 @@ mod bitstamp_tests {
     // IMPORTANT: Real keys are needed in order to retrieve the balance
     #[test]
     #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
-    fn balance_should_have_usd_btc_fee() {
+    fn balance_should_have_usd_and_btc_balance() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
         let mut api = BitstampApi::new_from_file("account_bitstamp", path).unwrap();
-        let result = api.return_balances(Pair::BTC_USD).unwrap();
+        let result = api.return_balances().unwrap();
         let result_looking_for_usd = result.clone();
         let result_looking_for_btc = result.clone();
-        let result_looking_for_fee = result.clone();
 
         assert!(result_looking_for_usd.contains_key("usd_balance"));
         assert!(result_looking_for_btc.contains_key("btc_balance"));
-        assert!(result_looking_for_fee.contains_key("fee"));
     }
 }
