@@ -117,7 +117,7 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 }
 
 /// Return the currency enum associated with the
-/// string used by Poloniex. If no currency is found,
+/// string used by Bitstamp. If no currency is found,
 /// return None
 pub fn get_currency_enum(currency: &str) -> Option<Currency> {
     match currency {

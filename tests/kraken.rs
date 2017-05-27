@@ -22,8 +22,8 @@ mod kraken_tests {
         let creds = KrakenCreds::new_from_file("account_kraken", path).unwrap();
         let mut api = KrakenApi::new(creds).unwrap();
 
-        let result = api.get_account_balance();
+        let result = api.get_account_balance().unwrap();
 
-        assert!(result.unwrap().contains_key("result"));
+        assert!(result.contains_key("result"))
     }
 }
