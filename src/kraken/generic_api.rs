@@ -164,6 +164,27 @@ impl ExchangeApi for KrakenApi {
     }
 
     fn balances(&mut self) -> Result<Balances> {
-        unimplemented!();
+        let raw_response = self.get_account_balance()?;
+        let result = utils::parse_result(&raw_response)?;
+
+        let mut balances = Balances::new();
+
+        for (key, val) in result.iter() {
+            let currency = utils::get_currency_enum(key);
+
+            match currency {
+                Some(c) => {
+                    let amount = val.as_str()
+                        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?
+                        .parse::<f64>()
+                        .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?;
+
+                    balances.insert(c, amount);
+                },
+                _ => ()
+            }
+        }
+
+        Ok(balances)
     }
 }

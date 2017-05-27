@@ -102,5 +102,15 @@ error_chain!{
             description("InvalidExchange")
                 display("Invalid exchange: \"{}\"", value)
         }
+
+        InvalidNonce {
+            description("InvalidNonce")
+                display("Invalid nonce")
+        }
+
+        PermissionDenied {
+            description("PermissionDenied")
+                display("The operation cannot be done with the provided credentials")
+        }
     }
 }

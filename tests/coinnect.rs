@@ -118,6 +118,18 @@ mod coinnect_tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "kraken_private_tests"), ignore)]
+    fn coinnect_can_get_the_balances_from_kraken() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Kraken, "account_kraken", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+
+        assert!(balances.len() > 0);
+        assert!(balances.get(&Currency::BTC).unwrap() >= &0_f64)
+    }
+
+    #[test]
     #[cfg_attr(not(feature = "poloniex_private_tests"), ignore)]
     fn coinnect_can_get_at_least_a_positive_balance_from_poloniex() {
         let path = PathBuf::from("./keys_real.json");

@@ -6,6 +6,7 @@ use serde_json::value::Map;
 use error::*;
 use pair::Pair;
 use pair::Pair::*;
+use currency::Currency;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -128,11 +129,40 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
             Err(ErrorKind::ServiceUnavailable("Unknown...".to_string()).into())
         }
         "EAPI:Invalid key" => Err(ErrorKind::BadCredentials.into()),
+        "EAPI:Invalid nonce" => Err(ErrorKind::InvalidNonce.into()),
         "EOrder:Rate limit exceeded" => Err(ErrorKind::RateLimitExceeded.into()),
         "EQuery:Unknown asset pair" => Err(ErrorKind::PairUnsupported.into()),
         "EGeneral:Invalid arguments" => Err(ErrorKind::InvalidArguments.into()),
+        "EGeneral:Permission denied" => Err(ErrorKind::PermissionDenied.into()),
         "EOrder:Insufficient funds" => Err(ErrorKind::InsufficientFunds.into()),
         "EOrder:Order minimum not met" => Err(ErrorKind::InsufficientOrderSize.into()),
         other => Err(ErrorKind::ExchangeSpecificError(other.to_string()).into()),
+    }
+}
+
+/// return None
+pub fn get_currency_enum(currency: &str) -> Option<Currency> {
+    match currency {
+        "ZEUR" => Some(Currency::EUR),
+        "ZCAD" => Some(Currency::CAD),
+        "ZGBP" => Some(Currency::GBP),
+        "ZJPY" => Some(Currency::JPY),
+        "ZUSD" => Some(Currency::USD),
+        "XDASH" => Some(Currency::DASH),
+        "XETC" => Some(Currency::ETC),
+        "XETH" => Some(Currency::ETH),
+        "XGNO" => Some(Currency::GNO),
+        "XICN" => Some(Currency::ICN),
+        "XLTC" => Some(Currency::LTC),
+        "XMLN" => Some(Currency::MLN),
+        "XREP" => Some(Currency::REP),
+        "XUSDT" => Some(Currency::USDT),
+        "XXBT" => Some(Currency::BTC),
+        "XXDG" => Some(Currency::XDG),
+        "XXLM" => Some(Currency::XLM),
+        "XXMR" => Some(Currency::XMR),
+        "XXRP" => Some(Currency::XRP),
+        "XZEC" => Some(Currency::ZEC),
+        _ => None,
     }
 }
