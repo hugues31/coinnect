@@ -153,6 +153,15 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 /// Return the currency enum associated with the
 /// string used by Poloniex. If no currency is found,
 /// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::poloniex::utils::get_currency_enum;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_enum("BTC").unwrap();
+/// assert_eq!(currency, Currency::BTC);
+/// ```
 pub fn get_currency_enum(currency: &str) -> Option<Currency> {
     match currency {
         "AMP" => Some(Currency::AMP),
@@ -166,6 +175,35 @@ pub fn get_currency_enum(currency: &str) -> Option<Currency> {
         "XRP" => Some(Currency::XRP),
         "XVC" => Some(Currency::XVC),
         "ZEC" => Some(Currency::ZEC),
+        _ => None,
+    }
+}
+
+/// Return the currency string associated with the
+/// enum used by Poloniex. If no currency is found,
+/// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::poloniex::utils::get_currency_string;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_string(Currency::BTC);
+/// assert_eq!(currency, Some("BTC".to_string()));
+/// ```
+pub fn get_currency_string(currency: Currency) -> Option<String> {
+    match currency {
+        Currency::AMP => Some("AMP".to_string()),
+        Currency::BTC => Some("BTC".to_string()),
+        Currency::ARDR => Some("ARDR".to_string()),
+        Currency::ETH => Some("ETH".to_string()),
+        Currency::ETC => Some("ETC".to_string()),
+        Currency::LBC => Some("LBC".to_string()),
+        Currency::XMR => Some("XMR".to_string()),
+        Currency::XPM => Some("XPM".to_string()),
+        Currency::XRP => Some("XRP".to_string()),
+        Currency::XVC => Some("XVC".to_string()),
+        Currency::ZEC => Some("ZEC".to_string()),
         _ => None,
     }
 }

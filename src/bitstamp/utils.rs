@@ -137,3 +137,25 @@ pub fn get_currency_enum(currency: &str) -> Option<Currency> {
         _ => None,
     }
 }
+
+/// Return the currency string associated with the
+/// enum used by Bitstamp. If no currency is found,
+/// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::bitstamp::utils::get_currency_string;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_string(Currency::USD);
+/// assert_eq!(currency, Some("USD".to_string()));
+/// ```
+pub fn get_currency_string(currency: Currency) -> Option<String> {
+    match currency {
+        Currency::USD => Some("USD".to_string()),
+        Currency::BTC => Some("BTC".to_string()),
+        Currency::EUR => Some("EUR".to_string()),
+        Currency::XRP => Some("XRP".to_string()),
+        _ => None,
+    }
+}
