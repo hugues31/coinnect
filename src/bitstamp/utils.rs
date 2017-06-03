@@ -119,6 +119,15 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 /// Return the currency enum associated with the
 /// string used by Bitstamp. If no currency is found,
 /// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::bitstamp::utils::get_currency_enum;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_enum("usd_balance");
+/// assert_eq!(Some(Currency::USD), currency);
+/// ```
 pub fn get_currency_enum(currency: &str) -> Option<Currency> {
     match currency {
         "usd_balance" => Some(Currency::USD),
