@@ -31,11 +31,59 @@ impl ExchangeApi for BitstampApi {
            })
     }
 
-    fn orderbook(&mut self,
-                 /*pair*/
-                 _: Pair)
-                 -> Result<Orderbook> {
-        unimplemented!();
+    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
+
+        let raw_response = self.return_order_book(pair)?;
+
+        let result = utils::parse_result(&raw_response)?;
+
+        let mut ask_offers = Vec::new();
+        let mut bid_offers = Vec::new();
+
+        let ask_array =
+            result["asks"]
+                .as_array()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let bid_array =
+            result["bids"]
+                .as_array()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+
+        for ask in ask_array {
+            let price = ask[0]
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
+
+            let volume = ask[1]
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
+            ask_offers.push((price, volume));
+        }
+
+        for bid in bid_array {
+            let price = bid[0]
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
+            let volume = bid[1]
+                .as_str()
+                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
+                .parse::<f64>()
+                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+            bid_offers.push((price, volume));
+        }
+
+        Ok(Orderbook {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            asks: ask_offers,
+            bids: bid_offers,
+        })
     }
 
     fn add_order(&mut self,
