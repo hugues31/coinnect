@@ -64,6 +64,15 @@ mod coinnect_tests {
     }
 
     #[test]
+    fn coinnect_can_get_an_orderbook_from_bitstamp() {
+        let creds = BitstampCreds::new("test", "api_key", "api_secret", "customer_id");
+        let mut api = Coinnect::new(Exchange::Bitstamp, creds).unwrap();
+        let orderbook = api.orderbook(Pair::BTC_EUR);
+
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+    }
+
+    #[test]
     fn coinnect_can_get_an_orderbook_from_kraken() {
         let creds = KrakenCreds::new("test", "api_key", "api_secret");
         let mut api = Coinnect::new(Exchange::Kraken, creds).unwrap();
