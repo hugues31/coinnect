@@ -140,7 +140,18 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
     }
 }
 
+/// Return the currency enum associated with the
+/// string used by Kraken. If no currency is found,
 /// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::kraken::utils::get_currency_enum;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_enum("ZUSD");
+/// assert_eq!(Some(Currency::USD), currency);
+/// ```
 pub fn get_currency_enum(currency: &str) -> Option<Currency> {
     match currency {
         "ZEUR" => Some(Currency::EUR),
@@ -163,6 +174,44 @@ pub fn get_currency_enum(currency: &str) -> Option<Currency> {
         "XXMR" => Some(Currency::XMR),
         "XXRP" => Some(Currency::XRP),
         "XZEC" => Some(Currency::ZEC),
+        _ => None,
+    }
+}
+
+/// Return the currency String associated with the
+/// string used by Kraken. If no currency is found,
+/// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::kraken::utils::get_currency_string;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_string(Currency::BTC);
+/// assert_eq!(currency, Some("XXBT".to_string()));
+/// ```
+pub fn get_currency_string(currency: Currency) -> Option<String> {
+    match currency {
+        Currency::EUR => Some("ZEUR".to_string()),
+        Currency::CAD => Some("ZCAD".to_string()),
+        Currency::GBP => Some("ZGBP".to_string()),
+        Currency::JPY => Some("ZJPY".to_string()),
+        Currency::USD => Some("ZUSD".to_string()),
+        Currency::DASH => Some("XDASH".to_string()),
+        Currency::ETC => Some("XETC".to_string()),
+        Currency::ETH => Some("XETH".to_string()),
+        Currency::GNO => Some("XGNO".to_string()),
+        Currency::ICN => Some("XICN".to_string()),
+        Currency::LTC => Some("XLTC".to_string()),
+        Currency::MLN => Some("XMLN".to_string()),
+        Currency::REP => Some("XREP".to_string()),
+        Currency::USDT => Some("XUSDT".to_string()),
+        Currency::BTC => Some("XXBT".to_string()),
+        Currency::XDG => Some("XXDG".to_string()),
+        Currency::XLM => Some("XXLM".to_string()),
+        Currency::XMR => Some("XXMR".to_string()),
+        Currency::XRP => Some("XXRP".to_string()),
+        Currency::ZEC => Some("XZEC".to_string()),
         _ => None,
     }
 }

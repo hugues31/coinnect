@@ -119,12 +119,43 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 /// Return the currency enum associated with the
 /// string used by Bitstamp. If no currency is found,
 /// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::bitstamp::utils::get_currency_enum;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_enum("usd_balance");
+/// assert_eq!(Some(Currency::USD), currency);
+/// ```
 pub fn get_currency_enum(currency: &str) -> Option<Currency> {
     match currency {
         "usd_balance" => Some(Currency::USD),
         "btc_balance" => Some(Currency::BTC),
         "eur_balance" => Some(Currency::EUR),
         "xrp_balance" => Some(Currency::XRP),
+        _ => None,
+    }
+}
+
+/// Return the currency string associated with the
+/// enum used by Bitstamp. If no currency is found,
+/// return None
+/// # Examples
+///
+/// ```
+/// use coinnect::bitstamp::utils::get_currency_string;
+/// use coinnect::currency::Currency;
+///
+/// let currency = get_currency_string(Currency::USD);
+/// assert_eq!(currency, Some("USD".to_string()));
+/// ```
+pub fn get_currency_string(currency: Currency) -> Option<String> {
+    match currency {
+        Currency::USD => Some("USD".to_string()),
+        Currency::BTC => Some("BTC".to_string()),
+        Currency::EUR => Some("EUR".to_string()),
+        Currency::XRP => Some("XRP".to_string()),
         _ => None,
     }
 }
