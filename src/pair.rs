@@ -158,3 +158,176 @@ pub enum Pair {
     ZEC_USDT,
     ZEC_XMR,
 }
+
+
+pub trait Operations {
+    fn to_string(&self) -> String;
+    fn from_str(&str) -> Option<Pair>;
+}
+
+impl Operations for Pair {
+
+    fn from_str(pair: &str) -> Option<Pair> {
+        match pair {
+            "AMP_BTC" => Some(Pair::AMP_BTC),
+            "ARDR_BTC" => Some(Pair::ARDR_BTC),
+            "BCN_BTC" => Some(Pair::BCN_BTC),
+            "BCN_XMR" => Some(Pair::BCN_XMR),
+            "BCY_BTC" => Some(Pair::BCY_BTC),
+            "BELA_BTC" => Some(Pair::BELA_BTC),
+            "BLK_BTC" => Some(Pair::BLK_BTC),
+            "BLK_XMR" => Some(Pair::BLK_XMR),
+            "BTCD_BTC" => Some(Pair::BTCD_BTC),
+            "BTCD_XMR" => Some(Pair::BTCD_XMR),
+            "BTC_CAD" => Some(Pair::BTC_CAD),
+            "BTC_CAD_d" => Some(Pair::BTC_CAD_d),
+            "BTC_EUR" => Some(Pair::BTC_EUR),
+            "BTC_EUR_d" => Some(Pair::BTC_EUR_d),
+            "BTC_GBP" => Some(Pair::BTC_GBP),
+            "BTC_GBP_d" => Some(Pair::BTC_GBP_d),
+            "BTC_JPY" => Some(Pair::BTC_JPY),
+            "BTC_JPY_d" => Some(Pair::BTC_JPY_d),
+            "BTC_USD" => Some(Pair::BTC_USD),
+            "BTC_USDT" => Some(Pair::BTC_USDT),
+            "BTC_USD_d" => Some(Pair::BTC_USD_d),
+            "BTM_BTC" => Some(Pair::BTM_BTC),
+            "BTS_BTC" => Some(Pair::BTS_BTC),
+            "BURST_BTC" => Some(Pair::BURST_BTC),
+            "CLAM_BTC" => Some(Pair::CLAM_BTC),
+            "DASH_BTC" => Some(Pair::DASH_BTC),
+            "DASH_EUR" => Some(Pair::DASH_EUR),
+            "DASH_USD" => Some(Pair::DASH_USD),
+            "DASH_USDT" => Some(Pair::DASH_USDT),
+            "DASH_XMR" => Some(Pair::DASH_XMR),
+            "DCR_BTC" => Some(Pair::DCR_BTC),
+            "DGB_BTC" => Some(Pair::DGB_BTC),
+            "DOGE_BTC" => Some(Pair::DOGE_BTC),
+            "EMC2_BTC" => Some(Pair::EMC2_BTC),
+            "ETC_BTC" => Some(Pair::ETC_BTC),
+            "ETC_ETH" => Some(Pair::ETC_ETH),
+            "ETC_EUR" => Some(Pair::ETC_EUR),
+            "ETC_USD" => Some(Pair::ETC_USD),
+            "ETC_USDT" => Some(Pair::ETC_USDT),
+            "ETH_BTC" => Some(Pair::ETH_BTC),
+            "ETH_BTC_d" => Some(Pair::ETH_BTC_d),
+            "ETH_CAD" => Some(Pair::ETH_CAD),
+            "ETH_CAD_d" => Some(Pair::ETH_CAD_d),
+            "ETH_EUR" => Some(Pair::ETH_EUR),
+            "ETH_EUR_d" => Some(Pair::ETH_EUR_d),
+            "ETH_GBP" => Some(Pair::ETH_GBP),
+            "ETH_GBP_d" => Some(Pair::ETH_GBP_d),
+            "ETH_JPY" => Some(Pair::ETH_JPY),
+            "ETH_JPY_d" => Some(Pair::ETH_JPY_d),
+            "ETH_USD" => Some(Pair::ETH_USD),
+            "ETH_USDT" => Some(Pair::ETH_USDT),
+            "ETH_USD_d" => Some(Pair::ETH_USD_d),
+            "EUR_USD" => Some(Pair::EUR_USD),
+            "EXP_BTC" => Some(Pair::EXP_BTC),
+            "FCT_BTC" => Some(Pair::FCT_BTC),
+            "FLDC_BTC" => Some(Pair::FLDC_BTC),
+            "FLO_BTC" => Some(Pair::FLO_BTC),
+            "GAME_BTC" => Some(Pair::GAME_BTC),
+            "GNO_BTC" => Some(Pair::GNO_BTC),
+            "GNO_ETH" => Some(Pair::GNO_ETH),
+            "GNO_EUR" => Some(Pair::GNO_EUR),
+            "GNO_USD" => Some(Pair::GNO_USD),
+            "GNT_BTC" => Some(Pair::GNT_BTC),
+            "GNT_ETH" => Some(Pair::GNT_ETH),
+            "GRC_BTC" => Some(Pair::GRC_BTC),
+            "HUC_BTC" => Some(Pair::HUC_BTC),
+            "ICN_BTC" => Some(Pair::ICN_BTC),
+            "ICN_ETH" => Some(Pair::ICN_ETH),
+            "LBC_BTC" => Some(Pair::LBC_BTC),
+            "LSK_BTC" => Some(Pair::LSK_BTC),
+            "LSK_ETH" => Some(Pair::LSK_ETH),
+            "LTC_BTC" => Some(Pair::LTC_BTC),
+            "LTC_EUR" => Some(Pair::LTC_EUR),
+            "LTC_USD" => Some(Pair::LTC_USD),
+            "LTC_USDT" => Some(Pair::LTC_USDT),
+            "LTC_XMR" => Some(Pair::LTC_XMR),
+            "MAID_BTC" => Some(Pair::MAID_BTC),
+            "MAID_XMR" => Some(Pair::MAID_XMR),
+            "MLN_BTC" => Some(Pair::MLN_BTC),
+            "MLN_ETH" => Some(Pair::MLN_ETH),
+            "NAUT_BTC" => Some(Pair::NAUT_BTC),
+            "NAV_BTC" => Some(Pair::NAV_BTC),
+            "NEOS_BTC" => Some(Pair::NEOS_BTC),
+            "NMC_BTC" => Some(Pair::NMC_BTC),
+            "NOTE_BTC" => Some(Pair::NOTE_BTC),
+            "NXC_BTC" => Some(Pair::NXC_BTC),
+            "NXT_BTC" => Some(Pair::NXT_BTC),
+            "NXT_USDT" => Some(Pair::NXT_USDT),
+            "NXT_XMR" => Some(Pair::NXT_XMR),
+            "OMNI_BTC" => Some(Pair::OMNI_BTC),
+            "PASC_BTC" => Some(Pair::PASC_BTC),
+            "PINK_BTC" => Some(Pair::PINK_BTC),
+            "POT_BTC" => Some(Pair::POT_BTC),
+            "PPC_BTC" => Some(Pair::PPC_BTC),
+            "RADS_BTC" => Some(Pair::RADS_BTC),
+            "REP_BTC" => Some(Pair::REP_BTC),
+            "REP_ETH" => Some(Pair::REP_ETH),
+            "REP_EUR" => Some(Pair::REP_EUR),
+            "REP_USD" => Some(Pair::REP_USD),
+            "REP_USDT" => Some(Pair::REP_USDT),
+            "RIC_BTC" => Some(Pair::RIC_BTC),
+            "SBD_BTC" => Some(Pair::SBD_BTC),
+            "SC_BTC" => Some(Pair::SC_BTC),
+            "SJCX_BTC" => Some(Pair::SJCX_BTC),
+            "STEEM_BTC" => Some(Pair::STEEM_BTC),
+            "STEEM_ETH" => Some(Pair::STEEM_ETH),
+            "STRAT_BTC" => Some(Pair::STRAT_BTC),
+            "STR_BTC" => Some(Pair::STR_BTC),
+            "STR_USDT" => Some(Pair::STR_USDT),
+            "SYS_BTC" => Some(Pair::SYS_BTC),
+            "USDT_USD" => Some(Pair::USDT_USD),
+            "VIA_BTC" => Some(Pair::VIA_BTC),
+            "VRC_BTC" => Some(Pair::VRC_BTC),
+            "VTC_BTC" => Some(Pair::VTC_BTC),
+            "XBC_BTC" => Some(Pair::XBC_BTC),
+            "XCP_BTC" => Some(Pair::XCP_BTC),
+            "XDG_BTC" => Some(Pair::XDG_BTC),
+            "XEM_BTC" => Some(Pair::XEM_BTC),
+            "XLM_BTC" => Some(Pair::XLM_BTC),
+            "XLM_EUR" => Some(Pair::XLM_EUR),
+            "XLM_USD" => Some(Pair::XLM_USD),
+            "XMR_BTC" => Some(Pair::XMR_BTC),
+            "XMR_EUR" => Some(Pair::XMR_EUR),
+            "XMR_USD" => Some(Pair::XMR_USD),
+            "XMR_USDT" => Some(Pair::XMR_USDT),
+            "XPM_BTC" => Some(Pair::XPM_BTC),
+            "XRP_BTC" => Some(Pair::XRP_BTC),
+            "XRP_CAD" => Some(Pair::XRP_CAD),
+            "XRP_EUR" => Some(Pair::XRP_EUR),
+            "XRP_JPY" => Some(Pair::XRP_JPY),
+            "XRP_USD" => Some(Pair::XRP_USD),
+            "XRP_USDT" => Some(Pair::XRP_USDT),
+            "XVC_BTC" => Some(Pair::XVC_BTC),
+            "ZEC_BTC" => Some(Pair::ZEC_BTC),
+            "ZEC_ETH" => Some(Pair::ZEC_ETH),
+            "ZEC_EUR" => Some(Pair::ZEC_EUR),
+            "ZEC_USD" => Some(Pair::ZEC_USD),
+            "ZEC_USDT" => Some(Pair::ZEC_USDT),
+            "ZEC_XMR" => Some(Pair::ZEC_XMR),
+            _ => None,
+        }
+    }
+
+    fn to_string(&self) -> String {
+        format!("{:?}", self).to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_pair() {
+        assert_eq!(Pair::BTC_USD.to_string(), "BTC_USD".to_string());
+        assert_eq!(Pair::XMR_USDT.to_string(), "XMR_USDT".to_string());
+
+        assert_eq!(Pair::from_str("BTC_USD"), Some(Pair::BTC_USD));
+        assert_eq!(Pair::from_str("ETH_EUR"), Some(Pair::ETH_EUR));
+        assert_eq!(Pair::from_str("XxX"), None);
+    }
+}

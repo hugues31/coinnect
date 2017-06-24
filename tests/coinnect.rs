@@ -68,8 +68,10 @@ mod coinnect_tests {
         let creds = BitstampCreds::new("test", "api_key", "api_secret", "customer_id");
         let mut api = Coinnect::new(Exchange::Bitstamp, creds).unwrap();
         let orderbook = api.orderbook(Pair::BTC_EUR);
+        let (ask, volume) = orderbook.unwrap().asks[0];
 
-        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+        assert_ne!(ask, 1.0);
+        assert_ne!(volume, 0.0);
     }
 
     #[test]
