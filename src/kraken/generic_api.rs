@@ -6,7 +6,6 @@ use exchange::ExchangeApi;
 use kraken::api::KrakenApi;
 
 use error::*;
-use pair::Pair;
 use types::*;
 use kraken::utils;
 use helpers;

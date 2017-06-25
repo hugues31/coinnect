@@ -12,9 +12,9 @@ use std::time::Duration;
 
 use error::*;
 use helpers;
-use pair::Pair;
-use pair::Pair::*;
-use currency::Currency;
+use types::Currency;
+use types::Pair;
+use types::Pair::*;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -123,7 +123,7 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 ///
 /// ```
 /// use coinnect::bitstamp::utils::get_currency_enum;
-/// use coinnect::currency::Currency;
+/// use coinnect::types::Currency;
 ///
 /// let currency = get_currency_enum("usd_balance");
 /// assert_eq!(Some(Currency::USD), currency);
@@ -145,7 +145,7 @@ pub fn get_currency_enum(currency: &str) -> Option<Currency> {
 ///
 /// ```
 /// use coinnect::bitstamp::utils::get_currency_string;
-/// use coinnect::currency::Currency;
+/// use coinnect::types::Currency;
 ///
 /// let currency = get_currency_string(Currency::USD);
 /// assert_eq!(currency, Some("USD".to_string()));

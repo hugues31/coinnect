@@ -6,12 +6,10 @@ mod coinnect_tests {
 
     use self::coinnect::coinnect::Coinnect;
     use self::coinnect::exchange::{Exchange, ExchangeApi};
-    use self::coinnect::currency::Currency;
     use self::coinnect::kraken::KrakenCreds;
     use self::coinnect::bitstamp::BitstampCreds;
     use self::coinnect::poloniex::PoloniexCreds;
     use self::coinnect::error::*;
-    use self::coinnect::pair::Pair;
     use self::coinnect::types::*;
 
     #[test]

@@ -18,7 +18,7 @@ use exchange::Exchange;
 
 use error::*;
 use helpers;
-use pair::Pair;
+use types::Pair;
 use bitstamp::utils;
 use types::*;
 

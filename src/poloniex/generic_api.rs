@@ -6,7 +6,6 @@ use exchange::ExchangeApi;
 use poloniex::api::PoloniexApi;
 
 use error::*;
-use pair::Pair;
 use types::*;
 use poloniex::utils;
 use helpers;

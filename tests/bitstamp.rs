@@ -6,7 +6,7 @@ mod bitstamp_tests {
     use self::coinnect::kraken::KrakenCreds;
 
     use self::coinnect::exchange::ExchangeApi;
-    use self::coinnect::pair::Pair;
+    use self::coinnect::types::Pair;
 
     #[test]
     fn build_url_should_return_the_a_url() {
