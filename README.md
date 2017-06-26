@@ -51,7 +51,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-coinnect = "0.3"
+coinnect = "0.4"
 ```
 
 and this to your crate root:
