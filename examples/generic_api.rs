@@ -9,7 +9,7 @@ extern crate coinnect;
 use coinnect::coinnect::Coinnect;
 use coinnect::kraken::KrakenCreds;
 use coinnect::exchange::Exchange::*;
-use coinnect::pair::Pair::*;
+use coinnect::types::Pair::*;
 
 fn main() {
     // We create a Coinnect Generic API

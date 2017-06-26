@@ -7,7 +7,6 @@ use bitstamp::api::BitstampApi;
 use bitstamp::utils;
 
 use error::*;
-use pair::Pair;
 use types::*;
 use helpers;
 

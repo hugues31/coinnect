@@ -5,7 +5,6 @@ use std::convert::Into;
 use std::str::FromStr;
 
 use error::*;
-use pair::Pair;
 use types::*;
 
 
