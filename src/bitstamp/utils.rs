@@ -1,7 +1,7 @@
 use bidir_map::BidirMap;
-use crypto::sha2::Sha256;
-use crypto::hmac::Hmac;
-use crypto::mac::Mac;
+
+use hmac::{Hmac, Mac};
+use sha2::{Sha256};
 
 use serde_json;
 use serde_json::Value;
@@ -58,10 +58,11 @@ pub fn build_signature(nonce: &str,
     const C: &'static [u8] = b"0123456789ABCDEF";
 
     let message = nonce.to_owned() + customer_id + api_key;
-    let mut hmac = Hmac::new(Sha256::new(), api_secret.as_bytes());
 
-    hmac.input(message.as_bytes());
-    let result = hmac.result();
+    let mut mac = Hmac::<Sha256>::new(api_secret.as_bytes());
+
+    mac.input(message.as_bytes());
+    let result = mac.result();
 
     let raw_signature = result.code();
     let mut signature = Vec::with_capacity(raw_signature.len() * 2);
