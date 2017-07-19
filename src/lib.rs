@@ -30,7 +30,8 @@
 
 #[macro_use]
 extern crate hyper;
-extern crate crypto;
+extern crate sha2;
+extern crate hmac;
 extern crate hyper_native_tls;
 extern crate serde_json;
 extern crate time;
