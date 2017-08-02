@@ -1,22 +1,25 @@
 language: rust
+cache: cargo
+sudo: false
 rust:
+  - 1.17.0 # oldest version supported
   - stable
   - nightly
 
 matrix:
   allow_failures:
-    - rust:
-      - nightly
+    - rust: nightly
 
-  cache: cargo
-  before_script:
-    - export PATH="$PATH:$HOME/.cargo/bin"
-    - which rustfmt || cargo install rustfmt
-    - which cargo-audit || cargo install cargo-audit
-    - which cargo-clippy || rustup install nigthly && rustup run nightly  cargo install clippy --force
+before_script:
+  - if [ ${TRAVIS_RUST_VERSION} = "nightly" ]; then
+      cargo install rustfmt --force &&
+      cargo install clippy --force;
+    fi
 
-  script:
-    - cargo fmt -- --write-mode=diff
-    - cargo build
-    - cargo test
-    - rustup run nightly cargo clippy
+script:
+  - if [ ${TRAVIS_RUST_VERSION} = "nightly" ]; then
+      cargo fmt -- --write-mode=diff &&
+      cargo clippy;
+    fi
+  - cargo build --verbose
+  - cargo test --verbose
