@@ -8,8 +8,7 @@ rust:
 
 matrix:
   allow_failures:
-    - rust:
-      - nightly
+    - rust: nightly
 
 before_script:
   - if [ ${TRAVIS_RUST_VERSION} = "nightly" ]; then
