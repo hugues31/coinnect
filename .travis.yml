@@ -19,6 +19,6 @@ before_script:
 
 script:
   - cargo fmt -- --write-mode=diff
-  - cargo build
-  - cargo test
+  - cargo build --verbose
+  - cargo test --verbose
   - rustup run nightly cargo clippy
