@@ -13,7 +13,6 @@ matrix:
 
 before_script:
   - export PATH="$PATH:$HOME/.cargo/bin"
-  - which cargo-audit || cargo install cargo-audit
   - if [ ${TRAVIS_RUST_VERSION} = "nightly" ]; then
       cargo install rustfmt --force &&
       cargo install clippy --force;
