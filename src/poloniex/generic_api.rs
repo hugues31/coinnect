@@ -5,6 +5,9 @@
 use exchange::ExchangeApi;
 use poloniex::api::PoloniexApi;
 
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
+
 use error::*;
 use types::*;
 use poloniex::utils;
@@ -20,10 +23,10 @@ impl ExchangeApi for PoloniexApi {
 
         let result = utils::parse_result(&raw_response)?;
 
-        let price = helpers::from_json_float(&result[*pair_name]["last"], "last")?;
-        let ask = helpers::from_json_float(&result[*pair_name]["lowestAsk"], "lowestAsk")?;
-        let bid = helpers::from_json_float(&result[*pair_name]["highestBid"], "highestBid")?;
-        let vol = helpers::from_json_float(&result[*pair_name]["quoteVolume"], "quoteVolume")?;
+        let price = helpers::from_json_bigdecimal(&result[*pair_name]["last"], "last")?;
+        let ask = helpers::from_json_bigdecimal(&result[*pair_name]["lowestAsk"], "lowestAsk")?;
+        let bid = helpers::from_json_bigdecimal(&result[*pair_name]["highestBid"], "highestBid")?;
+        let vol = helpers::from_json_bigdecimal(&result[*pair_name]["quoteVolume"], "quoteVolume")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),
@@ -56,28 +59,19 @@ impl ExchangeApi for PoloniexApi {
                 .as_array()
                 .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
-        for ask in ask_array {
-            let price = ask[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
+       for ask in ask_array {
+            let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
+            let volume_str = ask[1].as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
 
-            let volume = ask[1]
-                .as_f64()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
-            let price = bid[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
-            let volume = bid[1]
-                .as_f64()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+            let price = helpers::from_json_bigdecimal(&bid[0], "bid price")?;
+            let volume_str = bid[1].as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
+
             bid_offers.push((price, volume));
         }
 
@@ -151,7 +145,7 @@ impl ExchangeApi for PoloniexApi {
             let currency = utils::get_currency_enum(key);
 
             if currency.is_some() {
-                let amount = val.as_str().unwrap().parse::<f64>()?;
+                let amount = helpers::from_json_bigdecimal(&val, "amount")?;
                 balances.insert(currency.unwrap(), amount);
             }
         }

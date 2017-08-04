@@ -15,10 +15,10 @@ impl ExchangeApi for BitstampApi {
 
         let result = self.return_ticker(pair)?;
 
-        let price = helpers::from_json_float(&result["last"], "last")?;
-        let ask = helpers::from_json_float(&result["ask"], "ask")?;
-        let bid = helpers::from_json_float(&result["bid"], "bid")?;
-        let vol = helpers::from_json_float(&result["volume"], "volume")?;
+        let price = helpers::from_json_bigdecimal(&result["last"], "last")?;
+        let ask = helpers::from_json_bigdecimal(&result["ask"], "ask")?;
+        let bid = helpers::from_json_bigdecimal(&result["bid"], "bid")?;
+        let vol = helpers::from_json_bigdecimal(&result["volume"], "volume")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),
@@ -49,31 +49,16 @@ impl ExchangeApi for BitstampApi {
                 .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
         for ask in ask_array {
-            let price = ask[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
+            let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
+            let volume = helpers::from_json_bigdecimal(&ask[1], "ask volume")?;
 
-            let volume = ask[1]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
-            let price = bid[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
-            let volume = bid[1]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+            let price = helpers::from_json_bigdecimal(&bid[0], "bid price")?;
+            let volume = helpers::from_json_bigdecimal(&bid[1], "bid volume")?;
+
             bid_offers.push((price, volume));
         }
 
@@ -140,10 +125,7 @@ impl ExchangeApi for BitstampApi {
 
             match currency {
                 Some(c) => {
-                    let amount = val.as_str()
-                        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?
-                        .parse::<f64>()
-                        .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?;
+                    let amount = helpers::from_json_bigdecimal(&val, "amount")?;
 
                     balances.insert(c, amount);
                 },

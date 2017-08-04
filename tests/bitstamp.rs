@@ -1,6 +1,11 @@
 #[cfg(test)]
 mod bitstamp_tests {
     extern crate coinnect;
+    extern crate bigdecimal;
+
+    use self::bigdecimal::BigDecimal;
+    use std::str::FromStr;
+
     use self::coinnect::bitstamp::utils;
     use self::coinnect::bitstamp::{BitstampApi, BitstampCreds};
     use self::coinnect::kraken::KrakenCreds;
@@ -40,28 +45,32 @@ mod bitstamp_tests {
         let creds = BitstampCreds::new("", "", "", "");
         let mut api = BitstampApi::new(creds).unwrap();
         let result = api.ticker(Pair::BTC_USD);
-        assert_ne!(result.unwrap().last_trade_price, 0.0);
+        assert_ne!(result.unwrap().last_trade_price,
+                   BigDecimal::from_str("0.0").unwrap());
     }
     #[test]
     fn ticker_should_have_the_correct_high() {
         let creds = BitstampCreds::new("", "", "", "");
         let mut api = BitstampApi::new(creds).unwrap();
         let result = api.ticker(Pair::BTC_USD);
-        assert_ne!(result.unwrap().highest_bid, 0.0);
+        assert_ne!(result.unwrap().highest_bid,
+                   BigDecimal::from_str("0.0").unwrap());
     }
     #[test]
     fn ticker_should_have_the_correct_low() {
         let creds = BitstampCreds::new("", "", "", "");
         let mut api = BitstampApi::new(creds).unwrap();
         let result = api.ticker(Pair::BTC_USD);
-        assert_ne!(result.unwrap().lowest_ask, 0.0);
+        assert_ne!(result.unwrap().lowest_ask,
+                   BigDecimal::from_str("0.0").unwrap());
     }
     #[test]
     fn ticker_should_have_the_correct_volume() {
         let creds = BitstampCreds::new("", "", "", "");
         let mut api = BitstampApi::new(creds).unwrap();
         let result = api.ticker(Pair::BTC_USD);
-        assert_ne!(result.unwrap().volume.unwrap(), 0.0);
+        assert_ne!(result.unwrap().volume.unwrap(),
+                   BigDecimal::from_str("0.0").unwrap());
     }
 
     #[test]

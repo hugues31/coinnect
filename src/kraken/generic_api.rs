@@ -21,10 +21,10 @@ impl ExchangeApi for KrakenApi {
 
         let result = utils::parse_result(&raw_response)?;
 
-        let price = helpers::from_json_float(&result[*pair_name]["c"][0], "c")?;
-        let ask = helpers::from_json_float(&result[*pair_name]["a"][0], "a")?;
-        let bid = helpers::from_json_float(&result[*pair_name]["b"][0], "b")?;
-        let vol = helpers::from_json_float(&result[*pair_name]["v"][0], "v")?;
+        let price = helpers::from_json_bigdecimal(&result[*pair_name]["c"][0], "c")?;
+        let ask = helpers::from_json_bigdecimal(&result[*pair_name]["a"][0], "a")?;
+        let bid = helpers::from_json_bigdecimal(&result[*pair_name]["b"][0], "b")?;
+        let vol = helpers::from_json_bigdecimal(&result[*pair_name]["v"][0], "v")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),
@@ -66,30 +66,15 @@ impl ExchangeApi for KrakenApi {
                             })?;
 
         for ask in ask_array {
-            let price = ask[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[0])))?;
-            let volume = ask[1]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", ask[1])))?;
+            let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
+            let volume = helpers::from_json_bigdecimal(&ask[1], "ask volume")?;
+
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
-            let price = bid[0]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[0])))?;
-            let volume = bid[1]
-                .as_str()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?
-                .parse::<f64>()
-                .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", bid[1])))?;
+            let price = helpers::from_json_bigdecimal(&bid[0], "bid price")?;
+            let volume = helpers::from_json_bigdecimal(&bid[1], "bid volume")?;
 
             bid_offers.push((price, volume));
         }
@@ -173,10 +158,7 @@ impl ExchangeApi for KrakenApi {
 
             match currency {
                 Some(c) => {
-                    let amount = val.as_str()
-                        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?
-                        .parse::<f64>()
-                        .chain_err(|| ErrorKind::InvalidFieldFormat(format!("{}", val)))?;
+                    let amount = helpers::from_json_bigdecimal(&val, "amount")?;
 
                     balances.insert(c, amount);
                 },

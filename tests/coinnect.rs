@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod coinnect_tests {
     extern crate coinnect;
+    extern crate bigdecimal;
 
+    use self::bigdecimal::BigDecimal;
+    use std::str::FromStr;
     use std::path::PathBuf;
 
     use self::coinnect::coinnect::Coinnect;
@@ -40,7 +43,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Bitstamp, creds).unwrap();
         let ticker = api.ticker(Pair::BTC_USD);
 
-        assert_ne!(ticker.unwrap().last_trade_price, 0.0);
+        assert_ne!(ticker.unwrap().last_trade_price, BigDecimal::from_str("0.0").unwrap());
     }
 
     #[test]
@@ -49,7 +52,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Kraken, creds).unwrap();
         let ticker = api.ticker(Pair::BTC_EUR);
 
-        assert_ne!(ticker.unwrap().last_trade_price, 0.0);
+        assert_ne!(ticker.unwrap().last_trade_price, BigDecimal::from_str("0.0").unwrap());
     }
 
     #[test]
@@ -58,7 +61,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Poloniex, creds).unwrap();
         let ticker = api.ticker(Pair::ETH_BTC);
 
-        assert_ne!(ticker.unwrap().last_trade_price, 0.0);
+        assert_ne!(ticker.unwrap().last_trade_price, BigDecimal::from_str("0.0").unwrap());
     }
 
     #[test]
@@ -67,7 +70,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Bitstamp, creds).unwrap();
         let orderbook = api.orderbook(Pair::BTC_EUR);
 
-        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), BigDecimal::from_str("0.0").unwrap())
     }
 
     #[test]
@@ -76,7 +79,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Kraken, creds).unwrap();
         let orderbook = api.orderbook(Pair::BTC_EUR);
 
-        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), BigDecimal::from_str("0.0").unwrap())
     }
 
     #[test]
@@ -85,7 +88,7 @@ mod coinnect_tests {
         let mut api = Coinnect::new(Exchange::Poloniex, creds).unwrap();
         let orderbook = api.orderbook(Pair::ETH_BTC);
 
-        assert_ne!(orderbook.unwrap().avg_price().unwrap(), 0.0)
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), BigDecimal::from_str("0.0").unwrap())
     }
 
     #[test]
@@ -118,10 +121,10 @@ mod coinnect_tests {
             .unwrap();
         let balances: Balances = api.balances().unwrap();
 
-        assert!(balances.get(&Currency::BTC).unwrap() >= &0_f64);
-        assert!(balances.get(&Currency::EUR).unwrap() >= &0_f64);
-        assert!(balances.get(&Currency::USD).unwrap() >= &0_f64);
-        assert!(balances.get(&Currency::XRP).unwrap() >= &0_f64)
+        assert!(balances.get(&Currency::BTC).unwrap() >= &BigDecimal::from_str("0.0").unwrap());
+        assert!(balances.get(&Currency::EUR).unwrap() >= &BigDecimal::from_str("0.0").unwrap());
+        assert!(balances.get(&Currency::USD).unwrap() >= &BigDecimal::from_str("0.0").unwrap());
+        assert!(balances.get(&Currency::XRP).unwrap() >= &BigDecimal::from_str("0.0").unwrap())
     }
 
     #[test]
@@ -133,7 +136,7 @@ mod coinnect_tests {
         let balances: Balances = api.balances().unwrap();
 
         assert!(balances.len() > 0);
-        assert!(balances.get(&Currency::BTC).unwrap() >= &0_f64)
+        assert!(balances.get(&Currency::BTC).unwrap() >= &BigDecimal::from_str("0.0").unwrap())
     }
 
     #[test]
@@ -145,7 +148,7 @@ mod coinnect_tests {
         let balances: Balances = api.balances().unwrap();
         let mut is_positive = false;
         for (_, balance) in &balances {
-            if balance > &0.0 {
+            if balance > &BigDecimal::from_str("0.0").unwrap() {
                 is_positive = true;
                 break;
             }
@@ -159,8 +162,11 @@ mod coinnect_tests {
         let path = PathBuf::from("./keys_real.json");
         let creds = KrakenCreds::new_from_file("account_kraken", path).unwrap();
         let mut api = Coinnect::new(Exchange::Kraken, creds).unwrap();
-        // following request should return an error since Kraken minimum order size is 0.01
-        let orderinfo = api.add_order(OrderType::BuyLimit, Pair::BTC_EUR, 0.00001, Some(1000.58));
+        // following request should return an error since Kraken minimum order size is BigDecimal::from_str("0.01")?
+        let orderinfo = api.add_order(OrderType::BuyLimit,
+                                      Pair::BTC_EUR,
+                                      BigDecimal::from_str("0.00001").unwrap(),
+                                      Some(BigDecimal::from_str("1000.58").unwrap()));
 
         assert_eq!(orderinfo.unwrap_err().to_string(),
                    ErrorKind::InsufficientOrderSize.to_string())
@@ -173,7 +179,10 @@ mod coinnect_tests {
         let creds = PoloniexCreds::new_from_file("account_poloniex", path).unwrap();
         let mut api = Coinnect::new(Exchange::Poloniex, creds).unwrap();
         // following request should return an error
-        let orderinfo = api.add_order(OrderType::BuyLimit, Pair::ETH_BTC, 0.00001, Some(1000.58));
+        let orderinfo = api.add_order(OrderType::BuyLimit,
+                                      Pair::ETH_BTC,
+                                      BigDecimal::from_str("0.00001").unwrap(),
+                                      Some(BigDecimal::from_str("1000.58").unwrap()));
 
         assert_eq!(orderinfo.unwrap_err().to_string(),
                    ErrorKind::InsufficientOrderSize.to_string())
@@ -186,7 +195,10 @@ mod coinnect_tests {
         let creds = BitstampCreds::new_from_file("account_bitstamp", path).unwrap();
         let mut api = Coinnect::new(Exchange::Bitstamp, creds).unwrap();
         // following request should return an error
-        let orderinfo = api.add_order(OrderType::BuyLimit, Pair::EUR_USD, 0.00001, Some(1000.58));
+        let orderinfo = api.add_order(OrderType::BuyLimit,
+                                      Pair::EUR_USD,
+                                      BigDecimal::from_str("0.00001").unwrap(),
+                                      Some(BigDecimal::from_str("1000.58").unwrap()));
 
         assert_eq!(orderinfo.unwrap_err().to_string(),
                    ErrorKind::InsufficientOrderSize.to_string())

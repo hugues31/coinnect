@@ -3,6 +3,8 @@
 
 use serde_json::Value;
 use error::*;
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
 
 use std::collections::HashMap;
 use time;
@@ -45,10 +47,10 @@ pub fn get_json_string<'a>(json_obj: &'a Value, key: &str) -> Result<&'a str> {
            .ok_or_else(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
 }
 
-pub fn from_json_float(json_obj: &Value, key: &str) -> Result<f64> {
-    Ok(json_obj
-           .as_str()
-           .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?
-           .parse::<f64>()
-           .chain_err(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
+pub fn from_json_bigdecimal(json_obj: &Value, key: &str) -> Result<BigDecimal> {
+    let num = json_obj
+        .as_str()
+        .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?;
+
+    Ok(BigDecimal::from_str(num).chain_err(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
 }

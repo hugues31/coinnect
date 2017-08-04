@@ -41,6 +41,7 @@ extern crate bidir_map;
 extern crate data_encoding;
 #[macro_use]
 extern crate error_chain;
+extern crate bigdecimal;
 
 pub mod coinnect;
 pub mod exchange;
