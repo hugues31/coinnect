@@ -1,11 +1,13 @@
 //! Types definition used for handling returned data when generic API is used.
 
 use std::collections::HashMap;
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
 
 
-pub type Amount = f64;
-pub type Price = f64;
-pub type Volume = f64;
+pub type Amount = BigDecimal;
+pub type Price = BigDecimal;
+pub type Volume = BigDecimal;
 
 pub type Balances = HashMap<Currency, Amount>;
 
@@ -46,7 +48,11 @@ impl Orderbook {
         if self.asks.is_empty() || self.bids.is_empty() {
             return None;
         }
-        Some((self.asks[0].0 + self.bids[0].0) / 2.0)
+        Some(
+            (self.asks[0].0.clone() + self.bids[0].0.clone())
+            /
+            BigDecimal::from_str("2.0").unwrap()
+        )
     }
 }
 
