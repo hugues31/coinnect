@@ -5,6 +5,9 @@
 use exchange::ExchangeApi;
 use poloniex::api::PoloniexApi;
 
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
+
 use error::*;
 use types::*;
 use poloniex::utils;
@@ -56,16 +59,18 @@ impl ExchangeApi for PoloniexApi {
                 .as_array()
                 .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
-        for ask in ask_array {
+       for ask in ask_array {
             let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
-            let volume = helpers::from_json_bigdecimal(&ask[1], "ask volume")?;
+            let volume_str = ask[1].as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
 
             ask_offers.push((price, volume));
         }
 
         for bid in bid_array {
             let price = helpers::from_json_bigdecimal(&bid[0], "bid price")?;
-            let volume = helpers::from_json_bigdecimal(&bid[1], "bid volume")?;
+            let volume_str = bid[1].as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
 
             bid_offers.push((price, volume));
         }
