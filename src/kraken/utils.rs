@@ -11,9 +11,16 @@ use types::Pair::*;
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
         let mut m = BidirMap::new();
+        m.insert(BCH_EUR, "BCHEUR");
+        m.insert(BCH_USD, "BCHUSD");
+        m.insert(BCH_BTC, "BCHXBT");
         m.insert(DASH_EUR, "DASHEUR");
         m.insert(DASH_USD, "DASHUSD");
         m.insert(DASH_BTC, "DASHXBT");
+        m.insert(EOS_ETH, "EOSETH");
+        m.insert(EOS_EUR, "EOSEUR");
+        m.insert(EOS_USD, "EOSUSD");
+        m.insert(EOS_BTC, "EOSXBT");
         m.insert(GNO_ETH, "GNOETH");
         m.insert(GNO_EUR, "GNOEUR");
         m.insert(GNO_USD, "GNOUSD");
