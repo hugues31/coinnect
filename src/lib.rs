@@ -34,7 +34,7 @@ extern crate sha2;
 extern crate hmac;
 extern crate hyper_native_tls;
 extern crate serde_json;
-extern crate time;
+extern crate chrono;
 #[macro_use]
 extern crate lazy_static;
 extern crate bidir_map;

@@ -7,7 +7,7 @@ use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
 use std::collections::HashMap;
-use time;
+use chrono::prelude::*;
 
 // Helper functions
 
@@ -24,9 +24,10 @@ pub fn url_encode_hashmap(hashmap: &HashMap<&str, &str>) -> String {
 }
 
 pub fn get_unix_timestamp_ms() -> i64 {
-    let current_time = time::get_time();
-    //Calculate milliseconds
-    (current_time.sec as i64 * 1000) + (current_time.nsec as i64 / 1000 / 1000)
+    let now = Utc::now();
+    let seconds: i64 = now.timestamp();
+    let nanoseconds: i64 = now.nanosecond() as i64;
+    (seconds * 1000) + (nanoseconds / 1000 / 1000)
 }
 
 pub fn strip_empties(x: &mut HashMap<&str, &str>) {
