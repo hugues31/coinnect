@@ -73,11 +73,11 @@ impl PoloniexApi {
     }
 
     fn block_or_continue(&self) {
-        let threshold = 167; // 6 requests/sec = 1/6*1000
-        let delay = helpers::get_unix_timestamp_ms() - self.last_request;
-        if delay < threshold {
-            let duration_ms = Duration::from_millis(delay as u64);
-            thread::sleep(duration_ms);
+        let threshold: u64 = 167; // 6 requests/sec = 1/6*1000
+        let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
+        if offset < threshold {
+            let wait_ms = Duration::from_millis(threshold - offset);
+            thread::sleep(wait_ms);
         }
     }
 
