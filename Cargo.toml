@@ -1,6 +1,6 @@
 [package]
 name = "coinnect"
-version = "0.5.1"
+version = "0.5.2"
 license = "MIT"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal <ainestal@gmail.com>"]
 description = """
