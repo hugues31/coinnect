@@ -24,7 +24,7 @@ mod coinnect_tests {
                    "BitstampApi { last_request: 0, api_key: \"bs_api_key\", api_secret: \
         \"bs_api_secret\", customer_id: \"bs_cust_id\", http_client: Client { \
                     redirect_policy: FollowAll, read_timeout: None, write_timeout: None, proxy: \
-                    None } }");
+                    None }, burst: false }");
     }
     #[test]
     fn can_create_new_api_connection_to_kraken() {

@@ -12,6 +12,8 @@ use serde_json::value::Map;
 
 use std::collections::HashMap;
 use std::io::Read;
+use std::thread;
+use std::time::Duration;
 
 use coinnect::Credentials;
 use exchange::Exchange;
@@ -44,6 +46,7 @@ pub struct BitstampApi {
     api_secret: String,
     customer_id: String,
     http_client: Client,
+    burst: bool,
 }
 
 
@@ -69,7 +72,23 @@ impl BitstampApi {
                api_secret: creds.get("api_secret").unwrap_or_default(),
                customer_id: creds.get("customer_id").unwrap_or_default(),
                http_client: Client::with_connector(connector),
+               burst: false, // No burst by default
            })
+    }
+
+    pub fn set_burst(&mut self, burst: bool) {
+        self.burst = burst
+    }
+
+    fn block_or_continue(&self) {
+        if ! self.burst {
+            let threshold: u64 = 1000; // 600 requests per 10 mins = 1 request per second
+            let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
+            if offset < threshold {
+                let wait_ms = Duration::from_millis(threshold - offset);
+                thread::sleep(wait_ms);
+            }
+        }
     }
 
     fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
@@ -80,7 +99,7 @@ impl BitstampApi {
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
         let url: String = utils::build_url(method, pair);
 
-        utils::block_or_continue(self.last_request);
+        self.block_or_continue();
         let mut response = self.http_client.get(&url).send()?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
@@ -325,5 +344,47 @@ impl BitstampApi {
         params.insert("amount", &amount_string);
 
         self.private_query(&params)
+    }
+}
+
+
+#[cfg(test)]
+mod bitstamp_api_tests {
+    use super::*;
+
+    #[test]
+    fn should_block_or_not_block_when_enabled_or_disabled() {
+        let mut api = BitstampApi {
+            last_request: helpers::get_unix_timestamp_ms(),
+            api_key: "".to_string(),
+            api_secret: "".to_string(),
+            customer_id: "".to_string(),
+            http_client: Client::new(),
+            burst: false,
+        };
+
+        let mut counter = 0;
+        loop {
+            api.set_burst(false);
+            let start = helpers::get_unix_timestamp_ms();
+            api.block_or_continue();
+            api.last_request = helpers::get_unix_timestamp_ms();
+
+            let difference = api.last_request - start;
+            assert!(difference >= 999);
+            assert!(difference < 10000);
+
+
+            api.set_burst(true);
+            let start = helpers::get_unix_timestamp_ms();
+            api.block_or_continue();
+            api.last_request = helpers::get_unix_timestamp_ms();
+
+            let difference = api.last_request - start;
+            assert!(difference < 10);
+
+            counter = counter + 1;
+            if counter >= 3 { break; }
+        }
     }
 }
