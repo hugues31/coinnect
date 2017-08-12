@@ -76,6 +76,11 @@ impl BitstampApi {
            })
     }
 
+    /// The number of calls in a given period is limited. In order to avoid a ban we limit
+    /// by default the number of api requests.
+    /// This function sets or removes the limitation.
+    /// Burst false implies no block.
+    /// Burst true implies there is a control over the number of calls allowed to the exchange
     pub fn set_burst(&mut self, burst: bool) {
         self.burst = burst
     }
