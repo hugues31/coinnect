@@ -46,6 +46,7 @@ pub struct KrakenApi {
     api_secret: String,
     otp: Option<String>, // two-factor password (if two-factor enabled, otherwise not required)
     http_client: Client,
+    burst: bool,
 }
 
 
@@ -69,6 +70,7 @@ impl KrakenApi {
                api_secret: creds.get("api_secret").unwrap_or_default(),
                otp: None,
                http_client: Client::with_connector(connector),
+               burst: false,
            })
     }
 
@@ -78,12 +80,23 @@ impl KrakenApi {
         self.otp = Some(otp);
     }
 
+    /// The number of calls in a given period is limited. In order to avoid a ban we limit
+    /// by default the number of api requests.
+    /// This function sets or removes the limitation.
+    /// Burst false implies no block.
+    /// Burst true implies there is a control over the number of calls allowed to the exchange
+    pub fn set_burst(&mut self, burst: bool) {
+        self.burst = burst
+    }
+
     pub fn block_or_continue(&self) {
-        let threshold: u64 = 2000; // 1 request/2sec
-        let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
-        if offset < threshold {
-            let wait_ms = Duration::from_millis(threshold - offset);
-            thread::sleep(wait_ms);
+        if ! self.burst {
+            let threshold: u64 = 2000; // 1 request/2sec
+            let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
+            if offset < threshold {
+                let wait_ms = Duration::from_millis(threshold - offset);
+                thread::sleep(wait_ms);
+            }
         }
     }
 
@@ -1109,5 +1122,46 @@ impl KrakenApi {
         params.insert("asset", asset);
         params.insert("refid", refid);
         self.private_query("WithdrawCancel", &mut params)
+    }
+}
+
+#[cfg(test)]
+mod kraken_api_tests {
+    use super::*;
+
+    #[test]
+    fn should_block_or_not_block_when_enabled_or_disabled() {
+        let mut api = KrakenApi {
+            last_request: helpers::get_unix_timestamp_ms(),
+            api_key: "".to_string(),
+            api_secret: "".to_string(),
+            otp: None,
+            http_client: Client::new(),
+            burst: false,
+        };
+
+        let mut counter = 0;
+        loop {
+            api.set_burst(false);
+            let start = helpers::get_unix_timestamp_ms();
+            api.block_or_continue();
+            api.last_request = helpers::get_unix_timestamp_ms();
+
+            let difference = api.last_request - start;
+            assert!(difference >= 1999);
+            assert!(difference < 10000);
+
+
+            api.set_burst(true);
+            let start = helpers::get_unix_timestamp_ms();
+            api.block_or_continue();
+            api.last_request = helpers::get_unix_timestamp_ms();
+
+            let difference = api.last_request - start;
+            assert!(difference < 10);
+
+            counter = counter + 1;
+            if counter >= 3 { break; }
+        }
     }
 }
