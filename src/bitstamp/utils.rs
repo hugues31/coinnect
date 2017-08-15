@@ -42,11 +42,11 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
 }
 
 pub fn block_or_continue(last_request: i64) {
-    let threshold = 1000; // 600 requests per 10 mins = 1 request per second
-    let delay = helpers::get_unix_timestamp_ms() - last_request;
-    if delay < threshold {
-        let duration_ms = Duration::from_millis(delay as u64);
-        thread::sleep(duration_ms);
+    let threshold: u64 = 1000; // 600 requests per 10 mins = 1 request per second
+    let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - last_request as u64;
+    if offset < threshold {
+        let wait_ms = Duration::from_millis(threshold - offset);
+        thread::sleep(wait_ms);
     }
 }
 
@@ -158,5 +158,18 @@ pub fn get_currency_string(currency: Currency) -> Option<String> {
         Currency::EUR => Some("EUR".to_string()),
         Currency::XRP => Some("XRP".to_string()),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod utils_tests {
+    use super::*;
+
+    #[test]
+    fn should_block_when_enabled() {
+        let start = helpers::get_unix_timestamp_ms();
+        block_or_continue(start);
+        let end = helpers::get_unix_timestamp_ms();
+        assert!(end - start >= 1000)
     }
 }
