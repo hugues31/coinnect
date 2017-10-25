@@ -4,14 +4,14 @@
 #![allow(too_many_arguments)]
 
 use hmac::{Hmac, Mac};
-use sha2::{Sha256, Sha512, Digest};
+use sha2::{Sha512};
 
 use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::header;
 use hyper::net::HttpsConnector;
 
-use data_encoding::BASE64;
+use data_encoding::HEXLOWER;
 
 use serde_json::Value;
 use serde_json::value::Map;
@@ -113,13 +113,42 @@ impl BittrexApi {
                      method: &str,
                      mut params: &mut HashMap<&str, &str>)
                      -> Result<Map<String, Value>> {
-        let url = "https://bittrex.com/api/v1.1".to_string() + method;
+        let nonce = helpers::get_unix_timestamp_ms().to_string();
+        let mut initial_params: HashMap<&str, &str> = HashMap::new();
+        
+        initial_params.insert("nonce", &nonce);
+        initial_params.insert("apikey", &self.api_key);
 
-        unimplemented!();
-    }
+        let base_url = "https://bittrex.com/api/v1.1".to_string() + method + "?apikey=" +
+        &self.api_key + "&nonce=" + &nonce;
+        
+        let url = if params.is_empty() {
+            base_url
+        } else {
+            base_url + "&" + &helpers::url_encode_hashmap(&mut params)
+        };
+ 
+        let hmac_key = self.api_secret.as_bytes();
+        let mut mac = Hmac::<Sha512>::new(&hmac_key[..]);
+        mac.input(url.as_bytes());
 
-    fn create_signature(&self, urlpath: String, postdata: &str, nonce: &str) -> Result<String> {
-        unimplemented!();
+        let mut custom_header = header::Headers::new();
+
+        let signature = HEXLOWER.encode(mac.result().code());
+
+        custom_header.set(ApiSign(signature));
+
+        let mut res = match self.http_client
+                  .post(&url)
+                  .headers(custom_header)
+                  .send() {
+            Ok(res) => res,
+            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
+        };
+
+        let mut buffer = String::new();
+        res.read_to_string(&mut buffer)?;
+        utils::deserialize_json(&buffer)
     }
 
     /// Used to get the open and available trading markets at Bittrex along with other meta data.
@@ -368,5 +397,392 @@ impl BittrexApi {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.public_query("/public/getmarkethistory", &mut params)
+    }
+
+    /// Used to place a buy order in a specific market. Use buylimit to place limit orders.
+    /// Make sure you have the proper permissions set on your API keys for this call to work.
+    /// "market" required a string literal for the market (ex: BTC-LTC)
+    /// "quantity" required the amount to purchase
+    /// "rate" required the rate at which to place the order.
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 			"uuid" : "e606d53c-8d70-11e3-94b5-425861b86ab6"
+    /// 	}
+    /// }
+    /// ```
+    pub fn buy_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("market", market);
+        params.insert("quantity", quantity);
+        params.insert("rate", rate);
+        self.private_query("/market/buylimit", &mut params)
+    }
+
+    /// Used to place a sell order in a specific market. Use selllimit to place limit orders.
+    /// Make sure you have the proper permissions set on your API keys for this call to work.
+    /// "market" required a string literal for the market (ex: BTC-LTC)
+    /// "quantity" required the amount to purchase
+    /// "rate" required the rate at which to place the order.
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 			"uuid" : "614c34e4-8d71-11e3-94b5-425861b86ab6"
+    /// 	}
+    /// }
+    /// ```
+    pub fn sell_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("market", market);
+        params.insert("quantity", quantity);
+        params.insert("rate", rate);
+        self.private_query("/market/selllimit", &mut params)
+    }
+
+    /// Used to cancel a buy or sell order.
+    /// "uuid" required uuid of buy or sell order
+    /// 
+    /// ```json
+    /// {
+    /// "success" : true,
+    /// "message" : "",
+    /// "result" : null
+    /// }
+    /// ```
+    pub fn cancel(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("uuid", uuid);
+        self.private_query("/market/cancel", &mut params)
+    }
+
+    /// Get all orders that you currently have opened. A specific market can be requested
+    /// "market" optional a string literal for the market (ie. BTC-LTC)
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : [{
+    /// 			"Uuid" : null,
+    /// 			"OrderUuid" : "09aa5bb6-8232-41aa-9b78-a5a1093e0211",
+    /// 			"Exchange" : "BTC-LTC",
+    /// 			"OrderType" : "LIMIT_SELL",
+    /// 			"Quantity" : 5.00000000,
+    /// 			"QuantityRemaining" : 5.00000000,
+    /// 			"Limit" : 2.00000000,
+    /// 			"CommissionPaid" : 0.00000000,
+    /// 			"Price" : 0.00000000,
+    /// 			"PricePerUnit" : null,
+    /// 			"Opened" : "2014-07-09T03:55:48.77",
+    /// 			"Closed" : null,
+    /// 			"CancelInitiated" : false,
+    /// 			"ImmediateOrCancel" : false,
+    /// 			"IsConditional" : false,
+    /// 			"Condition" : null,
+    /// 			"ConditionTarget" : null
+    /// 		}, {
+    /// 			"Uuid" : null,
+    /// 			"OrderUuid" : "8925d746-bc9f-4684-b1aa-e507467aaa99",
+    /// 			"Exchange" : "BTC-LTC",
+    /// 			"OrderType" : "LIMIT_BUY",
+    /// 			"Quantity" : 100000.00000000,
+    /// 			"QuantityRemaining" : 100000.00000000,
+    /// 			"Limit" : 0.00000001,
+    /// 			"CommissionPaid" : 0.00000000,
+    /// 			"Price" : 0.00000000,
+    /// 			"PricePerUnit" : null,
+    /// 			"Opened" : "2014-07-09T03:55:48.583",
+    /// 			"Closed" : null,
+    /// 			"CancelInitiated" : false,
+    /// 			"ImmediateOrCancel" : false,
+    /// 			"IsConditional" : false,
+    /// 			"Condition" : null,
+    /// 			"ConditionTarget" : null
+    /// 		}
+    /// 	]
+    /// }
+    /// ```
+    pub fn get_open_orders(&mut self, market: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("market", market);
+        self.private_query("/market/getopenorders", &mut params)
+    }
+
+    /// Used to retrieve all balances from your account
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : [{
+    /// 			"Currency" : "DOGE",
+    /// 			"Balance" : 0.00000000,
+    /// 			"Available" : 0.00000000,
+    /// 			"Pending" : 0.00000000,
+    /// 			"CryptoAddress" : "DLxcEt3AatMyr2NTatzjsfHNoB9NT62HiF",
+    /// 			"Requested" : false,
+    /// 			"Uuid" : null
+    /// 
+    /// 		}, {
+    /// 			"Currency" : "BTC",
+    /// 			"Balance" : 14.21549076,
+    /// 			"Available" : 14.21549076,
+    /// 			"Pending" : 0.00000000,
+    /// 			"CryptoAddress" : "1Mrcdr6715hjda34pdXuLqXcju6qgwHA31",
+    /// 			"Requested" : false,
+    /// 			"Uuid" : null
+    /// 		}
+    /// 	]
+    /// }
+    /// ```
+    pub fn get_balances(&mut self) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        self.private_query("/account/getbalances", &mut params)
+    }
+
+    /// Used to retrieve the balance from your account for a specific currency.
+    /// "currency" required a string literal for the currency (ex: LTC)
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 		"Currency" : "BTC",
+    /// 		"Balance" : 4.21549076,
+    /// 		"Available" : 4.21549076,
+    /// 		"Pending" : 0.00000000,
+    /// 		"CryptoAddress" : "1MacMr6715hjds342dXuLqXcju6fgwHA31",
+    /// 		"Requested" : false,
+    /// 		"Uuid" : null
+    /// 	}
+    /// }
+    /// ```
+    pub fn get_balance(&mut self, currency: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        self.private_query("/account/getbalance", &mut params)
+    }
+
+    /// Used to retrieve or generate an address for a specific currency.
+    /// If one does not exist, the call will fail and return ADDRESS_GENERATING until one is available.
+    /// "currency" required a string literal for the currency (ex: LTC)
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 		"Currency" : "VTC",
+    /// 		"Address" : "Vy5SKeKGXUHKS2WVpJ76HYuKAu3URastUo"
+    /// 	}
+    /// }
+    /// ```
+    pub fn get_deposit_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        self.private_query("/account/getdepositaddress", &mut params)
+    }
+
+    /// Used to withdraw funds from your account. note: please account for txfee.
+    /// "currency" required a string literal for the currency (ie. BTC)
+    /// "quantity" required the quantity of coins to withdraw
+    /// "address" required the address where to send the funds.
+    /// "paymentid" optional used for CryptoNotes/BitShareX/Nxt optional field (memo/paymentid)
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 			"uuid" : "68b5a16c-92de-11e3-ba3b-425861b86ab6"
+    /// 	}
+    /// }
+    /// ```
+    pub fn withdraw(&mut self, currency: &str, quantity: &str, address: &str, paymentid: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        params.insert("quantity", quantity);
+        params.insert("address", address);
+        params.insert("paymentid", paymentid);
+        self.private_query("/account/withdraw", &mut params)
+    }
+
+    /// Used to retrieve a single order by uuid.
+    /// "uuid" required the uuid of the buy or sell order
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : {
+    /// 		"AccountId" : null,
+    /// 		"OrderUuid" : "0cb4c4e4-bdc7-4e13-8c13-430e587d2cc1",
+    /// 		"Exchange" : "BTC-SHLD",
+    /// 		"Type" : "LIMIT_BUY",
+    /// 		"Quantity" : 1000.00000000,
+    /// 		"QuantityRemaining" : 1000.00000000,
+    /// 		"Limit" : 0.00000001,
+    /// 		"Reserved" : 0.00001000,
+    /// 		"ReserveRemaining" : 0.00001000,
+    /// 		"CommissionReserved" : 0.00000002,
+    /// 		"CommissionReserveRemaining" : 0.00000002,
+    /// 		"CommissionPaid" : 0.00000000,
+    /// 		"Price" : 0.00000000,
+    /// 		"PricePerUnit" : null,
+    /// 		"Opened" : "2014-07-13T07:45:46.27",
+    /// 		"Closed" : null,
+    /// 		"IsOpen" : true,
+    /// 		"Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
+    /// 		"CancelInitiated" : false,
+    /// 		"ImmediateOrCancel" : false,
+    /// 		"IsConditional" : false,
+    /// 		"Condition" : "NONE",
+    /// 		"ConditionTarget" : null
+    /// 	}
+    /// }
+    /// ```
+    pub fn get_order(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("uuid", uuid);
+        self.private_query("/account/getorder", &mut params)
+    }
+
+    /// Used to retrieve your order history.
+    /// "market" optional a string literal for the market (ie. BTC-LTC).
+    /// If ommited, will return for all markets
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : [{
+    /// 			"OrderUuid" : "fd97d393-e9b9-4dd1-9dbf-f288fc72a185",
+    /// 			"Exchange" : "BTC-LTC",
+    /// 			"TimeStamp" : "2014-07-09T04:01:00.667",
+    /// 			"OrderType" : "LIMIT_BUY",
+    /// 			"Limit" : 0.00000001,
+    /// 			"Quantity" : 100000.00000000,
+    /// 			"QuantityRemaining" : 100000.00000000,
+    /// 			"Commission" : 0.00000000,
+    /// 			"Price" : 0.00000000,
+    /// 			"PricePerUnit" : null,
+    /// 			"IsConditional" : false,
+    /// 			"Condition" : null,
+    /// 			"ConditionTarget" : null,
+    /// 			"ImmediateOrCancel" : false
+    /// 		}, {
+    /// 			"OrderUuid" : "17fd64d1-f4bd-4fb6-adb9-42ec68b8697d",
+    /// 			"Exchange" : "BTC-ZS",
+    /// 			"TimeStamp" : "2014-07-08T20:38:58.317",
+    /// 			"OrderType" : "LIMIT_SELL",
+    /// 			"Limit" : 0.00002950,
+    /// 			"Quantity" : 667.03644955,
+    /// 			"QuantityRemaining" : 0.00000000,
+    /// 			"Commission" : 0.00004921,
+    /// 			"Price" : 0.01968424,
+    /// 			"PricePerUnit" : 0.00002950,
+    /// 			"IsConditional" : false,
+    /// 			"Condition" : null,
+    /// 			"ConditionTarget" : null,
+    /// 			"ImmediateOrCancel" : false
+    /// 		}
+    /// 	]
+    /// }
+    /// ```
+    pub fn get_order_history(&mut self, market: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("market", market);
+        self.private_query("/account/getorderhistory", &mut params)
+    }
+
+    /// Used to retrieve your withdrawal history.
+    /// "currency" optional	a string literal for the currecy (ie. BTC).
+    /// If omitted, will return for all currencies
+    /// ```json
+    /// {
+	/// "success" : true,
+	/// "message" : "",
+	/// "result" : [{
+	/// 		"PaymentUuid" : "b52c7a5c-90c6-4c6e-835c-e16df12708b1",
+	/// 		"Currency" : "BTC",
+	/// 		"Amount" : 17.00000000,
+	/// 		"Address" : "1DeaaFBdbB5nrHj87x3NHS4onvw1GPNyAu",
+	/// 		"Opened" : "2014-07-09T04:24:47.217",
+	/// 		"Authorized" : true,
+	/// 		"PendingPayment" : false,
+	/// 		"TxCost" : 0.00020000,
+	/// 		"TxId" : null,
+	/// 		"Canceled" : true,
+	/// 		"InvalidAddress" : false
+	/// 	}, {
+	/// 		"PaymentUuid" : "f293da98-788c-4188-a8f9-8ec2c33fdfcf",
+	/// 		"Currency" : "XC",
+	/// 		"Amount" : 7513.75121715,
+	/// 		"Address" : "XVnSMgAd7EonF2Dgc4c9K14L12RBaW5S5J",
+	/// 		"Opened" : "2014-07-08T23:13:31.83",
+	/// 		"Authorized" : true,
+	/// 		"PendingPayment" : false,
+	/// 		"TxCost" : 0.00002000,
+	/// 		"TxId" : "b4a575c2a71c7e56d02ab8e26bb1ef0a2f6cf2094f6ca2116476a569c1e84f6e",
+	/// 		"Canceled" : false,
+	/// 		"InvalidAddress" : false
+	/// 	}
+	///  ]
+    /// }
+    /// ```
+    pub fn get_withdrawal_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        self.private_query("/account/getwithdrawalhistory", &mut params)
+    }
+
+    /// Used to retrieve your deposit history.
+    /// "currency" optional a string literal for the currecy (ie. BTC).
+    /// If omitted, will return for all currencies
+    /// 
+    /// ```json
+    /// {
+    /// 	"success" : true,
+    /// 	"message" : "",
+    /// 	"result" : [{
+    /// 			"PaymentUuid" : "554ec664-8842-4fe9-b491-06225becbd59",
+    /// 			"Currency" : "BTC",
+    /// 			"Amount" : 0.00156121,
+    /// 			"Address" : "1K37yQZaGrPKNTZ5KNP792xw8f7XbXxetE",
+    /// 			"Opened" : "2014-07-11T03:41:25.323",
+    /// 			"Authorized" : true,
+    /// 			"PendingPayment" : false,
+    /// 			"TxCost" : 0.00020000,
+    /// 			"TxId" : "70cf6fdccb9bd38e1a930e13e4ae6299d678ed6902da710fa3cc8d164f9be126",
+    /// 			"Canceled" : false,
+    /// 			"InvalidAddress" : false
+    /// 		}, {
+    /// 			"PaymentUuid" : "d3fdf168-3d8e-40b6-8fe4-f46e2a7035ea",
+    /// 			"Currency" : "BTC",
+    /// 			"Amount" : 0.11800000,
+    /// 			"Address" : "1Mrcar6715hjds34pdXuLqXcju6QgwHA31",
+    /// 			"O
+    /// 			pened" : "2014-07-03T20:27:07.163",
+    /// 			"Authorized" : true,
+    /// 			"PendingPayment" : false,
+    /// 			"TxCost" : 0.00020000,
+    /// 			"TxId" : "3efd41b3a051433a888eed3ecc174c1d025a5e2b486eb418eaaec5efddda22de",
+    /// 			"Canceled" : false,
+    /// 			"InvalidAddress" : false
+    /// 		}
+    ///     ]
+    /// }
+    /// ```
+    pub fn get_deposit_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        params.insert("currency", currency);
+        self.private_query("/account/getdeposithistory", &mut params)
     }
 }

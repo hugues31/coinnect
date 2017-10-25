@@ -7,8 +7,6 @@ use bittrex::api::BittrexApi;
 
 use error::*;
 use types::*;
-use bittrex::utils;
-use helpers;
 
 impl ExchangeApi for BittrexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {

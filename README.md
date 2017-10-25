@@ -30,7 +30,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 | Bitstamp | X | X | Not every method is implemented for now.|
 | Kraken   | X | X | - |
 | Poloniex | X | X | - |
-| Bittrex  | X | - | Only public methods are available, more to come |
+| Bittrex  | X | - | Generic API will be added soon |
 
 Generic API supports:
  - Ticker

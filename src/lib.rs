@@ -12,6 +12,7 @@
 //! - [x] Poloniex
 //! - [x] Kraken
 //! - [x] Bitstamp (partial)
+//! - [x] Bittrex (only raw API for now)
 //!
 //! # WARNING
 //! This library is highly experimental at the moment. Please do not invest what you

@@ -25,10 +25,17 @@ mod bittrex_tests {
         assert!(last_price.is_some())
     }
 
-    /// IMPORTANT: Real keys are needed in order to retrieve the xxxxx
+    /// IMPORTANT: Real keys are needed in order to retrieve the balances
     #[test]
     #[cfg_attr(not(feature = "bittrex_private_tests"), ignore)]
-    fn xxxxxx_should_return_a_result() {
+    fn balances_should_return_a_result() {
+        use std::path::PathBuf;
+        let path = PathBuf::from("./keys_real.json");
+        let creds = BittrexCreds::new_from_file("account_bittrex", path).unwrap();
+        let mut api = BittrexApi::new(creds).unwrap();
 
+        let result = api.get_balances().unwrap();
+
+        assert!(result.get("result").is_some())
     }
 }
