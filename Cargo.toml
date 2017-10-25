@@ -1,6 +1,6 @@
 [package]
 name = "coinnect"
-version = "0.5.2"
+version = "0.5.3"
 license = "MIT"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal <ainestal@gmail.com>"]
 description = """
@@ -17,6 +17,7 @@ default = []
 bitstamp_private_tests = []
 kraken_private_tests = []
 poloniex_private_tests = []
+bittrex_private_tests = []
 
 [[example]]
 name = "simple"
