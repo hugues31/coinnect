@@ -30,6 +30,7 @@ held responsible for the library malfunction, which can lead to a loss of money.
 | Bitstamp | X | X | Not every method is implemented for now.|
 | Kraken   | X | X | - |
 | Poloniex | X | X | - |
+| Bittrex  | X | - | Only get_markets() is available, more to come |
 
 Generic API supports:
  - Ticker

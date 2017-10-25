@@ -52,3 +52,4 @@ mod helpers;
 pub mod bitstamp;
 pub mod poloniex;
 pub mod kraken;
+pub mod bittrex;
