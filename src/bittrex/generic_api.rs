@@ -112,6 +112,28 @@ impl ExchangeApi for BittrexApi {
     }
 
     fn balances(&mut self) -> Result<Balances> {
-        unimplemented!();
+        let raw_response = self.get_balances()?;
+
+        let result = utils::parse_result(&raw_response)?;
+
+        let result_array = result.as_array().unwrap();
+
+        let mut balances = Balances::new();
+
+        for currency in result_array {
+            let currency_obj = currency.as_object().unwrap();
+            let currency_str = currency_obj.get("Currency").unwrap().as_str().unwrap();
+            let currency = utils::get_currency_enum(&currency_str);
+
+            match currency {
+                Some(c) => {
+                    let amount_str = currency_obj.get("Available").unwrap().as_f64().unwrap().to_string();
+                    let amount = BigDecimal::from_str(&amount_str).unwrap();
+                    balances.insert(c, amount);
+                },
+                _ => ()
+            }
+        }
+        Ok(balances)
     }
 }

@@ -176,6 +176,23 @@ mod coinnect_tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "bittrex_private_tests"), ignore)]
+    fn coinnect_can_get_at_least_a_positive_balance_from_bittrex() {
+        let path = PathBuf::from("./keys_real.json");
+        let mut api = Coinnect::new_from_file(Exchange::Bittrex, "account_bittrex", path)
+            .unwrap();
+        let balances: Balances = api.balances().unwrap();
+        let mut is_positive = false;
+        for (_, balance) in &balances {
+            if balance >= &BigDecimal::from_str("0.0").unwrap() {
+                is_positive = true;
+                break;
+            }
+        }
+        assert!(is_positive)
+    }
+
+    #[test]
     #[cfg_attr(not(feature = "kraken_private_tests"), ignore)]
     fn coinnect_can_add_order_from_kraken() {
         let path = PathBuf::from("./keys_real.json");
@@ -217,6 +234,22 @@ mod coinnect_tests {
         let orderinfo = api.add_order(OrderType::BuyLimit,
                                       Pair::EUR_USD,
                                       BigDecimal::from_str("0.00001").unwrap(),
+                                      Some(BigDecimal::from_str("1000.58").unwrap()));
+
+        assert_eq!(orderinfo.unwrap_err().to_string(),
+                   ErrorKind::InsufficientOrderSize.to_string())
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "bittrex_private_tests"), ignore)]
+    fn coinnect_can_add_order_from_bittrex() {
+        let path = PathBuf::from("./keys_real.json");
+        let creds = BittrexCreds::new_from_file("account_bittrex", path).unwrap();
+        let mut api = Coinnect::new(Exchange::Bittrex, creds).unwrap();
+        // following request should return an error
+        let orderinfo = api.add_order(OrderType::BuyLimit,
+                                      Pair::ETH_BTC,
+                                      BigDecimal::from_str("0.000000000001").unwrap(),
                                       Some(BigDecimal::from_str("1000.58").unwrap()));
 
         assert_eq!(orderinfo.unwrap_err().to_string(),
