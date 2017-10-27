@@ -108,7 +108,43 @@ impl ExchangeApi for BittrexApi {
                  quantity: Volume,
                  price: Option<Price>)
                  -> Result<OrderInfo> {
-        unimplemented!();
+
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(pair_str) => pair_str,
+            None => return Err(ErrorKind::PairUnsupported.into())
+        };
+
+        let raw_response = match order_type {
+            OrderType::BuyLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+                self.buy_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string())
+            }
+            OrderType::BuyMarket => {
+                let min_price = "0.000000001";
+                self.buy_limit(pair_name, &quantity.to_string(), min_price)
+            }
+            OrderType::SellLimit => {
+                if price.is_none() {
+                    return Err(ErrorKind::MissingPrice.into());
+                }
+                self.sell_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string())
+            }
+            OrderType::SellMarket => {
+                let max_price = "999999999.99";
+                self.buy_limit(pair_name, &quantity.to_string(), max_price)
+            }
+        }?;
+
+        let result = utils::parse_result(&raw_response)?;
+
+        let result_obj = result.as_object().unwrap();
+
+        Ok(OrderInfo {
+               timestamp: helpers::get_unix_timestamp_ms(),
+               identifier: vec![result_obj.get("uuid").unwrap().as_str().unwrap().to_string()],
+        })
     }
 
     fn balances(&mut self) -> Result<Balances> {

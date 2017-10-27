@@ -320,8 +320,12 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Value> {
         .ok_or_else(|| ErrorKind::MissingField("message".to_string()))?
         .as_str()
         .ok_or_else(|| ErrorKind::InvalidFieldFormat("message".to_string()))?;
-        
-        return Err(ErrorKind::ExchangeSpecificError(error_message.to_string()).into());
+
+        match error_message.as_ref() {
+            "MIN_TRADE_REQUIREMENT_NOT_MET" => Err(ErrorKind::InsufficientOrderSize.into()),
+            "INVALID_PERMISSION" => Err(ErrorKind::PermissionDenied.into()),
+            _ => Err(ErrorKind::ExchangeSpecificError(error_message.to_string()).into()),
+        }
     }
 
 
