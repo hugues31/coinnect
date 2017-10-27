@@ -62,9 +62,29 @@ for pair in raw_poloniex_pairs:
     base, quote = pair.split('_', 1)
     standardized_poloniex_pairs.append(quote + "_" + base)
 
+# ╔╗   ╦  ╔╦╗  ╔╦╗  ╦═╗  ╔═╗  ═╗ ╦
+# ╠╩╗  ║   ║    ║   ╠╦╝  ║╣   ╔╩╦╝
+# ╚═╝  ╩   ╩    ╩   ╩╚═  ╚═╝  ╩ ╚═
+url = "https://bittrex.com/api/v1.1/public/getmarketsummaries"
+
+raw_bittrex_pairs = list()
+with urllib.request.urlopen(url) as response:
+    html = response.read().decode("utf-8")
+    json_data = json.loads(html)
+    for currency in json_data["result"]:
+        raw_bittrex_pairs.append(currency["MarketName"])
+
+# conversion
+standardized_bittrex_pairs = list()
+for pair in raw_bittrex_pairs:
+    base, quote = pair.split('-', 1)
+    standardized_bittrex_pairs.append(quote + "_" + base)
+
+
+
 # Generate all possible pairs
 exchanges = [standardized_bitstamp_pairs, standardized_kraken_pairs,
-standardized_poloniex_pairs]
+standardized_poloniex_pairs, standardized_bittrex_pairs]
 
 pairs = list()
 for exchange in exchanges:
@@ -95,3 +115,31 @@ print("POLONIEX PAIRS")
 print("==============")
 for std, raw in zip(standardized_poloniex_pairs, raw_poloniex_pairs):
     print("m.insert({std}, \"{raw}\");".format(std=std, raw=raw))
+
+print("\n\n\n")
+print("BITTREX PAIRS")
+print("==============")
+for std, raw in zip(standardized_bittrex_pairs, raw_bittrex_pairs):
+    print("m.insert({std}, \"{raw}\");".format(std=std, raw=raw))
+
+
+# CURRENCIES
+# BITTREX
+url = "https://bittrex.com/api/v1.1/public/getcurrencies"
+
+bittrex_currencies = list()
+with urllib.request.urlopen(url) as response:
+    html = response.read().decode("utf-8")
+    json_data = json.loads(html)
+    for currency in json_data["result"]:
+        print(currency["Currency"] + ",")
+        bittrex_currencies.append(currency["Currency"])
+
+# Currency enum -> Option<String>
+for currency in bittrex_currencies:
+    print("Currency::" + currency + " => Some(\"" +
+          currency + "\".to_string()),")
+
+# Currency str -> Option<Currency>
+for currency in bittrex_currencies:
+    print("\"" + currency + "\" => Some(Currency::" + currency + "),")

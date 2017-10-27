@@ -12,20 +12,22 @@
 //! - [x] Poloniex
 //! - [x] Kraken
 //! - [x] Bitstamp (partial)
-//! - [x] Bittrex (only raw API for now)
+//! - [x] Bittrex
 //!
 //! # WARNING
 //! This library is highly experimental at the moment. Please do not invest what you
 //! can't afford to loose. This is a personal project, I can not be held responsible for
 //! the library malfunction, which can lead to a loss of money.
 
+// error_chain can make a lot of recursions.
+#![recursion_limit="128"]
+
+// Allow lint customization.
+#![allow(unknown_lints)]
+
 // Move all the clippy warning in deny.
 #![deny(clippy)]
 
-// error_chain can make a lot of recursions.
-#![recursion_limit="128"]
-// Allow lint customization.
-#![allow(unknown_lints)]
 // Avoid warning for the Crypto-currency about quotes.
 #![allow(doc_markdown)]
 

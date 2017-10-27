@@ -101,6 +101,18 @@ lazy_static! {
         m.insert(GNT_ETH, "ETH_GNT");
         m.insert(GNO_BTC, "BTC_GNO");
         m.insert(GNO_ETH, "ETH_GNO");
+        m.insert(BCH_BTC, "BTC_BCH");
+        m.insert(BCH_ETH, "ETH_BCH");
+        m.insert(BCH_USDT, "USDT_BCH");
+        m.insert(ZRX_BTC, "BTC_ZRX");
+        m.insert(ZRX_ETH, "ETH_ZRX");
+        m.insert(CVC_BTC, "BTC_CVC");
+        m.insert(CVC_ETH, "ETH_CVC");
+        m.insert(OMG_BTC, "BTC_OMG");
+        m.insert(OMG_ETH, "ETH_OMG");
+        m.insert(GAS_BTC, "BTC_GAS");
+        m.insert(GAS_ETH, "ETH_GAS");
+        m.insert(STORJ_BTC, "BTC_STORJ");
         m
     };
 }
