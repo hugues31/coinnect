@@ -2,6 +2,9 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Bittrex offers.
 
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
+
 use exchange::ExchangeApi;
 use bittrex::api::BittrexApi;
 
@@ -17,7 +20,23 @@ impl ExchangeApi for BittrexApi {
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let raw_response = self.get_ticker(pair_name)?;
+        let raw_response = self.get_market_summary(pair_name)?;
+
+        let result = utils::parse_result(&raw_response)?;
+        let result_array = result.as_array();
+        let result_obj = result_array.unwrap()[0].as_object().unwrap();
+
+        let price_str = result_obj.get("Last").unwrap().as_f64().unwrap().to_string();
+        let price = BigDecimal::from_str(&price_str).unwrap();
+
+        let ask_str = result_obj.get("Ask").unwrap().as_f64().unwrap().to_string();
+        let ask = BigDecimal::from_str(&price_str).unwrap();
+
+        let bid_str = result_obj.get("Bid").unwrap().as_f64().unwrap().to_string();
+        let bid = BigDecimal::from_str(&price_str).unwrap();
+
+        let volume_str = result_obj.get("Volume").unwrap().as_f64().unwrap().to_string();
+        let vol = BigDecimal::from_str(&price_str).unwrap();
 
         Ok(Ticker {
             timestamp: helpers::get_unix_timestamp_ms(),

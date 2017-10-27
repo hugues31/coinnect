@@ -133,5 +133,13 @@ with urllib.request.urlopen(url) as response:
     json_data = json.loads(html)
     for currency in json_data["result"]:
         print(currency["Currency"] + ",")
-        raw_bittrex_pairs.append(currency["Currency"])
+        bittrex_currencies.append(currency["Currency"])
 
+# Currency enum -> Option<String>
+for currency in bittrex_currencies:
+    print("Currency::" + currency + " => Some(\"" +
+          currency + "\".to_string()),")
+
+# Currency str -> Option<Currency>
+for currency in bittrex_currencies:
+    print("\"" + currency + "\" => Some(Currency::" + currency + "),")
