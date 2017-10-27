@@ -102,6 +102,15 @@ mod coinnect_tests {
     }
 
     #[test]
+    fn coinnect_can_get_an_orderbook_from_bittrex() {
+        let creds = BittrexCreds::new("test", "api_key", "api_secret");
+        let mut api = Coinnect::new(Exchange::Bittrex, creds).unwrap();
+        let orderbook = api.orderbook(Pair::ETH_BTC);
+
+        assert_ne!(orderbook.unwrap().avg_price().unwrap(), BigDecimal::from_str("0.0").unwrap())
+    }
+
+    #[test]
     #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
     fn coinnect_can_get_the_balances_from_bitstamp() {
         let path = PathBuf::from("./keys_real.json");

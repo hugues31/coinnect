@@ -50,7 +50,56 @@ impl ExchangeApi for BittrexApi {
     }
 
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
-        unimplemented!();
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(ErrorKind::PairUnsupported.into()),
+        };
+
+        let raw_response = self.get_order_book(pair_name, "both")?;
+
+        let result = utils::parse_result(&raw_response)?;
+
+        let mut ask_offers = Vec::new();    // buy orders
+        let mut bid_offers = Vec::new();    // sell orders
+
+        let buy_orders = result["buy"].as_array()
+        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["buy"])))?;
+
+        let sell_orders = result["sell"].as_array()
+        .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["sell"])))?;
+
+        for ask in buy_orders {
+            let ask_obj = ask.as_object().unwrap();
+
+            let price_str = ask_obj.get("Rate").unwrap().as_f64().unwrap().to_string();
+            let price = BigDecimal::from_str(&price_str).unwrap();
+
+
+            let volume_str = ask_obj.get("Quantity").unwrap().as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
+
+            ask_offers.push((price, volume));
+        }
+
+        for bid in sell_orders {
+            let bid_obj = bid.as_object().unwrap();
+
+            let price_str = bid_obj.get("Rate").unwrap().as_f64().unwrap().to_string();
+            let price = BigDecimal::from_str(&price_str).unwrap();
+
+
+            let volume_str = bid_obj.get("Quantity").unwrap().as_f64().unwrap().to_string();
+            let volume = BigDecimal::from_str(&volume_str).unwrap();
+
+            bid_offers.push((price, volume));
+        }
+
+        Ok(Orderbook {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            asks: ask_offers,
+            bids: bid_offers,
+        })
     }
 
     fn add_order(&mut self,
