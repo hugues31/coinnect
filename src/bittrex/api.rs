@@ -705,6 +705,7 @@ impl BittrexApi {
     /// Used to retrieve your withdrawal history.
     /// "currency" optional	a string literal for the currecy (ie. BTC).
     /// If omitted, will return for all currencies
+    /// 
     /// ```json
     /// {
 	/// "success" : true,
