@@ -18,12 +18,8 @@ lazy_static! {
         m.insert(DASH_USD, "DASHUSD");
         m.insert(DASH_BTC, "DASHXBT");
         m.insert(EOS_ETH, "EOSETH");
-        m.insert(EOS_EUR, "EOSEUR");
-        m.insert(EOS_USD, "EOSUSD");
         m.insert(EOS_BTC, "EOSXBT");
         m.insert(GNO_ETH, "GNOETH");
-        m.insert(GNO_EUR, "GNOEUR");
-        m.insert(GNO_USD, "GNOUSD");
         m.insert(GNO_BTC, "GNOXBT");
         m.insert(USDT_USD, "USDTZUSD");
         m.insert(ETC_ETH, "XETCXETH");
@@ -52,7 +48,6 @@ lazy_static! {
         m.insert(REP_ETH, "XREPXETH");
         m.insert(REP_BTC, "XREPXXBT");
         m.insert(REP_EUR, "XREPZEUR");
-        m.insert(REP_USD, "XREPZUSD");
         m.insert(BTC_CAD, "XXBTZCAD");
         m.insert(BTC_CAD_d, "XXBTZCAD.d");
         m.insert(BTC_EUR, "XXBTZEUR");
@@ -65,15 +60,11 @@ lazy_static! {
         m.insert(BTC_USD_d, "XXBTZUSD.d");
         m.insert(XDG_BTC, "XXDGXXBT");
         m.insert(XLM_BTC, "XXLMXXBT");
-        m.insert(XLM_EUR, "XXLMZEUR");
-        m.insert(XLM_USD, "XXLMZUSD");
         m.insert(XMR_BTC, "XXMRXXBT");
         m.insert(XMR_EUR, "XXMRZEUR");
         m.insert(XMR_USD, "XXMRZUSD");
         m.insert(XRP_BTC, "XXRPXXBT");
-        m.insert(XRP_CAD, "XXRPZCAD");
         m.insert(XRP_EUR, "XXRPZEUR");
-        m.insert(XRP_JPY, "XXRPZJPY");
         m.insert(XRP_USD, "XXRPZUSD");
         m.insert(ZEC_BTC, "XZECXXBT");
         m.insert(ZEC_EUR, "XZECZEUR");

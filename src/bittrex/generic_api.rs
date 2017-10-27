@@ -7,10 +7,26 @@ use bittrex::api::BittrexApi;
 
 use error::*;
 use types::*;
+use bittrex::utils;
+use helpers;
 
 impl ExchangeApi for BittrexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
-        unimplemented!();
+        let pair_name = match utils::get_pair_string(&pair) {
+            Some(name) => name,
+            None => return Err(ErrorKind::PairUnsupported.into()),
+        };
+
+        let raw_response = self.get_ticker(pair_name)?;
+
+        Ok(Ticker {
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            last_trade_price: price,
+            lowest_ask: ask,
+            highest_bid: bid,
+            volume: Some(vol),
+        })
 
     }
 

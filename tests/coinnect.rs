@@ -12,6 +12,7 @@ mod coinnect_tests {
     use self::coinnect::kraken::KrakenCreds;
     use self::coinnect::bitstamp::BitstampCreds;
     use self::coinnect::poloniex::PoloniexCreds;
+    use self::coinnect::bittrex::BittrexCreds;
     use self::coinnect::error::*;
     use self::coinnect::types::*;
 
@@ -59,6 +60,15 @@ mod coinnect_tests {
     fn coinnect_can_get_a_ticker_from_poloniex() {
         let creds = PoloniexCreds::new("test", "api_key", "api_secret");
         let mut api = Coinnect::new(Exchange::Poloniex, creds).unwrap();
+        let ticker = api.ticker(Pair::ETH_BTC);
+
+        assert_ne!(ticker.unwrap().last_trade_price, BigDecimal::from_str("0.0").unwrap());
+    }
+
+    #[test]
+    fn coinnect_can_get_a_ticker_from_bittrex() {
+        let creds = BittrexCreds::new("test", "api_key", "api_secret");
+        let mut api = Coinnect::new(Exchange::Bittrex, creds).unwrap();
         let ticker = api.ticker(Pair::ETH_BTC);
 
         assert_ne!(ticker.unwrap().last_trade_price, BigDecimal::from_str("0.0").unwrap());
