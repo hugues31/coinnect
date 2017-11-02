@@ -30,13 +30,13 @@ impl ExchangeApi for BittrexApi {
         let price = BigDecimal::from_str(&price_str).unwrap();
 
         let ask_str = result_obj.get("Ask").unwrap().as_f64().unwrap().to_string();
-        let ask = BigDecimal::from_str(&price_str).unwrap();
+        let ask = BigDecimal::from_str(&ask_str).unwrap();
 
         let bid_str = result_obj.get("Bid").unwrap().as_f64().unwrap().to_string();
-        let bid = BigDecimal::from_str(&price_str).unwrap();
+        let bid = BigDecimal::from_str(&bid_str).unwrap();
 
         let volume_str = result_obj.get("Volume").unwrap().as_f64().unwrap().to_string();
-        let vol = BigDecimal::from_str(&price_str).unwrap();
+        let vol = BigDecimal::from_str(&volume_str).unwrap();
 
         Ok(Ticker {
             timestamp: helpers::get_unix_timestamp_ms(),
