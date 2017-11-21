@@ -1,19 +1,25 @@
 //! Use this module to interact with Bitstamp exchange.
 //! Please see examples for more informations.
 
-
-use hyper_native_tls::NativeTlsClient;
+use hyper;
 use hyper::Client;
 use hyper::header::ContentType;
-use hyper::net::HttpsConnector;
+use hyper::Request;
+use hyper::Method;
 
+use futures::Future;
+use futures::future;
+use futures::stream::Stream;
+
+use serde_json;
 use serde_json::Value;
-use serde_json::value::Map;
 
 use std::collections::HashMap;
 use std::io::Read;
 use std::thread;
 use std::time::Duration;
+
+use tokio_core;
 
 use coinnect::Credentials;
 use exchange::Exchange;
@@ -45,8 +51,8 @@ pub struct BitstampApi {
     api_key: String,
     api_secret: String,
     customer_id: String,
-    http_client: Client,
     burst: bool,
+    core: tokio_core::reactor::Core,
 }
 
 
@@ -57,22 +63,13 @@ impl BitstampApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Bitstamp, creds.exchange()).into());
         }
 
-        //TODO: Handle correctly TLS errors with error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-
-        let connector = HttpsConnector::new(ssl);
-
-
         Ok(BitstampApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
                customer_id: creds.get("customer_id").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
                burst: false, // No burst by default
+               core: tokio_core::reactor::Core::new().unwrap(),
            })
     }
 
@@ -96,7 +93,11 @@ impl BitstampApi {
         }
     }
 
-    fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
+    fn public_query(&mut self, params: &HashMap<&str, &str>) -> impl Future<Item = Value, Error = hyper::Error> {
+        let handle = self.core.handle();
+        let client = ::hyper::Client::configure()
+        .connector(::hyper_tls::HttpsConnector::new(4, &self.core.handle()).unwrap())
+        .build(&self.core.handle());
 
         let method: &str = params
             .get("method")
@@ -105,11 +106,15 @@ impl BitstampApi {
         let url: String = utils::build_url(method, pair);
 
         self.block_or_continue();
-        let mut response = self.http_client.get(&url).send()?;
+    
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+
+        client.get(url.parse().unwrap()).and_then(|res| {
+            res.body().concat2().and_then(move |body| {
+                let v: Value = serde_json::from_slice(&body).unwrap();
+                future::ok((v))
+            })
+        })
     }
 
     ///
@@ -123,7 +128,11 @@ impl BitstampApi {
     /// let  result = api.private_query("balance", "btcusd");
     /// assert_eq!(true, true);
     /// ```
-    fn private_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
+    fn private_query(&mut self, params: &HashMap<&str, &str>) -> impl Future<Item = Value, Error = hyper::Error> {
+        let handle = self.core.handle();
+        let client = ::hyper::Client::configure()
+        .connector(::hyper_tls::HttpsConnector::new(4, &self.core.handle()).unwrap())
+        .build(&self.core.handle());
 
         let method: &str = params
             .get("method")
@@ -142,15 +151,17 @@ impl BitstampApi {
         post_params.insert("nonce", &nonce);
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(post_params);
-        let mut response = self.http_client
-            .post(&url)
-            .header(ContentType::form_url_encoded())
-            .body(&post_data)
-            .send()?;
 
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let mut custom_header = client.headers_mut();
+        custom_header.set(ContentType::form_url_encoded());
+        let post_request = Request::new(Method::Post, &url).set_body(&post_data);
+
+        client.request(post_request).and_then(|res| {
+            res.body().concat2().and_then(move |body| {
+                let v: Value = serde_json::from_slice(&body).unwrap();
+                future::ok((v))
+            })
+        })
     }
 
     /// Sample output :
@@ -165,7 +176,7 @@ impl BitstampApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub fn return_ticker(&mut self, pair: Pair) -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -183,7 +194,7 @@ impl BitstampApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub fn return_order_book(&mut self, pair: Pair) -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -204,7 +215,7 @@ impl BitstampApi {
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
     /// "total":"0.04978"}, ... ]
     /// ```
-    pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub fn return_trade_history(&mut self, pair: Pair) -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -224,7 +235,7 @@ impl BitstampApi {
     /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_balances(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("method", "balance");
         params.insert("pair", "");
@@ -242,7 +253,7 @@ impl BitstampApi {
                      price: Price,
                      price_limit: Option<Price>,
                      daily_order: Option<bool>)
-                     -> Result<Map<String, Value>> {
+                     -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -281,7 +292,7 @@ impl BitstampApi {
                       price: Price,
                       price_limit: Option<Price>,
                       daily_order: Option<bool>)
-                      -> Result<Map<String, Value>> {
+                      -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -313,7 +324,7 @@ impl BitstampApi {
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn buy_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
+    pub fn buy_market(&mut self, pair: Pair, amount: Volume) -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -334,7 +345,7 @@ impl BitstampApi {
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn sell_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
+    pub fn sell_market(&mut self, pair: Pair, amount: Volume) -> impl Future<Item = Value, Error = hyper::Error> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),

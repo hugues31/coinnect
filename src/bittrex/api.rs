@@ -6,10 +6,15 @@
 use hmac::{Hmac, Mac};
 use sha2::{Sha512};
 
-use hyper_native_tls::NativeTlsClient;
+use hyper;
 use hyper::Client;
 use hyper::header;
-use hyper::net::HttpsConnector;
+use hyper::Request;
+use hyper::Method;
+
+use futures::Future;
+use futures::future;
+use futures::stream::Stream;
 
 use data_encoding::HEXLOWER;
 
@@ -21,6 +26,8 @@ use std::io::Read;
 use std::thread;
 use std::time::Duration;
 use std::str;
+
+use tokio_core;
 
 use error::*;
 use helpers;
@@ -39,8 +46,8 @@ pub struct BittrexApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
-    http_client: Client,
     burst: bool,
+    core: tokio_core::reactor::Core,
 }
 
 
@@ -51,19 +58,12 @@ impl BittrexApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Bittrex, creds.exchange()).into());
         }
 
-        // TODO: implement correctly the TLS error in error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-        let connector = HttpsConnector::new(ssl);
-
         Ok(BittrexApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
                burst: false,
+               core: tokio_core::reactor::Core::new().unwrap(),
            })
     }
 
@@ -90,7 +90,7 @@ impl BittrexApi {
     fn public_query(&mut self,
                     method: &str,
                     params: &mut HashMap<&str, &str>)
-                    -> Result<Map<String, Value>> {
+                    -> impl Future<Item = Value, Error = hyper::Error> {
 
         helpers::strip_empties(params);
 
@@ -112,7 +112,7 @@ impl BittrexApi {
     fn private_query(&mut self,
                      method: &str,
                      mut params: &mut HashMap<&str, &str>)
-                     -> Result<Map<String, Value>> {
+                     -> impl Future<Item = Value, Error = hyper::Error> {
         let nonce = helpers::get_unix_timestamp_ms().to_string();
         let mut initial_params: HashMap<&str, &str> = HashMap::new();
         
@@ -179,7 +179,7 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_markets(&mut self) -> Result<Map<String, Value>> {
+    pub fn get_markets(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         self.public_query("/public/getmarkets", &mut params)
     }
@@ -210,7 +210,7 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_currencies(&mut self) -> Result<Map<String, Value>> {
+    pub fn get_currencies(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         self.public_query("/public/getcurrencies", &mut params)
     }
@@ -229,7 +229,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_ticker(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub fn get_ticker(&mut self, market: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.public_query("/public/getticker", &mut params)
@@ -275,7 +275,7 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_market_summaries(&mut self) -> Result<Map<String, Value>> {
+    pub fn get_market_summaries(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         self.public_query("/public/getmarketsummaries", &mut params)
     }
@@ -306,7 +306,7 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_market_summary(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub fn get_market_summary(&mut self, market: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.public_query("/public/getmarketsummary", &mut params)
@@ -343,7 +343,7 @@ impl BittrexApi {
     ///     }
     /// }
     /// ```
-    pub fn get_order_book(&mut self, market: &str, order_type: &str) -> Result<Map<String, Value>> {
+    pub fn get_order_book(&mut self, market: &str, order_type: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("type", order_type);
@@ -393,7 +393,7 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_market_history(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub fn get_market_history(&mut self, market: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.public_query("/public/getmarkethistory", &mut params)
@@ -414,7 +414,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn buy_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub fn buy_limit(&mut self, market: &str, quantity: &str, rate: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("quantity", quantity);
@@ -437,7 +437,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn sell_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub fn sell_limit(&mut self, market: &str, quantity: &str, rate: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("quantity", quantity);
@@ -455,7 +455,7 @@ impl BittrexApi {
     /// "result" : null
     /// }
     /// ```
-    pub fn cancel(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+    pub fn cancel(&mut self, uuid: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("uuid", uuid);
         self.private_query("/market/cancel", &mut params)
@@ -508,7 +508,7 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_open_orders(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub fn get_open_orders(&mut self, market: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.private_query("/market/getopenorders", &mut params)
@@ -541,7 +541,7 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_balances(&mut self) -> Result<Map<String, Value>> {
+    pub fn get_balances(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         self.private_query("/account/getbalances", &mut params)
     }
@@ -564,7 +564,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_balance(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn get_balance(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("/account/getbalance", &mut params)
@@ -584,7 +584,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_deposit_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn get_deposit_address(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("/account/getdepositaddress", &mut params)
@@ -605,7 +605,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn withdraw(&mut self, currency: &str, quantity: &str, address: &str, paymentid: &str) -> Result<Map<String, Value>> {
+    pub fn withdraw(&mut self, currency: &str, quantity: &str, address: &str, paymentid: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("quantity", quantity);
@@ -648,7 +648,7 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_order(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+    pub fn get_order(&mut self, uuid: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("uuid", uuid);
         self.private_query("/account/getorder", &mut params)
@@ -696,7 +696,7 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_order_history(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub fn get_order_history(&mut self, market: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("market", market);
         self.private_query("/account/getorderhistory", &mut params)
@@ -738,7 +738,7 @@ impl BittrexApi {
 	///  ]
     /// }
     /// ```
-    pub fn get_withdrawal_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn get_withdrawal_history(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("/account/getwithdrawalhistory", &mut params)
@@ -781,7 +781,7 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_deposit_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn get_deposit_history(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("/account/getdeposithistory", &mut params)

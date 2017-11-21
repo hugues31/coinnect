@@ -4,20 +4,27 @@
 use hmac::{Hmac, Mac};
 use sha2::{Sha512};
 
-use hyper_native_tls::NativeTlsClient;
+use hyper;
 use hyper::Client;
 use hyper::header;
-use hyper::net::HttpsConnector;
+use hyper::Request;
+use hyper::Method;
+
+use futures::Future;
+use futures::future;
+use futures::stream::Stream;
 
 use data_encoding::HEXLOWER;
 
+use serde_json;
 use serde_json::Value;
-use serde_json::value::Map;
 
 use std::collections::HashMap;
 use std::io::Read;
 use std::thread;
 use std::time::Duration;
+
+use tokio_core;
 
 use error::*;
 use helpers;
@@ -46,8 +53,8 @@ pub struct PoloniexApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
-    http_client: Client,
     burst: bool,
+    core: tokio_core::reactor::Core,
 }
 
 
@@ -58,19 +65,12 @@ impl PoloniexApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Poloniex, creds.exchange()).into());
         }
 
-        //TODO: Handle correctly the TLS errors with error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-        let connector = HttpsConnector::new(ssl);
-
         Ok(PoloniexApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
                burst: false,
+               core: tokio_core::reactor::Core::new().unwrap(),
            })
     }
 
@@ -97,27 +97,36 @@ impl PoloniexApi {
     fn public_query(&mut self,
                     method: &str,
                     params: &HashMap<&str, &str>)
-                    -> Result<Map<String, Value>> {
+                    -> impl Future<Item = Value, Error = hyper::Error> {
+        let handle = self.core.handle();
+        let client = ::hyper::Client::configure()
+        .connector(::hyper_tls::HttpsConnector::new(4, &self.core.handle()).unwrap())
+        .build(&self.core.handle());
         let mut params = params.clone();
         helpers::strip_empties(&mut params);
         let url = "https://poloniex.com/public?command=".to_string() + method + "&" +
                   &helpers::url_encode_hashmap(&params);
 
         self.block_or_continue();
-        let mut response = match self.http_client.get(&url).send() {
-            Ok(response) => response,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
+
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+
+        client.get(&url).and_then(|res| {
+            res.body().concat2().and_then(move |body| {
+                let v: Value = serde_json::from_slice(&body).unwrap();
+                future::ok((v))
+            })
+        })
     }
 
     fn private_query(&mut self,
                      method: &str,
                      params: &HashMap<&str, &str>)
-                     -> Result<Map<String, Value>> {
+                     -> impl Future<Item = Value, Error = hyper::Error> {
+        let handle = self.core.handle();
+        let client = ::hyper::Client::configure()
+        .connector(::hyper_tls::HttpsConnector::new(4, &self.core.handle()).unwrap())
+        .build(&self.core.handle());
         let unix_timestamp = helpers::get_unix_timestamp_ms().to_string();
         let mut post_params = params.clone();
         post_params.insert("command", method);
@@ -130,7 +139,7 @@ impl PoloniexApi {
 
         let sign = HEXLOWER.encode(mac.result().code());
 
-        let mut custom_header = header::Headers::new();
+        let mut custom_header = client.headers_mut();
         custom_header.set(KeyHeader(self.api_key.to_owned()));
         custom_header.set(SignHeader(sign));
         custom_header.set(ContentHeader("application/x-www-form-urlencoded".to_owned()));
@@ -147,9 +156,14 @@ impl PoloniexApi {
         };
         self.last_request = helpers::get_unix_timestamp_ms();
 
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let post_request = Request::new(Method::Post, "https://poloniex.com/tradingApi").set_body(&post_data);
+
+        client.request(post_request).and_then(|res| {
+            res.body().concat2().and_then(move |body| {
+                let v: Value = serde_json::from_slice(&body).unwrap();
+                future::ok((v))
+            })
+        })
     }
 
     /// Sample output :
@@ -164,7 +178,7 @@ impl PoloniexApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    pub fn return_ticker(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_ticker(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.public_query("returnTicker", &params)
     }
@@ -176,7 +190,7 @@ impl PoloniexApi {
     /// "NXT":"14145"},
     /// ... "totalBTC":"81.89657704","totalLTC":"78.52083806"}
     /// ```
-    pub fn return_24_volume(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_24_volume(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.public_query("return24Volume", &params)
     }
@@ -190,7 +204,7 @@ impl PoloniexApi {
     pub fn return_order_book(&mut self,
                              currency_pair: &str,
                              depth: &str)
-                             -> Result<Map<String, Value>> {
+                             -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("depth", depth);
@@ -209,7 +223,7 @@ impl PoloniexApi {
                                 currency_pair: &str,
                                 start: &str,
                                 end: &str)
-                                -> Result<Map<String, Value>> {
+                                -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -228,7 +242,7 @@ impl PoloniexApi {
                              start: &str,
                              end: &str,
                              period: &str)
-                             -> Result<Map<String, Value>> {
+                             -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -243,7 +257,7 @@ impl PoloniexApi {
     /// {"1CR":{"maxDailyWithdrawal":10000,"txFee":0.01,"minConf":3,"disabled":0},
     /// "ABY":{"maxDailyWithdrawal":10000000,"txFee":0.01,"minConf":8,"disabled":0}, ... }
     /// ```
-    pub fn return_currencies(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_currencies(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.public_query("returnCurrencies", &params)
     }
@@ -254,7 +268,7 @@ impl PoloniexApi {
     /// {"offers":[{"rate":"0.00200000","amount":"64.66305732","rangeMin":2,"rangeMax":8}, ... ],
     /// "demands":[{"rate":"0.00170000","amount":"26.54848841","rangeMin":2,"rangeMax":2}, ... ]}
     /// ```
-    pub fn return_loan_orders(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn return_loan_orders(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.public_query("returnLoanOrders", &params)
@@ -267,7 +281,7 @@ impl PoloniexApi {
     /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_balances(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnBalances", &params)
     }
@@ -282,7 +296,7 @@ impl PoloniexApi {
     /// ```json
     /// {"LTC":{"available":"5.015","onOrders":"1.0025","btcValue":"0.078"},"NXT":{...}, ... }
     /// ```
-    pub fn return_complete_balances(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_complete_balances(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("account", "all");
         self.private_query("returnCompleteBalances", &params)
@@ -296,7 +310,7 @@ impl PoloniexApi {
     /// {"BTC":"19YqztHmspv2egyD6jQM3yn81x5t5krVdJ","LTC":"LPgf9kjv9H1Vuh4XSaKhzBe8JHdou1WgUB",
     /// ... "ITC":"Press Generate.." ... }
     /// ```
-    pub fn return_deposit_addresses(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_deposit_addresses(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnDepositAddresses", &params)
     }
@@ -308,7 +322,7 @@ impl PoloniexApi {
     /// ```json
     /// {"success":1,"response":"CKXbbs8FAVbtEa397gJHSutmrdrBrhUMxe"}
     /// ```
-    pub fn generate_new_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub fn generate_new_address(&mut self, currency: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         self.private_query("generateNewAddress", &params)
@@ -337,7 +351,7 @@ impl PoloniexApi {
     pub fn return_deposits_withdrawals(&mut self,
                                        start: &str,
                                        end: &str)
-                                       -> Result<Map<String, Value>> {
+                                       -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("start", start);
         params.insert("end", end);
@@ -360,7 +374,7 @@ impl PoloniexApi {
     /// "amount":"100","total":"2.5"},
     /// {"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}], ... }
     /// ```
-    pub fn return_open_orders(&mut self, currency_pair: &str) -> Result<Map<String, Value>> {
+    pub fn return_open_orders(&mut self, currency_pair: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("returnOpenOrders", &params)
@@ -401,7 +415,7 @@ impl PoloniexApi {
                                         currency_pair: &str,
                                         start: &str,
                                         end: &str)
-                                        -> Result<Map<String, Value>> {
+                                        -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("start", start);
@@ -420,7 +434,7 @@ impl PoloniexApi {
     /// "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000",
     /// "date": "2016-03-14 01:04:36"}, ...]
     /// ```
-    pub fn return_order_trades(&mut self, order_number: &str) -> Result<Map<String, Value>> {
+    pub fn return_order_trades(&mut self, order_number: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("returnOrderTrades", &params)
@@ -441,7 +455,7 @@ impl PoloniexApi {
                currency_pair: &str,
                rate: &str,
                amount: &str)
-               -> Result<Map<String, Value>> {
+               -> impl Future<Item = Value, Error = hyper::Error> {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
@@ -456,7 +470,7 @@ impl PoloniexApi {
                 currency_pair: &str,
                 rate: &str,
                 amount: &str)
-                -> Result<Map<String, Value>> {
+                -> impl Future<Item = Value, Error = hyper::Error> {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
@@ -468,7 +482,7 @@ impl PoloniexApi {
     /// Cancels an order you have placed in a given market.
     /// Required POST parameter is "orderNumber". If successful, the method will return:
     /// {"success":1}
-    pub fn cancel_order(&mut self, order_number: &str) -> Result<Map<String, Value>> {
+    pub fn cancel_order(&mut self, order_number: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("cancelOrder", &params)
@@ -486,7 +500,7 @@ impl PoloniexApi {
     /// ```json
     /// {"success":1,"orderNumber":"239574176","resultingTrades":{"BTC_BTS":[]}}
     /// ```
-    pub fn move_order(&mut self, order_number: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub fn move_order(&mut self, order_number: &str, rate: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         // TODO: add optional parameters
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
@@ -508,7 +522,7 @@ impl PoloniexApi {
                     currency: &str,
                     amount: &str,
                     address: &str)
-                    -> Result<Map<String, Value>> {
+                    -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -526,7 +540,7 @@ impl PoloniexApi {
     /// {"makerFee": "0.00140000", "takerFee": "0.00240000", "thirtyDayVolume": "612.00248891",
     /// "nextTier": "1200.00000000"}
     /// ```
-    pub fn return_free_info(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_free_info(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnFeeInfo", &params)
     }
@@ -546,7 +560,7 @@ impl PoloniexApi {
     /// ```
     pub fn return_available_account_balances(&mut self,
                                              account: &str)
-                                             -> Result<Map<String, Value>> {
+                                             -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("account", account);
         self.private_query("returnAvailableAccountBalances", &params)
@@ -562,7 +576,7 @@ impl PoloniexApi {
     /// {"BTC_DASH":{"BTC":"8.50274777","DASH":"654.05752077"},"BTC_LTC":{"BTC":"8.50274777",
     /// "LTC":"1214.67825290"},"BTC_XMR":{"BTC":"8.50274777","XMR":"3696.84685650"}}
     /// ```
-    pub fn return_tradable_balances(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_tradable_balances(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnTradableBalances", &params)
     }
@@ -581,7 +595,7 @@ impl PoloniexApi {
                             amount: &str,
                             from_account: &str,
                             to_account: &str)
-                            -> Result<Map<String, Value>> {
+                            -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -600,7 +614,7 @@ impl PoloniexApi {
     /// {"totalValue": "0.00346561","pl": "-0.00001220","lendingFees": "0.00000000",
     /// "netValue": "0.00345341","totalBorrowedValue": "0.00123220","currentMargin": "2.80263755"}
     /// ```
-    pub fn return_margin_account_summary(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_margin_account_summary(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnMarginAccountSummary", &params)
     }
@@ -622,7 +636,7 @@ impl PoloniexApi {
                       rate: &str,
                       amount: &str,
                       lending_rate: &str)
-                      -> Result<Map<String, Value>> {
+                      -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
@@ -648,7 +662,7 @@ impl PoloniexApi {
                        rate: &str,
                        amount: &str,
                        lending_rate: &str)
-                       -> Result<Map<String, Value>> {
+                       -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
@@ -670,7 +684,7 @@ impl PoloniexApi {
     /// {"amount":"40.94717831","total":"-0.09671314","basePrice":"0.00236190",
     /// "liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
     /// ```
-    pub fn get_margin_position(&mut self, currency_pair: &str) -> Result<Map<String, Value>> {
+    pub fn get_margin_position(&mut self, currency_pair: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("getMarginPosition", &params)
@@ -689,7 +703,7 @@ impl PoloniexApi {
     /// {"amount":"24.00289920","date":"2015-05-10 22:38:49","rate":"0.00235321",
     /// "total":"0.05648386","tradeID":"1213347","type":"sell"}]}}
     /// ```
-    pub fn close_margin_position(&mut self, currency_pair: &str) -> Result<Map<String, Value>> {
+    pub fn close_margin_position(&mut self, currency_pair: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         self.private_query("closeMarginPosition", &params)
@@ -709,7 +723,7 @@ impl PoloniexApi {
                              duration: &str,
                              auto_renew: &str,
                              lending_rate: &str)
-                             -> Result<Map<String, Value>> {
+                             -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("amount", amount);
@@ -726,7 +740,7 @@ impl PoloniexApi {
     /// ```json
     /// {"success":1,"message":"Loan offer canceled."}
     /// ```
-    pub fn cancel_loan_offer(&mut self, order_number: &str) -> Result<Map<String, Value>> {
+    pub fn cancel_loan_offer(&mut self, order_number: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("cancelLoanOffer", &params)
@@ -741,7 +755,7 @@ impl PoloniexApi {
     /// "date":"2015-05-10 23:33:50"}],"LTC":[{"id":10598,"rate":"0.00002100",
     /// "amount":"10.00000000","duration":2,"autoRenew":1,"date":"2015-05-10 23:34:35"}]}
     /// ```
-    pub fn return_open_loan_offers(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_open_loan_offers(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnOpenLoanOffers", &params)
     }
@@ -758,7 +772,7 @@ impl PoloniexApi {
     /// "used":[{"id":75238,"currency":"BTC","rate":"0.00020000","amount":"0.04843834","range":2,
     /// "date":"2015-05-10 23:51:12","fees":"-0.00000001"}]}
     /// ```
-    pub fn return_active_loans(&mut self) -> Result<Map<String, Value>> {
+    pub fn return_active_loans(&mut self) -> impl Future<Item = Value, Error = hyper::Error> {
         let params = HashMap::new();
         self.private_query("returnActiveLoans", &params)
     }
@@ -778,7 +792,7 @@ impl PoloniexApi {
                                   start: &str,
                                   end: &str,
                                   limit: &str)
-                                  -> Result<Map<String, Value>> {
+                                  -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("start", start);
         params.insert("end", end);
@@ -794,7 +808,7 @@ impl PoloniexApi {
     /// ```json
     /// {"success":1,"message":0}
     /// ```
-    pub fn toggle_auto_renew(&mut self, order_number: &str) -> Result<Map<String, Value>> {
+    pub fn toggle_auto_renew(&mut self, order_number: &str) -> impl Future<Item = Value, Error = hyper::Error> {
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         self.private_query("toggleAutoRenew", &params)

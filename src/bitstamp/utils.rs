@@ -1,4 +1,6 @@
 use bidir_map::BidirMap;
+use futures::Future;
+use hyper;
 
 use hmac::{Hmac, Mac};
 use sha2::{Sha256};
@@ -66,7 +68,7 @@ pub fn build_url(method: &str, pair: &str) -> String {
     "https://www.bitstamp.net/api/v2/".to_string() + method + "/" + pair + "/"
 }
 
-pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
+pub fn deserialize_json(json_string: &str) -> impl Future<Item = Value, Error = hyper::Error> {
     let data: Value = match serde_json::from_str(json_string) {
         Ok(data) => data,
         Err(_) => return Err(ErrorKind::BadParse.into()),
@@ -87,7 +89,7 @@ pub fn generate_nonce(fixed_nonce: Option<String>) -> String {
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
-pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>> {
+pub fn parse_result(response: &Map<String, Value>) -> impl Future<Item = Value, Error = hyper::Error> {
     let error_msg = match response.get("error") {
         Some(error) => {
             error

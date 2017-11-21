@@ -31,11 +31,13 @@
 // Avoid warning for the Crypto-currency about quotes.
 #![allow(doc_markdown)]
 
+#![feature(conservative_impl_trait)]
+
 #[macro_use]
 extern crate hyper;
 extern crate sha2;
 extern crate hmac;
-extern crate hyper_native_tls;
+extern crate hyper_tls;
 extern crate serde_json;
 extern crate chrono;
 #[macro_use]
@@ -45,6 +47,8 @@ extern crate data_encoding;
 #[macro_use]
 extern crate error_chain;
 extern crate bigdecimal;
+extern crate tokio_core;
+extern crate futures;
 
 pub mod coinnect;
 pub mod exchange;

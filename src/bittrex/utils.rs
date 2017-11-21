@@ -1,4 +1,6 @@
 use bidir_map::BidirMap;
+use futures::Future;
+use hyper;
 use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
@@ -290,7 +292,7 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
 
-pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
+pub fn deserialize_json(json_string: &str) -> impl Future<Item = Value, Error = hyper::Error> {
     let data: Value = match serde_json::from_str(json_string) {
         Ok(data) => data,
         Err(_) => return Err(ErrorKind::BadParse.into()),
