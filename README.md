@@ -32,6 +32,8 @@ held responsible for the library malfunction, which can lead to a loss of money.
 | Poloniex | X | X | - |
 | Bittrex  | X | X | - |
 
+If your favorite exchange is not listed above, you can vote [here](https://github.com/hugues31/coinnect/issues/54) to add it in the next release of Coinnect.
+
 Generic API supports:
  - Ticker
  - Orderbook
