@@ -22,6 +22,15 @@ lazy_static! {
         m.insert(XRP_USD, "xrpusd");
         m.insert(XRP_EUR, "xrpeur");
         m.insert(XRP_BTC, "xrpbtc");
+        m.insert(LTC_USD, "ltcusd");
+        m.insert(LTC_EUR, "ltceur");
+        m.insert(LTC_BTC, "ltcbtc");
+        m.insert(ETH_USD, "ethusd");
+        m.insert(ETH_EUR, "etheur");
+        m.insert(ETH_BTC, "ethbtc");
+        m.insert(BCH_USD, "bchusd");
+        m.insert(BCH_EUR, "bcheur");
+        m.insert(BCH_BTC, "bchbtc");
         m
     };
 }
