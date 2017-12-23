@@ -140,6 +140,12 @@ impl BitstampApi {
         post_params.insert("key", &copy_api_key);
         post_params.insert("signature", &signature);
         post_params.insert("nonce", &nonce);
+
+        // copy params into post_params .... bit of a hack but will do for now
+        params.iter().for_each(|(k,v)| {
+            post_params.insert(k,v);
+        });
+
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(post_params);
         let mut response = self.http_client
