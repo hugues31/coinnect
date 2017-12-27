@@ -16,6 +16,7 @@ pub enum Exchange {
     Kraken,
     Poloniex,
     Bittrex,
+    Gdax,
 }
 
 impl Into<String> for Exchange {
@@ -25,6 +26,7 @@ impl Into<String> for Exchange {
             Exchange::Kraken => "Kraken".to_string(),
             Exchange::Poloniex => "Poloniex".to_string(),
             Exchange::Bittrex => "Bittrex".to_string(),
+            Exchange::Gdax => "Gdax".to_string(),
         }
     }
 }
@@ -38,6 +40,7 @@ impl FromStr for Exchange {
             "kraken" => Ok(Exchange::Kraken),
             "poloniex" => Ok(Exchange::Poloniex),
             "bittrex" => Ok(Exchange::Bittrex),
+            "gdax" => Ok(Exchange::Gdax),
             _ => Err(ErrorKind::InvalidExchange(input.to_string()).into()),
         }
     }
