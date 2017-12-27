@@ -87,7 +87,7 @@ impl GdaxApi {
 
     fn block_or_continue(&self) {
         if ! self.burst {
-            let threshold: u64 = 1000; // 600 requests per 10 mins = 1 request per second
+            let threshold: u64 = 334; // 3 requests/sec = 1/3*1000
             let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
             if offset < threshold {
                 let wait_ms = Duration::from_millis(threshold - offset);
