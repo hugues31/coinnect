@@ -18,7 +18,7 @@ impl ExchangeApi for GdaxApi {
         let price = helpers::from_json_bigdecimal(&result["price"], "price")?;
         let ask = helpers::from_json_bigdecimal(&result["ask"], "ask")?;
         let bid = helpers::from_json_bigdecimal(&result["bid"], "bid")?;
-        let vol = helpers::from_json_bigdecimal(&result["size"], "size")?;
+        let vol = helpers::from_json_bigdecimal(&result["volume"], "volume")?;
 
         Ok(Ticker {
                timestamp: helpers::get_unix_timestamp_ms(),
