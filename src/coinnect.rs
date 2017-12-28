@@ -10,6 +10,7 @@ use bitstamp::{BitstampApi, BitstampCreds};
 use kraken::{KrakenApi, KrakenCreds};
 use poloniex::{PoloniexApi, PoloniexCreds};
 use bittrex::{BittrexApi, BittrexCreds};
+use gdax::{GdaxApi, GdaxCreds};
 use error::*;
 
 pub trait Credentials {
@@ -32,6 +33,7 @@ impl Coinnect {
             Exchange::Kraken => Ok(Box::new(KrakenApi::new(creds)?)),
             Exchange::Poloniex => Ok(Box::new(PoloniexApi::new(creds)?)),
             Exchange::Bittrex => Ok(Box::new(BittrexApi::new(creds)?)),
+            Exchange::Gdax => Ok(Box::new(GdaxApi::new(creds)?)),
         }
     }
 
@@ -56,6 +58,9 @@ impl Coinnect {
             }
             Exchange::Bittrex => {
                 Ok(Box::new(BittrexApi::new(BittrexCreds::new_from_file(name, path)?)?))
+            }
+            Exchange::Gdax => {
+                Ok(Box::new(GdaxApi::new(GdaxCreds::new_from_file(name, path)?)?))
             }
         }
     }

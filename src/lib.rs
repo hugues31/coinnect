@@ -13,6 +13,7 @@
 //! - [x] Kraken
 //! - [x] Bitstamp (partial)
 //! - [x] Bittrex
+//! - [x] Gdax
 //!
 //! # WARNING
 //! This library is highly experimental at the moment. Please do not invest what you
@@ -56,3 +57,4 @@ pub mod bitstamp;
 pub mod poloniex;
 pub mod kraken;
 pub mod bittrex;
+pub mod gdax;
