@@ -2,7 +2,7 @@ language: rust
 cache: cargo
 sudo: false
 rust:
-  - 1.17.0 # oldest version supported
+  - 1.21.0 # oldest version supported
   - stable
   - nightly
 
