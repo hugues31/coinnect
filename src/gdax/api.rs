@@ -386,7 +386,7 @@ mod gdax_api_tests {
             api.last_request = helpers::get_unix_timestamp_ms();
 
             let difference = api.last_request - start;
-            assert!(difference >= 999);
+            assert!(difference >= 334);
             assert!(difference < 10000);
 
 
