@@ -15,7 +15,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KrakenCreds {
     exchange: Exchange,
     name: String,
