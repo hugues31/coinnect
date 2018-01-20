@@ -118,7 +118,7 @@ impl PoloniexApi {
                      method: &str,
                      params: &HashMap<&str, &str>)
                      -> Result<Map<String, Value>> {
-        let unix_timestamp = helpers::get_unix_timestamp_ms().to_string();
+        let unix_timestamp = helpers::get_unix_timestamp_us().to_string();
         let mut post_params = params.clone();
         post_params.insert("command", method);
         post_params.insert("nonce", &unix_timestamp);
