@@ -30,6 +30,13 @@ pub fn get_unix_timestamp_ms() -> i64 {
     (seconds * 1000) + (nanoseconds / 1000 / 1000)
 }
 
+pub fn get_unix_timestamp_us() -> i64 {
+    let now = Utc::now();
+    let seconds: i64 = now.timestamp();
+    let nanoseconds: i64 = now.nanosecond() as i64;
+    (seconds * 1000 * 1000) + (nanoseconds / 1000)
+}
+
 pub fn strip_empties(x: &mut HashMap<&str, &str>) {
     let empties: Vec<_> = x.iter()
         .filter(|&(_, &v)| v.is_empty())
