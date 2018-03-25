@@ -41,6 +41,38 @@ header! {
     (ContentHeader, "Content-Type") => [String]
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum PlaceOrderOption {
+    FillOrKill,
+    ImmediateOrCancel,
+    PostOnly,
+}
+impl PlaceOrderOption {
+    fn repr(&self) -> &'static str {
+        match self {
+            &PlaceOrderOption::FillOrKill => "fillOrKill",
+            &PlaceOrderOption::ImmediateOrCancel => "immediateOrCancel",
+            &PlaceOrderOption::PostOnly => "postOnly",
+        }
+    }
+}
+
+
+#[derive(Debug, Copy, Clone)]
+pub enum MoveOrderOption {
+    ImmediateOrCancel,
+    PostOnly,
+}
+impl MoveOrderOption {
+    fn repr(&self) -> &'static str {
+        match self {
+            &MoveOrderOption::ImmediateOrCancel => "immediateOrCancel",
+            &MoveOrderOption::PostOnly => "postOnly",
+        }
+    }
+}
+
+
 #[derive(Debug)]
 pub struct PoloniexApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
@@ -437,31 +469,41 @@ impl PoloniexApi {
     /// "date":"2014-10-18 23:03:21", "rate":"0.00000173","total":"0.00058625","tradeID":"16164",
     /// "type":"buy"}]}
     /// ```
-    pub fn buy(&mut self,
+    pub fn buy<O>(&mut self,
                currency_pair: &str,
                rate: &str,
-               amount: &str)
-               -> Result<Map<String, Value>> {
+               amount: &str,
+               option: O)
+               -> Result<Map<String, Value>> 
+    where
+        O: Into<Option<PlaceOrderOption>>,
+    {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
         params.insert("amount", amount);
+        option.into().map(|o| params.insert(o.repr(), "1"));
         self.private_query("buy", &params)
     }
 
     /// Places a sell order in a given market. Parameters and output are the same as for the buy
     /// method.
-    pub fn sell(&mut self,
+    pub fn sell<O>(&mut self,
                 currency_pair: &str,
                 rate: &str,
-                amount: &str)
-                -> Result<Map<String, Value>> {
+                amount: &str,
+                option: O)
+                -> Result<Map<String, Value>> 
+    where
+        O: Into<Option<PlaceOrderOption>>,
+    {
         // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
         params.insert("amount", amount);
+        option.into().map(|o| params.insert(o.repr(), "1"));
         self.private_query("sell", &params)
     }
 
@@ -486,11 +528,15 @@ impl PoloniexApi {
     /// ```json
     /// {"success":1,"orderNumber":"239574176","resultingTrades":{"BTC_BTS":[]}}
     /// ```
-    pub fn move_order(&mut self, order_number: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub fn move_order<O>(&mut self, order_number: &str, rate: &str, option: O) -> Result<Map<String, Value>> 
+    where
+        O: Into<Option<MoveOrderOption>>
+    {
         // TODO: add optional parameters
         let mut params = HashMap::new();
         params.insert("orderNumber", order_number);
         params.insert("rate", rate);
+        option.into().map(|o| params.insert(o.repr(), "1"));
         self.private_query("moveOrder", &params)
     }
 

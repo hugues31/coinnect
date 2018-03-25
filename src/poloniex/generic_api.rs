@@ -104,10 +104,12 @@ impl ExchangeApi for PoloniexApi {
 
                 self.buy(pair_name,
                          &price.unwrap().to_string(),
-                         &quantity.to_string())
+                         &quantity.to_string(),
+                         None
+                )
             }
             OrderType::BuyMarket => {
-                self.buy(pair_name, "9999999999999999999", &quantity.to_string())
+                self.buy(pair_name, "9999999999999999999", &quantity.to_string(), None)
             }
             OrderType::SellLimit => {
                 if price.is_none() {
@@ -116,9 +118,11 @@ impl ExchangeApi for PoloniexApi {
 
                 self.sell(pair_name,
                           &price.unwrap().to_string(),
-                          &quantity.to_string())
+                          &quantity.to_string(),
+                          None
+                )
             }
-            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string()),
+            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string(), None),
         }?;
 
         let result = utils::parse_result(&raw_response)?;
