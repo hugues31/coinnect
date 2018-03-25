@@ -7,3 +7,4 @@ pub mod utils;
 
 pub use self::credentials::PoloniexCreds;
 pub use self::api::PoloniexApi;
+pub use self::api::{MoveOrderOption, PlaceOrderOption};

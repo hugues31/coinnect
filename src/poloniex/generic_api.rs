@@ -29,13 +29,13 @@ impl ExchangeApi for PoloniexApi {
         let vol = helpers::from_json_bigdecimal(&result[*pair_name]["quoteVolume"], "quoteVolume")?;
 
         Ok(Ticker {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               pair: pair,
-               last_trade_price: price,
-               lowest_ask: ask,
-               highest_bid: bid,
-               volume: Some(vol),
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            last_trade_price: price,
+            lowest_ask: ask,
+            highest_bid: bid,
+            volume: Some(vol),
+        })
     }
 
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
@@ -50,16 +50,14 @@ impl ExchangeApi for PoloniexApi {
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
 
-        let ask_array =
-            result["asks"]
-                .as_array()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
-        let bid_array =
-            result["bids"]
-                .as_array()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let ask_array = result["asks"]
+            .as_array()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
+        let bid_array = result["bids"]
+            .as_array()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["asks"])))?;
 
-       for ask in ask_array {
+        for ask in ask_array {
             let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
             let volume_str = ask[1].as_f64().unwrap().to_string();
             let volume = BigDecimal::from_str(&volume_str).unwrap();
@@ -76,19 +74,14 @@ impl ExchangeApi for PoloniexApi {
         }
 
         Ok(Orderbook {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               pair: pair,
-               asks: ask_offers,
-               bids: bid_offers,
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            asks: ask_offers,
+            bids: bid_offers,
+        })
     }
 
-    fn add_order(&mut self,
-                 order_type: OrderType,
-                 pair: Pair,
-                 quantity: Volume,
-                 price: Option<Price>)
-                 -> Result<OrderInfo> {
+    fn add_order(&mut self, order_type: OrderType, pair: Pair, quantity: Volume, price: Option<Price>) -> Result<OrderInfo> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -102,37 +95,45 @@ impl ExchangeApi for PoloniexApi {
                     return Err(ErrorKind::MissingPrice.into());
                 }
 
-                self.buy(pair_name,
-                         &price.unwrap().to_string(),
-                         &quantity.to_string())
+                self.buy(
+                    pair_name,
+                    &price.unwrap().to_string(),
+                    &quantity.to_string(),
+                    None,
+                )
             }
-            OrderType::BuyMarket => {
-                self.buy(pair_name, "9999999999999999999", &quantity.to_string())
-            }
+            OrderType::BuyMarket => self.buy(
+                pair_name,
+                "9999999999999999999",
+                &quantity.to_string(),
+                None,
+            ),
             OrderType::SellLimit => {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
                 }
 
-                self.sell(pair_name,
-                          &price.unwrap().to_string(),
-                          &quantity.to_string())
+                self.sell(
+                    pair_name,
+                    &price.unwrap().to_string(),
+                    &quantity.to_string(),
+                    None,
+                )
             }
-            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string()),
+            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string(), None),
         }?;
 
         let result = utils::parse_result(&raw_response)?;
 
         Ok(OrderInfo {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               identifier: vec![result["orderNumber"]
-                                    .as_f64()
-                                    .ok_or_else(|| {
-                                                    ErrorKind::MissingField("orderNumber"
-                                                                                .to_string())
-                                                })?
-                                    .to_string()],
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            identifier: vec![
+                result["orderNumber"]
+                    .as_f64()
+                    .ok_or_else(|| ErrorKind::MissingField("orderNumber".to_string()))?
+                    .to_string(),
+            ],
+        })
     }
 
     fn balances(&mut self) -> Result<Balances> {
