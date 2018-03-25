@@ -447,7 +447,6 @@ impl PoloniexApi {
     where
         O: Into<Option<PlaceOrderOption>>,
     {
-        // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
@@ -462,7 +461,6 @@ impl PoloniexApi {
     where
         O: Into<Option<PlaceOrderOption>>,
     {
-        // TODO: "fillOrKill", "immediateOrCancel", "postOnly"
         let mut params = HashMap::new();
         params.insert("currencyPair", currency_pair);
         params.insert("rate", rate);
