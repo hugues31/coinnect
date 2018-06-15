@@ -136,6 +136,10 @@ impl PoloniexApi {
         self.last_request = helpers::get_unix_timestamp_ms();
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
+
+        if method == "returnChartData" {
+            return utils::deserialize_json_array(&buffer);
+        }
         utils::deserialize_json(&buffer)
     }
 
@@ -174,6 +178,9 @@ impl PoloniexApi {
 
         let mut buffer = String::new();
         response.read_to_string(&mut buffer)?;
+        if method == "returnChartData" {
+            return utils::deserialize_json_array(&buffer);
+        }
         utils::deserialize_json(&buffer)
     }
 
@@ -238,8 +245,8 @@ impl PoloniexApi {
     /// Sample output :
     ///
     /// ```json
-    /// [{"date":1405699200,"high":0.0045388,"low":0.00403001,"open":0.00404545,"close":0.00427592,
-    /// "volume":44.11655644,"quoteVolume":10259.29079097,"weightedAverage":0.00430015}, ...]
+    /// {"data": {"date":1405699200,"high":0.0045388,"low":0.00403001,"open":0.00404545,"close":0.00427592,
+    /// "volume":44.11655644,"quoteVolume":10259.29079097,"weightedAverage":0.00430015}, ...}
     /// ```
     pub fn return_chart_data(&mut self, currency_pair: &str, start: &str, end: &str, period: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();

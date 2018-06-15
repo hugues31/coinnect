@@ -141,6 +141,24 @@ pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
     }
 }
 
+/// Convert a JSON array into a map containing a Vec for the "data" key
+pub fn deserialize_json_array(json_string: &str) -> Result<Map<String, Value>> {
+    let data: Value = match serde_json::from_str(json_string) {
+        Ok(data) => data,
+        Err(_) => return Err(ErrorKind::BadParse.into()),
+    };
+
+    if data.is_array() {
+        let mut map = Map::new();
+        map.insert("data".to_string(), data);
+        Ok(map)
+    }
+
+    else {
+        Err(ErrorKind::BadParse.into())
+    }
+}
+
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
