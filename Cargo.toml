@@ -1,6 +1,6 @@
 [package]
 name = "coinnect"
-version = "0.5.11"
+version = "0.5.12"
 license = "MIT"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Alejandro Inestal <ainestal@gmail.com>"]
 description = """
@@ -41,5 +41,5 @@ data-encoding = "2.0.0-rc.1"
 error-chain = "0.11.0"
 sha2 = "0.6.0"
 hmac = "0.4.2"
-bigdecimal = "0.0.10"
+bigdecimal = "0.0.14"
 chrono = "0.4.0"
