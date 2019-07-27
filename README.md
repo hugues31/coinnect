@@ -18,6 +18,9 @@ platform you target or use the generic Coinnect API, which is more user-friendly
 and safe. Ideally, use the raw API when the Coinnect API could not retrieve the
 data/perform the action you want.
 
+**NOTE:** A new version with Futures support is coming as soon as async-await
+syntax will be stabilized !
+
 **WARNING:**  This library is highly experimental at the moment. Please do not
 invest what you can't afford to lose. This is a personal project, I cannot be
 held responsible for the library malfunction, which can lead to a loss of money.
