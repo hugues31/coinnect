@@ -46,15 +46,22 @@ extern crate data_encoding;
 #[macro_use]
 extern crate error_chain;
 extern crate bigdecimal;
+extern crate tokio_tungstenite;
+extern crate url;
+extern crate log;
+extern crate futures;
+extern crate tokio;
 
 pub mod coinnect;
 pub mod exchange;
 pub mod error;
 pub mod types;
-mod helpers;
+pub mod helpers;
 
 pub mod bitstamp;
 pub mod poloniex;
 pub mod kraken;
 pub mod bittrex;
 pub mod gdax;
+
+use crate::error::{Result};

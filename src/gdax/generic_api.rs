@@ -2,13 +2,16 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Gdax offers.
 
-use exchange::ExchangeApi;
-use gdax::api::GdaxApi;
-use gdax::utils;
+use crate::exchange::ExchangeApi;
+use crate::gdax::api::GdaxApi;
+use crate::gdax::utils;
 
-use error::*;
-use types::*;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::helpers;
+
+use crate::exchange::StreamerKleisli;
+use futures::Future;
 
 impl ExchangeApi for GdaxApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -134,5 +137,9 @@ impl ExchangeApi for GdaxApi {
         }
 
         Ok(balances)
+    }
+
+    fn streaming(&mut self) -> StreamerKleisli {
+        unimplemented!()
     }
 }

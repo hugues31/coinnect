@@ -19,12 +19,12 @@ use std::io::Read;
 use std::thread;
 use std::time::Duration;
 
-use error::*;
-use helpers;
+use crate::error::*;
+use crate::helpers;
 
-use exchange::Exchange;
-use coinnect::Credentials;
-use poloniex::utils;
+use crate::exchange::Exchange;
+use crate::coinnect::Credentials;
+use crate::poloniex::utils;
 
 header! {
     #[doc(hidden)]

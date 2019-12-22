@@ -11,6 +11,7 @@ homepage = "https://github.com/hugues31/coinnect"
 repository = "https://github.com/hugues31/coinnect"
 keywords = [ "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
+edition = "2018"
 
 [features]
 default = []
@@ -32,14 +33,19 @@ name = "generic_api"
 path = "examples/generic_api.rs"
 
 [dependencies]
-hyper = "0.10.10"
+hyper = "0.13.1"
 serde_json = "1.0.0"
-hyper-native-tls = "0.3"
+hyper-native-tls = "0.3.0"
 lazy_static = "0.2"
 bidir-map = "1.0.0"
 data-encoding = "2.0.0-rc.1"
-error-chain = "0.11.0"
+error-chain = "0.12.1"
 sha2 = "0.6.0"
 hmac = "0.4.2"
 bigdecimal = "0.0.14"
 chrono = "0.4.0"
+tokio-tungstenite = { git = "https://github.com/Igosuki/tokio-tungstenite.git", branch = "futures_0_2", version = "0.9.1" }
+url = "2.1.0"
+log = "0.4.8"
+futures = "0.3.1"
+tokio = "0.2.6"

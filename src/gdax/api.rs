@@ -15,14 +15,14 @@ use std::io::Read;
 use std::thread;
 use std::time::Duration;
 
-use coinnect::Credentials;
-use exchange::Exchange;
+use crate::coinnect::Credentials;
+use crate::exchange::Exchange;
 
-use error::*;
-use helpers;
-use types::Pair;
-use gdax::utils;
-use types::*;
+use crate::error::*;
+use crate::helpers;
+use crate::types::Pair;
+use crate::gdax::utils;
+use crate::types::*;
 
 header! {
     #[doc(hidden)]
@@ -122,7 +122,7 @@ impl GdaxApi {
     ///
     /// ```json
     /// extern crate coinnect;
-    /// use coinnect::gdax::GdaxApi;
+    /// use crate::coinnect::gdax::GdaxApi;
     /// let mut api = GdaxApi::new("", "");
     /// let  result = api.private_query("balance", "btcusd");
     /// assert_eq!(true, true);

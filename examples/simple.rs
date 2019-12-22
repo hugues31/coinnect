@@ -2,7 +2,7 @@
 
 extern crate coinnect;
 
-use coinnect::poloniex::{PoloniexApi, PoloniexCreds};
+use crate::coinnect::poloniex::{PoloniexApi, PoloniexCreds};
 
 fn main() {
     // We create a PoloniexApi by providing API key/secret
