@@ -22,12 +22,12 @@ use std::thread;
 use std::time::Duration;
 use std::str;
 
-use error::*;
-use helpers;
+use crate::error::*;
+use crate::helpers;
 
-use exchange::Exchange;
-use coinnect::Credentials;
-use bittrex::utils;
+use crate::exchange::Exchange;
+use crate::coinnect::Credentials;
+use crate::bittrex::utils;
 
 header! {
     #[doc(hidden)]
@@ -115,19 +115,19 @@ impl BittrexApi {
                      -> Result<Map<String, Value>> {
         let nonce = helpers::get_unix_timestamp_ms().to_string();
         let mut initial_params: HashMap<&str, &str> = HashMap::new();
-        
+
         initial_params.insert("nonce", &nonce);
         initial_params.insert("apikey", &self.api_key);
 
         let base_url = "https://bittrex.com/api/v1.1".to_string() + method + "?apikey=" +
         &self.api_key + "&nonce=" + &nonce;
-        
+
         let url = if params.is_empty() {
             base_url
         } else {
             base_url + "&" + &helpers::url_encode_hashmap(&mut params)
         };
- 
+
         let hmac_key = self.api_secret.as_bytes();
         let mut mac = Hmac::<Sha512>::new(&hmac_key[..]);
         mac.input(url.as_bytes());
@@ -185,7 +185,7 @@ impl BittrexApi {
     }
 
     /// Used to get all supported currencies at Bittrex along with other meta data.
-    /// 
+    ///
     /// ```json
     /// {
     ///     "success" : true,
@@ -217,7 +217,7 @@ impl BittrexApi {
 
     /// Used to get the current tick values for a market.
     /// "market" required a string literal for the market (ex: BTC-LTC)
-    /// 
+    ///
     /// ````json
     /// {
     /// 	"success" : true,
@@ -236,7 +236,7 @@ impl BittrexApi {
     }
 
     /// Used to get the last 24 hour summary of all active exchanges
-    /// 
+    ///
     /// ````json
     /// {
     ///     "success" : true,
@@ -282,7 +282,7 @@ impl BittrexApi {
 
     /// Used to get the last 24 hour summary of all active exchanges
     /// "market" required a string literal for the market (ex: BTC-LTC)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -315,7 +315,7 @@ impl BittrexApi {
     /// Used to get retrieve the orderbook for a given market
     /// "market" required a string literal for the market (ex: BTC-LTC)
     /// "order_type" required "buy", "sell" or "both" to identify the type of orderbook to return.
-    /// 
+    ///
     /// ```json
     /// {
     ///     "success" : true,
@@ -352,7 +352,7 @@ impl BittrexApi {
 
     /// Used to retrieve the latest trades that have occured for a specific market.
     /// "market" required a string literal for the market (ex: BTC-LTC)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -404,7 +404,7 @@ impl BittrexApi {
     /// "market" required a string literal for the market (ex: BTC-LTC)
     /// "quantity" required the amount to purchase
     /// "rate" required the rate at which to place the order.
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -427,7 +427,7 @@ impl BittrexApi {
     /// "market" required a string literal for the market (ex: BTC-LTC)
     /// "quantity" required the amount to purchase
     /// "rate" required the rate at which to place the order.
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -447,7 +447,7 @@ impl BittrexApi {
 
     /// Used to cancel a buy or sell order.
     /// "uuid" required uuid of buy or sell order
-    /// 
+    ///
     /// ```json
     /// {
     /// "success" : true,
@@ -463,7 +463,7 @@ impl BittrexApi {
 
     /// Get all orders that you currently have opened. A specific market can be requested
     /// "market" optional a string literal for the market (ie. BTC-LTC)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -515,7 +515,7 @@ impl BittrexApi {
     }
 
     /// Used to retrieve all balances from your account
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -528,7 +528,7 @@ impl BittrexApi {
     /// 			"CryptoAddress" : "DLxcEt3AatMyr2NTatzjsfHNoB9NT62HiF",
     /// 			"Requested" : false,
     /// 			"Uuid" : null
-    /// 
+    ///
     /// 		}, {
     /// 			"Currency" : "BTC",
     /// 			"Balance" : 14.21549076,
@@ -548,7 +548,7 @@ impl BittrexApi {
 
     /// Used to retrieve the balance from your account for a specific currency.
     /// "currency" required a string literal for the currency (ex: LTC)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -573,7 +573,7 @@ impl BittrexApi {
     /// Used to retrieve or generate an address for a specific currency.
     /// If one does not exist, the call will fail and return ADDRESS_GENERATING until one is available.
     /// "currency" required a string literal for the currency (ex: LTC)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -595,7 +595,7 @@ impl BittrexApi {
     /// "quantity" required the quantity of coins to withdraw
     /// "address" required the address where to send the funds.
     /// "paymentid" optional used for CryptoNotes/BitShareX/Nxt optional field (memo/paymentid)
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -616,7 +616,7 @@ impl BittrexApi {
 
     /// Used to retrieve a single order by uuid.
     /// "uuid" required the uuid of the buy or sell order
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -657,7 +657,7 @@ impl BittrexApi {
     /// Used to retrieve your order history.
     /// "market" optional a string literal for the market (ie. BTC-LTC).
     /// If ommited, will return for all markets
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,
@@ -705,7 +705,7 @@ impl BittrexApi {
     /// Used to retrieve your withdrawal history.
     /// "currency" optional	a string literal for the currecy (ie. BTC).
     /// If omitted, will return for all currencies
-    /// 
+    ///
     /// ```json
     /// {
 	/// "success" : true,
@@ -747,7 +747,7 @@ impl BittrexApi {
     /// Used to retrieve your deposit history.
     /// "currency" optional a string literal for the currecy (ie. BTC).
     /// If omitted, will return for all currencies
-    /// 
+    ///
     /// ```json
     /// {
     /// 	"success" : true,

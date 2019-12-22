@@ -2,13 +2,22 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Bitstamp offers.
 
-use exchange::ExchangeApi;
-use bitstamp::api::BitstampApi;
-use bitstamp::utils;
+use crate::exchange::ExchangeApi;
+use crate::bitstamp::api::BitstampApi;
+use crate::bitstamp::utils;
 
-use error::*;
-use types::*;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::helpers;
+use hyper_native_tls::native_tls::TlsStream;
+use std::net::TcpStream;
+use crate::exchange::StreamerKleisli;
+use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::{connect, Error as WsError};
+use url::Url;
+use log::*;
+use futures::{Future, Stream};
+use tokio::prelude::*;
 
 impl ExchangeApi for BitstampApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -134,5 +143,23 @@ impl ExchangeApi for BitstampApi {
         }
 
         Ok(balances)
+    }
+
+    fn streaming(&mut self) -> StreamerKleisli {
+        let url = Url::parse("wss://ws.bitstamp.net").unwrap();
+        let job = connect_async(url)
+            .map_err(|err| error!("Connect error: {}", err))
+            .and_then(|(ws_stream, _)| {
+                let (sink, stream) = ws_stream.split();
+                stream
+                    .filter(|msg| msg.is_text() || msg.is_binary())
+                    .forward(sink)
+                    .and_then(|(_stream, _sink)| Ok(()))
+                    .map_err(|err| match err {
+                        WsError::ConnectionClosed => (),
+                        err => info!("WS error {}", err),
+                    })
+            });
+        tokio::spawn(job);
     }
 }

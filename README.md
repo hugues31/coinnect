@@ -80,8 +80,8 @@ The example below shows you how to connect to Poloniex
 ```rust
 extern crate coinnect;
 
-use coinnect::poloniex::api::PoloniexApi;
-use coinnect::poloniex::credentials::PoloniexCreds;
+use crate::coinnect::poloniex::api::PoloniexApi;
+use crate::coinnect::poloniex::credentials::PoloniexCreds;
 
 fn main() {
     // We create a PoloniexApi by providing API key/secret

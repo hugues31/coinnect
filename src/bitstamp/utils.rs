@@ -7,11 +7,11 @@ use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
-use error::*;
-use helpers;
-use types::Currency;
-use types::Pair;
-use types::Pair::*;
+use crate::error::*;
+use crate::helpers;
+use crate::types::Currency;
+use crate::types::Pair;
+use crate::types::Pair::*;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -120,8 +120,8 @@ pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>>
 /// # Examples
 ///
 /// ```
-/// use coinnect::bitstamp::utils::get_currency_enum;
-/// use coinnect::types::Currency;
+/// use crate::coinnect::bitstamp::utils::get_currency_enum;
+/// use crate::coinnect::types::Currency;
 ///
 /// let currency = get_currency_enum("usd_balance");
 /// assert_eq!(Some(Currency::USD), currency);
@@ -142,8 +142,8 @@ pub fn get_currency_enum(currency: &str) -> Option<Currency> {
 /// # Examples
 ///
 /// ```
-/// use coinnect::bitstamp::utils::get_currency_string;
-/// use coinnect::types::Currency;
+/// use crate::coinnect::bitstamp::utils::get_currency_string;
+/// use crate::coinnect::types::Currency;
 ///
 /// let currency = get_currency_string(Currency::USD);
 /// assert_eq!(currency, Some("USD".to_string()));

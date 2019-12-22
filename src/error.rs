@@ -6,7 +6,7 @@
 use serde_json;
 use hyper;
 use data_encoding;
-use exchange::Exchange;
+use crate::exchange::Exchange;
 
 error_chain!{
     types {

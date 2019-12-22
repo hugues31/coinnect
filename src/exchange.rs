@@ -4,11 +4,15 @@ use std::fmt::Debug;
 use std::convert::Into;
 use std::str::FromStr;
 
-use error::*;
-use types::*;
+use crate::error::*;
+use crate::types::*;
+use tokio_tungstenite::tungstenite::WebSocket;
+use tokio_tungstenite::tungstenite::client::AutoStream;
+use tokio_tungstenite::tungstenite::handshake::client::Response;
+use futures::Future;
 
-
-
+//pub type StreamerKleisli = (WebSocket<AutoStream>, Response);
+pub type StreamerKleisli = ();
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Exchange {
@@ -71,4 +75,6 @@ pub trait ExchangeApi: Debug {
     /// Retrieve the current amounts of all the currencies that the account holds
     /// The amounts returned are available (not used to open an order)
     fn balances(&mut self) -> Result<Balances>;
+
+    fn streaming(&mut self) -> StreamerKleisli;
 }
