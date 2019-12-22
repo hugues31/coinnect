@@ -8,6 +8,8 @@ use std::str::FromStr;
 use std::collections::HashMap;
 use chrono::prelude::*;
 use crate::error::*;
+use actix_codec::Framed;
+use awc::{error::WsProtocolError, ws::{Codec, Message}, Client, BoxedSocket};
 
 // Helper functions
 
@@ -61,4 +63,18 @@ pub fn from_json_bigdecimal(json_obj: &Value, key: &str) -> Result<BigDecimal> {
         .ok_or_else(|| ErrorKind::MissingField(key.to_string()))?;
 
     Ok(BigDecimal::from_str(num).chain_err(|| ErrorKind::InvalidFieldFormat(key.to_string()))?)
+}
+
+pub async fn new_ws_client(url: &str) -> Framed<BoxedSocket, Codec> {
+    let (response, framed) = Client::new()
+        .ws(url)
+        .connect()
+        .await
+        .map_err(|e| {
+            println!("Error: {}", e);
+        })
+        .unwrap();
+
+    println!("{:?}", response);
+    framed
 }

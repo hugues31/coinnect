@@ -2,16 +2,16 @@
 //! Please see examples for more informations.
 
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::Client;
-use hyper::header::ContentType;
-use hyper::net::HttpsConnector;
+use hyper::{Client, Response, Body, Request, Uri, Method};
+use hyper::header::CONTENT_TYPE;
+use hyper::header::HeaderName;
+use hyper_tls::HttpsConnector;
 
 use serde_json::Value;
 use serde_json::value::Map;
 
 use std::collections::HashMap;
-use std::io::Read;
+use std::io::{Read};
 use std::thread;
 use std::time::Duration;
 
@@ -23,21 +23,16 @@ use crate::helpers;
 use crate::types::Pair;
 use crate::bitstamp::utils;
 use crate::types::*;
+use hyper::client::HttpConnector;
+use futures::Stream;
+use futures::{FutureExt, TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+use std::convert::TryInto;
+use futures::select;
+use bytes::buf::BufExt as _;
 
-header! {
-    #[doc(hidden)]
-    (KeyHeader, "Key") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (SignHeader, "Sign") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (ContentHeader, "Content-Type") => [String]
-}
+const KeyHeader : HeaderName = HeaderName::from_lowercase(b"Key").unwrap();
+const SignHeader : HeaderName = HeaderName::from_lowercase(b"Sign").unwrap();
 
 #[derive(Debug)]
 pub struct BitstampApi {
@@ -45,7 +40,7 @@ pub struct BitstampApi {
     api_key: String,
     api_secret: String,
     customer_id: String,
-    http_client: Client,
+    http_client: Client<HttpsConnector<HttpConnector>>,
     burst: bool,
 }
 
@@ -57,21 +52,15 @@ impl BitstampApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Bitstamp, creds.exchange()).into());
         }
 
-        //TODO: Handle correctly TLS errors with error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-
-        let connector = HttpsConnector::new(ssl);
-
+        let connector = HttpsConnector::new();
+        let ssl = Client::builder().build::<_, hyper::Body>(connector);
 
         Ok(BitstampApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
                customer_id: creds.get("customer_id").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
+               http_client: ssl,
                burst: false, // No burst by default
            })
     }
@@ -102,14 +91,13 @@ impl BitstampApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url: String = utils::build_url(method, pair);
+        let url: Uri = Uri::from_static(utils::build_url(method, pair).as_str());
 
         self.block_or_continue();
-        let mut response = self.http_client.get(&url).send()?;
+        let mut buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let reader = buf.reader();
+        utils::deserialize_json_r(reader)
     }
 
     ///
@@ -148,15 +136,17 @@ impl BitstampApi {
 
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(post_params);
-        let mut response = self.http_client
-            .post(&url)
-            .header(ContentType::form_url_encoded())
-            .body(&post_data)
-            .send()?;
 
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::POST)
+            .uri(url)
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body(post_data.into())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let mut buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let reader = buf.reader();
+        utils::deserialize_json_r(reader)
     }
 
     /// Sample output :

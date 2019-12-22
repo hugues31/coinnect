@@ -6,10 +6,10 @@
 use hmac::{Hmac, Mac};
 use sha2::{Sha512};
 
-use hyper_native_tls::NativeTlsClient;
 use hyper::Client;
 use hyper::header;
-use hyper::net::HttpsConnector;
+use hyper::header::HeaderName;
+use hyper_tls::HttpsConnector;
 
 use data_encoding::HEXLOWER;
 
@@ -28,18 +28,16 @@ use crate::helpers;
 use crate::exchange::Exchange;
 use crate::coinnect::Credentials;
 use crate::bittrex::utils;
+use hyper::client::HttpConnector;
 
-header! {
-    #[doc(hidden)]
-    (ApiSign, "apisign") => [String]
-}
+const ApiSign : HeaderName = HeaderName::from_lowercase(b"apisign").unwrap();
 
 #[derive(Debug)]
 pub struct BittrexApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
-    http_client: Client,
+    http_client: Client<HttpsConnector<HttpConnector>>,
     burst: bool,
 }
 
@@ -51,18 +49,14 @@ impl BittrexApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Bittrex, creds.exchange()).into());
         }
 
-        // TODO: implement correctly the TLS error in error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-        let connector = HttpsConnector::new(ssl);
+        let connector = HttpsConnector::new();
+        let ssl = Client::builder().build::<_, hyper::Body>(connector);
 
         Ok(BittrexApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
+               http_client: ssl,
                burst: false,
            })
     }
@@ -132,7 +126,7 @@ impl BittrexApi {
         let mut mac = Hmac::<Sha512>::new(&hmac_key[..]);
         mac.input(url.as_bytes());
 
-        let mut custom_header = header::Headers::new();
+        let mut custom_header = header::HeaderMap::new();
 
         let signature = HEXLOWER.encode(mac.result().code());
 

@@ -9,15 +9,16 @@ use crate::bitstamp::utils;
 use crate::error::*;
 use crate::types::*;
 use crate::helpers;
-use hyper_native_tls::native_tls::TlsStream;
 use std::net::TcpStream;
 use crate::exchange::StreamerKleisli;
-use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::{connect, Error as WsError};
 use url::Url;
 use log::*;
 use futures::{Future, Stream};
-use tokio::prelude::*;
+use futures::stream::{SplitSink, StreamExt, SplitStream};
+use awc::error::WsClientError;
+use actix_codec::Framed;
+use awc::BoxedSocket;
+use awc::ws::{Codec, Frame};
 
 impl ExchangeApi for BitstampApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -146,20 +147,16 @@ impl ExchangeApi for BitstampApi {
     }
 
     fn streaming(&mut self) -> StreamerKleisli {
-        let url = Url::parse("wss://ws.bitstamp.net").unwrap();
-        let job = connect_async(url)
-            .map_err(|err| error!("Connect error: {}", err))
-            .and_then(|(ws_stream, _)| {
-                let (sink, stream) = ws_stream.split();
-                stream
-                    .filter(|msg| msg.is_text() || msg.is_binary())
-                    .forward(sink)
-                    .and_then(|(_stream, _sink)| Ok(()))
-                    .map_err(|err| match err {
-                        WsError::ConnectionClosed => (),
-                        err => info!("WS error {}", err),
+        futures::executor::block_on(async {
+            let c: Framed<BoxedSocket, Codec> = helpers::new_ws_client("wss://ws.bitstamp.net").await;
+            let (sink, stream) = c.split();
+            stream
+                .map(|msg|
+                    match msg {
+                        Ok(f) => println!("{:?}", f),
+                        Err(e) => println!("{:?}", e),
                     })
-            });
-        tokio::spawn(job);
+                .into_future();
+        });
     }
 }
