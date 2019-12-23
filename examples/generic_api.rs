@@ -11,7 +11,8 @@ use crate::coinnect::kraken::KrakenCreds;
 use crate::coinnect::exchange::Exchange::*;
 use crate::coinnect::types::Pair::*;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We create a Coinnect Generic API
     // Since Kraken does not need customer_id field, we set it to None
     let my_creds = KrakenCreds::new("my_optionnal_name", "api_key", "api_secret");
@@ -20,4 +21,5 @@ fn main() {
 
     println!("ETC_BTC last trade price is {}.",
              ticker.unwrap().last_trade_price);
+    Ok(())
 }

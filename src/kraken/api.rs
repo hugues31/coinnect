@@ -32,6 +32,7 @@ use hyper::client::HttpConnector;
 use futures::Stream;
 use futures::{FutureExt, TryFutureExt};
 use futures::io::{AsyncReadExt, AsyncRead};
+use futures::executor::block_on;
 use std::convert::TryInto;
 use futures::select;
 use bytes::buf::BufExt as _;
@@ -107,7 +108,7 @@ impl KrakenApi {
         let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
         json::deserialize_json_r(reader)

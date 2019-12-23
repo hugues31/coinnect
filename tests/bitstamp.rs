@@ -154,7 +154,7 @@ mod bitstamp_tests {
     #[cfg_attr(not(feature = "bitstamp_private_tests"), ignore)]
     fn balance_should_have_usd_and_btc_balance() {
         use std::path::PathBuf;
-        let path = PathBuf::from("./keys_real.json");
+        let path = PathBuf::from("./let buf = futures.json");
         let creds = BitstampCreds::new_from_file("account_bitstamp", path).unwrap();
         let mut api = BitstampApi::new(creds).unwrap();
         let result = api.return_balances().unwrap();

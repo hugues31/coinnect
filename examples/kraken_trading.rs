@@ -11,7 +11,8 @@ use std::path::PathBuf;
 use crate::coinnect::kraken::{KrakenApi, KrakenCreds};
 use std::error::Error;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We create a KrakenApi by loading a json file containing API configuration
     // (see documentation for more info)
     let path = PathBuf::from("keys_real.json");
@@ -121,4 +122,5 @@ fn main() {
                                       "", // userref
                                       ""); // validate
     // In a real case example, you should check if any error occurs.
+    Ok(())
 }

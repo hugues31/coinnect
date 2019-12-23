@@ -4,7 +4,8 @@ extern crate coinnect;
 
 use crate::coinnect::poloniex::{PoloniexApi, PoloniexCreds};
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We create a PoloniexApi by providing API key/secret
     // You can give an empty String if you only use public methods
     let creds = PoloniexCreds::new("my_optionnal_name", "api_key", "api_secret");
@@ -27,4 +28,5 @@ fn main() {
 
         println!("Coin {} has price : {}", name, price);
     }
+    Ok(())
 }
