@@ -52,6 +52,8 @@ extern crate log;
 extern crate futures;
 extern crate futures_util;
 extern crate awc;
+#[macro_use]
+extern crate tokio;
 
 pub mod coinnect;
 pub mod exchange;

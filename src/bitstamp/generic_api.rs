@@ -156,7 +156,7 @@ impl ExchangeApi for BitstampApi {
                         Ok(f) => println!("{:?}", f),
                         Err(e) => println!("{:?}", e),
                     })
-                .into_future();
+                .into_future().await
         });
     }
 }
