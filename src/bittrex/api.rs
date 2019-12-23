@@ -6,7 +6,7 @@
 use hmac::{Hmac, Mac};
 use sha2::{Sha512};
 
-use hyper::Client;
+use hyper::{Client, Uri, Method, Request, Body};
 use hyper::header;
 use hyper::header::HeaderName;
 use hyper_tls::HttpsConnector;
@@ -29,8 +29,15 @@ use crate::exchange::Exchange;
 use crate::coinnect::Credentials;
 use crate::bittrex::utils;
 use hyper::client::HttpConnector;
+use futures::Stream;
+use futures::{FutureExt, TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+use std::convert::TryInto;
+use futures::select;
+use bytes::buf::BufExt as _;
+use crate::helpers::json;
 
-const ApiSign : HeaderName = HeaderName::from_lowercase(b"apisign").unwrap();
+const API_SIGN: &str = "apisign";
 
 #[derive(Debug)]
 pub struct BittrexApi {
@@ -87,20 +94,15 @@ impl BittrexApi {
                     -> Result<Map<String, Value>> {
 
         helpers::strip_empties(params);
-
-        let url = "https://bittrex.com/api/v1.1".to_string() + method + "?" +
-                  &helpers::url_encode_hashmap(params);
+        let string = "https://bittrex.com/api/v1.1".to_string() + method + "?" +
+            &helpers::url_encode_hashmap(params);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        //TODO: Handle correctly http errors with error_chain.
-        let mut response = match self.http_client.get(&url).send() {
-            Ok(response) => response,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
+        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     fn private_query(&mut self,
@@ -126,23 +128,19 @@ impl BittrexApi {
         let mut mac = Hmac::<Sha512>::new(&hmac_key[..]);
         mac.input(url.as_bytes());
 
-        let mut custom_header = header::HeaderMap::new();
-
         let signature = HEXLOWER.encode(mac.result().code());
 
-        custom_header.set(ApiSign(signature));
-
-        let mut res = match self.http_client
-                  .post(&url)
-                  .headers(custom_header)
-                  .send() {
-            Ok(res) => res,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
-
-        let mut buffer = String::new();
-        res.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::POST)
+            .uri(&url)
+            .header(API_SIGN, signature)
+            .body(Body::empty())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        self.last_request = helpers::get_unix_timestamp_ms();
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     /// Used to get the open and available trading markets at Bittrex along with other meta data.

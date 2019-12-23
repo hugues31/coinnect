@@ -31,9 +31,6 @@ use std::convert::TryInto;
 use futures::select;
 use bytes::buf::BufExt as _;
 
-const KeyHeader : HeaderName = HeaderName::from_lowercase(b"Key").unwrap();
-const SignHeader : HeaderName = HeaderName::from_lowercase(b"Sign").unwrap();
-
 #[derive(Debug)]
 pub struct BitstampApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
@@ -91,10 +88,11 @@ impl BitstampApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url: Uri = Uri::from_static(utils::build_url(method, pair).as_str());
+        let string = utils::build_url(method, pair);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let mut buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
         utils::deserialize_json_r(reader)
@@ -144,7 +142,7 @@ impl BitstampApi {
             .body(post_data.into())
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
         let req2 = req.unwrap();
-        let mut buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         let reader = buf.reader();
         utils::deserialize_json_r(reader)
     }

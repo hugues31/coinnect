@@ -1,6 +1,8 @@
 
 #![warn(clone_double_ref)]
 
+pub mod json;
+
 use serde_json::Value;
 use bigdecimal::BigDecimal;
 use std::str::FromStr;

@@ -2,7 +2,7 @@
 //! Please see examples for more informations.
 
 
-use hyper::{Client, Uri, Request, Body};
+use hyper::{Client, Uri, Request, Body, Method};
 use hyper::header::{CONTENT_TYPE,USER_AGENT,HeaderName};
 
 use hyper_tls::HttpsConnector;
@@ -24,10 +24,13 @@ use crate::types::Pair;
 use crate::gdax::utils;
 use crate::types::*;
 use hyper::client::HttpConnector;
-use futures_util::AsyncReadExt;
-
-const KeyHeader : HeaderName = HeaderName::from_lowercase(b"Key").unwrap();
-const SignHeader : HeaderName = HeaderName::from_lowercase(b"Sign").unwrap();
+use futures::Stream;
+use futures::{FutureExt, TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+use std::convert::TryInto;
+use futures::select;
+use bytes::buf::BufExt as _;
+use crate::helpers::json;
 
 #[derive(Debug)]
 pub struct GdaxApi {
@@ -86,18 +89,24 @@ impl GdaxApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url : Uri = utils::build_url(method, pair).into();
+        let string = utils::build_url(method, pair);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let mut response = self.http_client
-            .get(url)
-            .header(USER_AGENT("coinnect".to_string()))
-            .send()?;
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::GET)
+            .uri(url)
+            .header(USER_AGENT, "coinnect")
+            .body(Body::empty())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2)
+            .and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
 
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     ///
@@ -117,7 +126,8 @@ impl GdaxApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url: Uri = Uri::from_static(utils::build_url(method, pair).as_str());
+        let string = utils::build_url(method, pair);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         let nonce = utils::generate_nonce(None);
         let signature =
@@ -136,19 +146,17 @@ impl GdaxApi {
 
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(post_params);
-        let ct = CONTENT_TYPE(
-            "application/x-www-form-urlencoded".to_owned(),
-        );
-        let req = Request::builder()
+        let req: Result<Request<Body>> = Request::builder()
             .method("POST")
             .uri(url)
             .header(CONTENT_TYPE, "application/x-www-form-urlencoded".to_owned())
-            .body(Body::from(post_data))?;
-        let mut response = self.http_client.request(req);
-
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+            .body(Body::from(post_data))
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        self.last_request = helpers::get_unix_timestamp_ms();
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     /// Sample output :

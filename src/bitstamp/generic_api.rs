@@ -149,7 +149,7 @@ impl ExchangeApi for BitstampApi {
     fn streaming(&mut self) -> StreamerKleisli {
         futures::executor::block_on(async {
             let c: Framed<BoxedSocket, Codec> = helpers::new_ws_client("wss://ws.bitstamp.net").await;
-            let (sink, stream) = c.split();
+            let (_, stream) = c.split();
             stream
                 .map(|msg|
                     match msg {
