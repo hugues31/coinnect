@@ -85,18 +85,6 @@ pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
 
-pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
-    let data: Value = match serde_json::from_str(json_string) {
-        Ok(data) => data,
-        Err(_) => return Err(ErrorKind::BadParse.into()),
-    };
-
-    match data.as_object() {
-        Some(value) => Ok(value.clone()),
-        None => Err(ErrorKind::BadParse.into()),
-    }
-}
-
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array
 pub fn parse_result(response: &Map<String, Value>) -> Result<Map<String, Value>> {

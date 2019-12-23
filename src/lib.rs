@@ -36,7 +36,7 @@
 extern crate hyper;
 extern crate sha2;
 extern crate hmac;
-extern crate hyper_native_tls;
+extern crate hyper_tls;
 extern crate serde_json;
 extern crate chrono;
 #[macro_use]
@@ -46,11 +46,12 @@ extern crate data_encoding;
 #[macro_use]
 extern crate error_chain;
 extern crate bigdecimal;
-extern crate tokio_tungstenite;
+extern crate actix_web;
 extern crate url;
 extern crate log;
 extern crate futures;
-extern crate tokio;
+extern crate futures_util;
+extern crate awc;
 
 pub mod coinnect;
 pub mod exchange;

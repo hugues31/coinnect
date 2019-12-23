@@ -4,10 +4,10 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha512;
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::Client;
+use hyper::{Client, Uri, Request, Body, Method};
 use hyper::header;
-use hyper::net::HttpsConnector;
+use hyper::header::{HeaderName, CONTENT_TYPE};
+use hyper_tls::HttpsConnector;
 
 use data_encoding::HEXLOWER;
 
@@ -19,27 +19,23 @@ use std::io::Read;
 use std::thread;
 use std::time::Duration;
 
+use futures::Stream;
+use futures::{TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+
 use crate::error::*;
-use crate::helpers;
+use crate::helpers::{self, json};
 
 use crate::exchange::Exchange;
 use crate::coinnect::Credentials;
 use crate::poloniex::utils;
 
-header! {
-    #[doc(hidden)]
-    (KeyHeader, "Key") => [String]
-}
+use hyper::client::HttpConnector;
+use bytes::buf::BufExt as _;
+use hyper::header::HeaderValue;
 
-header! {
-    #[doc(hidden)]
-    (SignHeader, "Sign") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (ContentHeader, "Content-Type") => [String]
-}
+const KEY_HEADER: &str = "Key";
+const SIGN_HEADER: &str = "Sign";
 
 #[derive(Debug, Copy, Clone)]
 pub enum PlaceOrderOption {
@@ -76,7 +72,7 @@ pub struct PoloniexApi {
     last_request: i64, // unix timestamp in ms, to avoid ban
     api_key: String,
     api_secret: String,
-    http_client: Client,
+    http_client: Client<HttpsConnector<HttpConnector>>,
     burst: bool,
 }
 
@@ -87,18 +83,15 @@ impl PoloniexApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Poloniex, creds.exchange()).into());
         }
 
-        //TODO: Handle correctly the TLS errors with error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-        let connector = HttpsConnector::new(ssl);
+        let connector = HttpsConnector::new();
+        let ssl = Client::builder().build::<_, hyper::Body>(connector);
+
 
         Ok(PoloniexApi {
             last_request: 0,
             api_key: creds.get("api_key").unwrap_or_default(),
             api_secret: creds.get("api_secret").unwrap_or_default(),
-            http_client: Client::with_connector(connector),
+            http_client: ssl,
             burst: false,
         })
     }
@@ -126,21 +119,18 @@ impl PoloniexApi {
     fn public_query(&mut self, method: &str, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
         let mut params = params.clone();
         helpers::strip_empties(&mut params);
-        let url = "https://poloniex.com/public?command=".to_string() + method + "&" + &helpers::url_encode_hashmap(&params);
+        let string = "https://poloniex.com/public?command=".to_string() + method + "&" + &helpers::url_encode_hashmap(&params);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let mut response = match self.http_client.get(&url).send() {
-            Ok(response) => response,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
+        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
+        let reader = buf.reader();
 
         if method == "returnChartData" {
-            return utils::deserialize_json_array(&buffer);
+            return json::deserialize_json_array_r(reader);
         }
-        utils::deserialize_json(&buffer)
+        json::deserialize_json_r(reader)
     }
 
     fn private_query(&mut self, method: &str, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
@@ -156,32 +146,24 @@ impl PoloniexApi {
 
         let sign = HEXLOWER.encode(mac.result().code());
 
-        let mut custom_header = header::Headers::new();
-        custom_header.set(KeyHeader(self.api_key.to_owned()));
-        custom_header.set(SignHeader(sign));
-        custom_header.set(ContentHeader(
-            "application/x-www-form-urlencoded".to_owned(),
-        ));
-
         self.block_or_continue();
 
-        let mut response = match self.http_client
-            .post("https://poloniex.com/tradingApi")
-            .body(&post_data)
-            .headers(custom_header)
-            .send()
-        {
-            Ok(response) => response,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::POST)
+            .uri("https://poloniex.com/tradingApi")
+            .header(KEY_HEADER, self.api_key.as_str())
+            .header(SIGN_HEADER, sign)
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body(post_data.into())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
-
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
+        let reader = buf.reader();
         if method == "returnChartData" {
-            return utils::deserialize_json_array(&buffer);
+            return json::deserialize_json_array_r(reader);
         }
-        utils::deserialize_json(&buffer)
+        json::deserialize_json_r(reader)
     }
 
     /// Sample output :

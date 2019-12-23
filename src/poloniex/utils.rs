@@ -7,6 +7,8 @@ use crate::error::*;
 use crate::types::Currency;
 use crate::types::Pair;
 use crate::types::Pair::*;
+use bytes::buf::ext::Reader;
+use bytes::Buf;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -128,37 +130,6 @@ pub fn get_pair_string(pair: &Pair) -> Option<&&str> {
 pub fn get_pair_enum(pair: &str) -> Option<&Pair> {
     PAIRS_STRING.get_by_second(&pair)
 }
-
-pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
-    let data: Value = match serde_json::from_str(json_string) {
-        Ok(data) => data,
-        Err(_) => return Err(ErrorKind::BadParse.into()),
-    };
-
-    match data.as_object() {
-        Some(value) => Ok(value.clone()),
-        None => Err(ErrorKind::BadParse.into()),
-    }
-}
-
-/// Convert a JSON array into a map containing a Vec for the "data" key
-pub fn deserialize_json_array(json_string: &str) -> Result<Map<String, Value>> {
-    let data: Value = match serde_json::from_str(json_string) {
-        Ok(data) => data,
-        Err(_) => return Err(ErrorKind::BadParse.into()),
-    };
-
-    if data.is_array() {
-        let mut map = Map::new();
-        map.insert("data".to_string(), data);
-        Ok(map)
-    }
-
-    else {
-        Err(ErrorKind::BadParse.into())
-    }
-}
-
 
 /// If error array is null, return the result (encoded in a json object)
 /// else return the error string found in array

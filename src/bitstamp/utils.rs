@@ -12,6 +12,9 @@ use crate::helpers;
 use crate::types::Currency;
 use crate::types::Pair;
 use crate::types::Pair::*;
+use bytes::buf::ext::Reader;
+use bytes::{Bytes, Buf};
+use bytes::buf::BufExt as _;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {
@@ -77,6 +80,18 @@ pub fn build_url(method: &str, pair: &str) -> String {
 
 pub fn deserialize_json(json_string: &str) -> Result<Map<String, Value>> {
     let data: Value = match serde_json::from_str(json_string) {
+        Ok(data) => data,
+        Err(_) => return Err(ErrorKind::BadParse.into()),
+    };
+
+    match data.as_object() {
+        Some(value) => Ok(value.clone()),
+        None => Err(ErrorKind::BadParse.into()),
+    }
+}
+
+pub fn deserialize_json_r<B>(reader: Reader<B>) -> Result<Map<String, Value>> where B: Buf {
+    let data: Value = match serde_json::from_reader(reader) {
         Ok(data) => data,
         Err(_) => return Err(ErrorKind::BadParse.into()),
     };

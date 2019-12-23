@@ -2,10 +2,10 @@
 //! Please see examples for more informations.
 
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::Client;
-use hyper::header::{ContentType,UserAgent};
-use hyper::net::HttpsConnector;
+use hyper::{Client, Uri, Request, Body, Method};
+use hyper::header::{CONTENT_TYPE,USER_AGENT,HeaderName};
+
+use hyper_tls::HttpsConnector;
 
 use serde_json::Value;
 use serde_json::value::Map;
@@ -23,21 +23,14 @@ use crate::helpers;
 use crate::types::Pair;
 use crate::gdax::utils;
 use crate::types::*;
-
-header! {
-    #[doc(hidden)]
-    (KeyHeader, "Key") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (SignHeader, "Sign") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (ContentHeader, "Content-Type") => [String]
-}
+use hyper::client::HttpConnector;
+use futures::Stream;
+use futures::{FutureExt, TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+use std::convert::TryInto;
+use futures::select;
+use bytes::buf::BufExt as _;
+use crate::helpers::json;
 
 #[derive(Debug)]
 pub struct GdaxApi {
@@ -45,7 +38,7 @@ pub struct GdaxApi {
     api_key: String,
     api_secret: String,
     customer_id: String,
-    http_client: Client,
+    http_client: Client<HttpsConnector<HttpConnector>>,
     burst: bool,
 }
 
@@ -57,21 +50,15 @@ impl GdaxApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Gdax, creds.exchange()).into());
         }
 
-        //TODO: Handle correctly TLS errors with error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-
-        let connector = HttpsConnector::new(ssl);
-
+        let connector = HttpsConnector::new();
+        let ssl = Client::builder().build::<_, hyper::Body>(connector);
 
         Ok(GdaxApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
                customer_id: creds.get("customer_id").unwrap_or_default(),
-               http_client: Client::with_connector(connector),
+               http_client: ssl,
                burst: false, // No burst by default
            })
     }
@@ -102,18 +89,24 @@ impl GdaxApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url: String = utils::build_url(method, pair);
+        let string = utils::build_url(method, pair);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let mut response = self.http_client
-            .get(&url)
-            .header(UserAgent("coinnect".to_string()))
-            .send()?;
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::GET)
+            .uri(url)
+            .header(USER_AGENT, "coinnect")
+            .body(Body::empty())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2)
+            .and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
 
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     ///
@@ -133,7 +126,8 @@ impl GdaxApi {
             .get("method")
             .ok_or_else(|| "Missing \"method\" field.")?;
         let pair: &str = params.get("pair").ok_or_else(|| "Missing \"pair\" field.")?;
-        let url: String = utils::build_url(method, pair);
+        let string = utils::build_url(method, pair);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         let nonce = utils::generate_nonce(None);
         let signature =
@@ -152,15 +146,17 @@ impl GdaxApi {
 
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(post_params);
-        let mut response = self.http_client
-            .post(&url)
-            .header(ContentType::form_url_encoded())
-            .body(&post_data)
-            .send()?;
-
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let req: Result<Request<Body>> = Request::builder()
+            .method("POST")
+            .uri(url)
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded".to_owned())
+            .body(Body::from(post_data))
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        self.last_request = helpers::get_unix_timestamp_ms();
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     /// Sample output :

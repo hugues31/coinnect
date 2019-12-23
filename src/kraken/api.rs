@@ -6,10 +6,10 @@
 use hmac::{Hmac, Mac};
 use sha2::{Sha256, Sha512, Digest};
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::Client;
+use hyper::{Client, Uri, Method, Request, Body};
 use hyper::header;
-use hyper::net::HttpsConnector;
+use hyper::header::HeaderName;
+use hyper_tls::HttpsConnector;
 
 use data_encoding::BASE64;
 
@@ -28,16 +28,17 @@ use crate::helpers;
 use crate::exchange::Exchange;
 use crate::coinnect::Credentials;
 use crate::kraken::utils;
+use hyper::client::HttpConnector;
+use futures::Stream;
+use futures::{FutureExt, TryFutureExt};
+use futures::io::{AsyncReadExt, AsyncRead};
+use std::convert::TryInto;
+use futures::select;
+use bytes::buf::BufExt as _;
+use crate::helpers::json;
 
-header! {
-    #[doc(hidden)]
-    (KeyHeader, "API-Key") => [String]
-}
-
-header! {
-    #[doc(hidden)]
-    (SignHeader, "API-Sign") => [String]
-}
+const KEY_HEADER: &str = "API-Key";
+const SIGN_HEADER: &str = "API-Sign";
 
 #[derive(Debug)]
 pub struct KrakenApi {
@@ -45,7 +46,7 @@ pub struct KrakenApi {
     api_key: String,
     api_secret: String,
     otp: Option<String>, // two-factor password (if two-factor enabled, otherwise not required)
-    http_client: Client,
+    http_client: Client<HttpsConnector<HttpConnector>>,
     burst: bool,
 }
 
@@ -57,19 +58,15 @@ impl KrakenApi {
             return Err(ErrorKind::InvalidConfigType(Exchange::Kraken, creds.exchange()).into());
         }
 
-        // TODO: implement correctly the TLS error in error_chain.
-        let ssl = match NativeTlsClient::new() {
-            Ok(res) => res,
-            Err(_) => return Err(ErrorKind::TlsError.into()),
-        };
-        let connector = HttpsConnector::new(ssl);
+        let connector = HttpsConnector::new();
+        let ssl = Client::builder().build::<_, hyper::Body>(connector);
 
         Ok(KrakenApi {
                last_request: 0,
                api_key: creds.get("api_key").unwrap_or_default(),
                api_secret: creds.get("api_secret").unwrap_or_default(),
                otp: None,
-               http_client: Client::with_connector(connector),
+               http_client: ssl,
                burst: false,
            })
     }
@@ -105,19 +102,15 @@ impl KrakenApi {
                     params: &mut HashMap<&str, &str>)
                     -> Result<Map<String, Value>> {
         helpers::strip_empties(params);
-        let url = "https://api.kraken.com/0/public/".to_string() + method + "?" +
-                  &helpers::url_encode_hashmap(params);
+        let string = "https://api.kraken.com/0/public/".to_string() + method + "?" +
+            &helpers::url_encode_hashmap(params);
+        let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        //TODO: Handle correctly http errors with error_chain.
-        let mut response = match self.http_client.get(&url).send() {
-            Ok(response) => response,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
+        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
         self.last_request = helpers::get_unix_timestamp_ms();
-        let mut buffer = String::new();
-        response.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     fn private_query(&mut self,
@@ -138,26 +131,22 @@ impl KrakenApi {
             params.insert("otp", password);
         }
 
-        let postdata = helpers::url_encode_hashmap(&params);
+        let post_data = helpers::url_encode_hashmap(&params);
 
-        let signature = self.create_signature(urlpath, &postdata, &nonce)?;
+        let signature = self.create_signature(urlpath, &post_data, &nonce)?;
 
-        let mut custom_header = header::Headers::new();
-        custom_header.set(KeyHeader(self.api_key.clone()));
-        custom_header.set(SignHeader(signature));
-
-        let mut res = match self.http_client
-                  .post(&url)
-                  .body(&postdata)
-                  .headers(custom_header)
-                  .send() {
-            Ok(res) => res,
-            Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
-        };
-
-        let mut buffer = String::new();
-        res.read_to_string(&mut buffer)?;
-        utils::deserialize_json(&buffer)
+        let req: Result<Request<Body>> = Request::builder()
+            .method(Method::POST)
+            .uri(&url)
+            .header(KEY_HEADER, self.api_key.as_str())
+            .header(SIGN_HEADER, signature)
+            .body(post_data.into())
+            .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
+        let req2 = req.unwrap();
+        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        self.last_request = helpers::get_unix_timestamp_ms();
+        let reader = buf.reader();
+        json::deserialize_json_r(reader)
     }
 
     fn create_signature(&self, urlpath: String, postdata: &str, nonce: &str) -> Result<String> {

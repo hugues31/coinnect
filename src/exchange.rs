@@ -6,12 +6,8 @@ use std::str::FromStr;
 
 use crate::error::*;
 use crate::types::*;
-use tokio_tungstenite::tungstenite::WebSocket;
-use tokio_tungstenite::tungstenite::client::AutoStream;
-use tokio_tungstenite::tungstenite::handshake::client::Response;
 use futures::Future;
 
-//pub type StreamerKleisli = (WebSocket<AutoStream>, Response);
 pub type StreamerKleisli = ();
 
 #[derive(Debug, PartialEq, Clone, Copy)]
