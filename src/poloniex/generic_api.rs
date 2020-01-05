@@ -13,8 +13,8 @@ use crate::types::*;
 use crate::poloniex::utils;
 use crate::helpers;
 
-use crate::exchange::StreamerKleisli;
-use futures::Future;
+
+use futures::{Future, Stream};
 
 impl ExchangeApi for PoloniexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -154,9 +154,5 @@ impl ExchangeApi for PoloniexApi {
             }
         }
         Ok(balances)
-    }
-
-    fn streaming(&mut self) -> StreamerKleisli {
-        unimplemented!()
     }
 }

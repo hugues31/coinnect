@@ -10,8 +10,8 @@ use crate::types::*;
 use crate::kraken::utils;
 use crate::helpers;
 
-use crate::exchange::StreamerKleisli;
-use futures::Future;
+
+use futures::{Future, Stream};
 
 impl ExchangeApi for KrakenApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -170,9 +170,5 @@ impl ExchangeApi for KrakenApi {
         }
 
         Ok(balances)
-    }
-
-    fn streaming(&mut self) -> StreamerKleisli {
-        unimplemented!()
     }
 }

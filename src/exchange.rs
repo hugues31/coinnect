@@ -6,9 +6,7 @@ use std::str::FromStr;
 
 use crate::error::*;
 use crate::types::*;
-use futures::Future;
-
-pub type StreamerKleisli = ();
+use futures::{Future, Stream};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Exchange {
@@ -71,6 +69,4 @@ pub trait ExchangeApi: Debug {
     /// Retrieve the current amounts of all the currencies that the account holds
     /// The amounts returned are available (not used to open an order)
     fn balances(&mut self) -> Result<Balances>;
-
-    fn streaming(&mut self) -> StreamerKleisli;
 }

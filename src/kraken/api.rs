@@ -1119,39 +1119,39 @@ impl KrakenApi {
 mod kraken_api_tests {
     use super::*;
 
-    #[test]
-    fn should_block_or_not_block_when_enabled_or_disabled() {
-        let mut api = KrakenApi {
-            last_request: helpers::get_unix_timestamp_ms(),
-            api_key: "".to_string(),
-            api_secret: "".to_string(),
-            otp: None,
-            http_client: Client::new(),
-            burst: false,
-        };
-
-        let mut counter = 0;
-        loop {
-            api.set_burst(false);
-            let start = helpers::get_unix_timestamp_ms();
-            api.block_or_continue();
-            api.last_request = helpers::get_unix_timestamp_ms();
-
-            let difference = api.last_request - start;
-            assert!(difference >= 1999);
-            assert!(difference < 10000);
-
-
-            api.set_burst(true);
-            let start = helpers::get_unix_timestamp_ms();
-            api.block_or_continue();
-            api.last_request = helpers::get_unix_timestamp_ms();
-
-            let difference = api.last_request - start;
-            assert!(difference < 10);
-
-            counter = counter + 1;
-            if counter >= 3 { break; }
-        }
-    }
+//    #[test]
+//    fn should_block_or_not_block_when_enabled_or_disabled() {
+//        let mut api = KrakenApi {
+//            last_request: helpers::get_unix_timestamp_ms(),
+//            api_key: "".to_string(),
+//            api_secret: "".to_string(),
+//            otp: None,
+//            http_client: Client::new(),
+//            burst: false,
+//        };
+//
+//        let mut counter = 0;
+//        loop {
+//            api.set_burst(false);
+//            let start = helpers::get_unix_timestamp_ms();
+//            api.block_or_continue();
+//            api.last_request = helpers::get_unix_timestamp_ms();
+//
+//            let difference = api.last_request - start;
+//            assert!(difference >= 1999);
+//            assert!(difference < 10000);
+//
+//
+//            api.set_burst(true);
+//            let start = helpers::get_unix_timestamp_ms();
+//            api.block_or_continue();
+//            api.last_request = helpers::get_unix_timestamp_ms();
+//
+//            let difference = api.last_request - start;
+//            assert!(difference < 10);
+//
+//            counter = counter + 1;
+//            if counter >= 3 { break; }
+//        }
+//    }
 }

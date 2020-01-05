@@ -10,11 +10,11 @@ use crate::error::*;
 use crate::types::*;
 use crate::helpers;
 use std::net::TcpStream;
-use crate::exchange::StreamerKleisli;
 use url::Url;
 use log::*;
 use futures::{Future, Stream};
-use futures::stream::{SplitSink, StreamExt, SplitStream};
+use futures_util::TryFutureExt;
+use futures::stream::{SplitSink, StreamExt, SplitStream, TryStreamExt, TryStream};
 use awc::error::WsClientError;
 use actix_codec::Framed;
 use awc::BoxedSocket;
@@ -144,19 +144,5 @@ impl ExchangeApi for BitstampApi {
         }
 
         Ok(balances)
-    }
-
-    fn streaming(&mut self) -> StreamerKleisli {
-        futures::executor::block_on(async {
-            let c: Framed<BoxedSocket, Codec> = helpers::new_ws_client("wss://ws.bitstamp.net").await;
-            let (_, stream) = c.split();
-            stream
-                .map(|msg|
-                    match msg {
-                        Ok(f) => println!("{:?}", f),
-                        Err(e) => println!("{:?}", e),
-                    })
-                .into_future().await
-        });
     }
 }

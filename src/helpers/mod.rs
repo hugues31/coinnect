@@ -12,6 +12,7 @@ use chrono::prelude::*;
 use crate::error::*;
 use actix_codec::Framed;
 use awc::{error::WsProtocolError, ws::{Codec, Message}, Client, BoxedSocket};
+use std::time::Duration;
 
 // Helper functions
 
@@ -68,7 +69,17 @@ pub fn from_json_bigdecimal(json_obj: &Value, key: &str) -> Result<BigDecimal> {
 }
 
 pub async fn new_ws_client(url: &str) -> Framed<BoxedSocket, Codec> {
-    let (response, framed) = Client::new()
+    let ssl = {
+        let mut ssl = openssl::ssl::SslConnector::builder(openssl::ssl::SslMethod::tls()).unwrap();
+        let _ = ssl.set_alpn_protos(b"\x08http/1.1");
+        ssl.build()
+    };
+    let connector = awc::Connector::new().ssl(ssl).finish();
+    let client = Client::build()
+        .connector(connector)
+        .finish();
+
+    let (response, framed) = client
         .ws(url)
         .connect()
         .await

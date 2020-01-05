@@ -10,8 +10,8 @@ use crate::error::*;
 use crate::types::*;
 use crate::helpers;
 
-use crate::exchange::StreamerKleisli;
-use futures::Future;
+
+use futures::{Future, Stream};
 
 impl ExchangeApi for GdaxApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -137,9 +137,5 @@ impl ExchangeApi for GdaxApi {
         }
 
         Ok(balances)
-    }
-
-    fn streaming(&mut self) -> StreamerKleisli {
-        unimplemented!()
     }
 }

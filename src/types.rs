@@ -28,7 +28,7 @@ pub struct Ticker {
     pub volume: Option<Volume>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Orderbook {
     /// UNIX timestamp in ms (when the response was received)
     pub timestamp: i64,
@@ -71,6 +71,67 @@ pub enum OrderType {
     SellLimit,
     BuyMarket,
     SellMarket,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum TradeType {
+    Sell,
+    Buy,
+}
+
+impl From<i64> for TradeType {
+    fn from(v: i64) -> Self {
+        if v == 0 {
+            return TradeType::Buy;
+        }
+        return TradeType::Sell;
+    }
+}
+
+impl Into<i32> for TradeType {
+    fn into(self) -> i32 {
+        match self {
+            TradeType::Buy => 0,
+            _ => 1,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LiveTrade {
+    /// UNIX timestamp in ms (when the event occured)
+    pub event_ms: i64,
+    /// The Pair corresponding to the Ticker returned (maybe useful later for asynchronous APIs)
+    pub pair: String,
+    /// Amount of the trade
+    pub amount: f32,
+    /// Price of the trade
+    pub price: Price,
+    /// Buy or Sell
+    pub tt: TradeType,
+}
+
+#[derive(Debug, Clone)]
+pub struct LiveOrder {
+    /// UNIX timestamp in ms (when the event occured)
+    pub event_ms: i64,
+    /// The Pair corresponding to the Ticker returned (maybe useful later for asynchronous APIs)
+    pub pair: String,
+    /// Amount of the trade
+    pub amount: f32,
+    /// Price of the trade
+    pub price: Price,
+    /// Buy or Sell
+    pub tt: TradeType,
+}
+
+#[derive(Message, Clone, Debug)]
+#[rtype(result = "()")]
+pub enum LiveEvent {
+    LiveOrder(LiveOrder),
+    LiveTrade(LiveTrade),
+    LiveOrderbook(Orderbook),
+    Noop
 }
 
 /// Currency lists all currencies that can be traded on supported exchanges.
@@ -400,7 +461,7 @@ pub enum Currency {
 /// the standardization proposed above these 2 pairs become 'ZEC_BTC', that are comparable in
 /// value accross the 2 exchanges.
 /// Pairs with "_d" at the end : dark pool
-/// 
+///
 /// Note 2 : 1ST and 2GIVE have been renammed "_1ST" and "_2GIVE" since variables name cannot start
 /// with a number.
 #[derive(Debug, Copy, Clone, PartialEq)]

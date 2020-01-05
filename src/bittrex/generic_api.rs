@@ -13,8 +13,8 @@ use crate::types::*;
 use crate::bittrex::utils;
 use crate::helpers;
 
-use crate::exchange::StreamerKleisli;
-use futures::Future;
+
+use futures::{Future, Stream};
 
 impl ExchangeApi for BittrexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -174,9 +174,5 @@ impl ExchangeApi for BittrexApi {
             }
         }
         Ok(balances)
-    }
-
-    fn streaming(&mut self) -> StreamerKleisli {
-        unimplemented!()
     }
 }
