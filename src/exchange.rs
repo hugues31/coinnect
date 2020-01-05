@@ -8,7 +8,7 @@ use crate::error::*;
 use crate::types::*;
 use futures::{Future, Stream};
 
-#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash, Deserialize, Serialize)]
 pub enum Exchange {
     Bitstamp,
     Kraken,
