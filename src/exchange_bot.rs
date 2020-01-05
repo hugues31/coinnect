@@ -1,14 +1,10 @@
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 use actix::{Context, io::SinkWrite, Actor, Handler, StreamHandler, AsyncContext, ActorContext, Addr, SystemService, Recipient};
-use awc::{
-    error::WsProtocolError,
-    ws::{Codec, Frame, Message},
-    Client, BoxedSocket,
-};
+use awc::{error::WsProtocolError, ws::{Codec, Frame, Message}, Client, BoxedSocket, ws};
 use actix_codec::{AsyncRead, AsyncWrite, Framed};
 use actix_rt::{System, Arbiter};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use bytes::Bytes;
 use futures::stream::{SplitSink, StreamExt};
 use bytes::Buf;
@@ -21,6 +17,7 @@ use std::cell::RefCell;
 pub struct ExchangeBot {
     inner: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
     handler: Box<ExchangeBotHandler>,
+    hb: Instant
 }
 
 pub trait ExchangeBotHandler {
@@ -60,11 +57,11 @@ impl ExchangeBot
         let (sink, stream) = c.split();
         actix::Supervisor::start(|ctx| {
             ExchangeBot::add_stream(stream, ctx);
-            ExchangeBot { inner: SinkWrite::new(sink, ctx), handler }
+            ExchangeBot { inner: SinkWrite::new(sink, ctx), handler, hb: Instant::now() }
         })
     }
     fn hb(&self, ctx: &mut Context<Self>) {
-        ctx.run_later(Duration::new(1, 0), |act, ctx| {
+        ctx.run_later(Duration::new(30, 0), |act, ctx| {
             act.inner.write(Message::Ping(Bytes::from_static(b""))).unwrap();
             act.hb(ctx);
             // client should also check for a timeout here, similar to the
@@ -86,10 +83,18 @@ impl Handler<ClientCommand> for ExchangeBot
 /// Handle server websocket messages
 impl StreamHandler<Result<Frame, WsProtocolError>> for ExchangeBot
 {
-    fn handle(&mut self, msg: Result<Frame, WsProtocolError>, _: &mut Context<Self>) {
-        if let Ok(Frame::Text(txt)) = msg {
-            println!("{:?}", txt);
-            self.handler.handle_in(&mut self.inner, txt);
+    fn handle(&mut self, msg: Result<Frame, WsProtocolError>, ctx: &mut Context<Self>) {
+        match msg {
+            Ok(Frame::Ping(msg)) => {
+                self.hb = Instant::now();
+                self.inner.write(Message::Pong(Bytes::copy_from_slice(&msg)));
+            }
+            Ok(Frame::Text(txt)) => {
+                self.handler.handle_in(&mut self.inner, txt);
+            }
+            _ => {
+                ();
+            }
         }
     }
 
