@@ -65,7 +65,7 @@ pub struct OrderInfo {
     pub identifier: Vec<String>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Deserialize)]
 pub enum OrderType {
     BuyLimit,
     SellLimit,
@@ -464,7 +464,7 @@ pub enum Currency {
 ///
 /// Note 2 : 1ST and 2GIVE have been renammed "_1ST" and "_2GIVE" since variables name cannot start
 /// with a number.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize)]
 #[allow(non_camel_case_types)]
 pub enum Pair {
     _1ST_BTC,
