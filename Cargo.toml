@@ -60,3 +60,4 @@ bytes = "0.5.3"
 tokio = { version = "0.2.6", features = ["full"] }
 pin-project = "0.4.6"
 actix-web-actors = "1.0"
+async-trait = "0.1.22"

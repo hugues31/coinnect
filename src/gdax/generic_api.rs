@@ -2,21 +2,22 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Gdax offers.
 
-use crate::exchange::ExchangeApi;
+use crate::exchange::{ExchangeApi, FResult};
 use crate::gdax::api::GdaxApi;
 use crate::gdax::utils;
 
 use crate::error::*;
 use crate::types::*;
 use crate::helpers;
-
+use async_trait::async_trait;
 
 use futures::{Future, Stream};
 
+#[async_trait]
 impl ExchangeApi for GdaxApi {
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
+    async fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
 
-        let result = self.return_ticker(pair)?;
+        let result = self.return_ticker(pair).await?;
 
         let price = helpers::from_json_bigdecimal(&result["price"], "price")?;
         let ask = helpers::from_json_bigdecimal(&result["ask"], "ask")?;
@@ -33,9 +34,9 @@ impl ExchangeApi for GdaxApi {
            })
     }
 
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
+    async fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
 
-        let raw_response = self.return_order_book(pair)?;
+        let raw_response = self.return_order_book(pair).await?;
 
         let result = utils::parse_result(&raw_response)?;
 
@@ -73,7 +74,7 @@ impl ExchangeApi for GdaxApi {
         })
     }
 
-    fn add_order(&mut self,
+    async fn add_order(&mut self,
                  order_type: OrderType,
                  pair: Pair,
                  quantity: Volume,
@@ -91,18 +92,18 @@ impl ExchangeApi for GdaxApi {
                 }
 
                 // Unwrap safe here with the check above.
-                self.buy_limit(pair, quantity, price.unwrap(), None, None)
+                self.buy_limit(pair, quantity, price.unwrap(), None, None).await
             }
-            OrderType::BuyMarket => self.buy_market(pair, quantity),
+            OrderType::BuyMarket => self.buy_market(pair, quantity).await,
             OrderType::SellLimit => {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
                 }
 
                 // Unwrap safe here with the check above.
-                self.sell_limit(pair, quantity, price.unwrap(), None, None)
+                self.sell_limit(pair, quantity, price.unwrap(), None, None).await
             }
-            OrderType::SellMarket => self.sell_market(pair, quantity),
+            OrderType::SellMarket => self.sell_market(pair, quantity).await,
         };
 
         Ok(OrderInfo {
@@ -117,8 +118,8 @@ impl ExchangeApi for GdaxApi {
     }
 
     /// Return the balances for each currency on the account
-    fn balances(&mut self) -> Result<Balances> {
-        let raw_response = self.return_balances()?;
+    async fn balances(&mut self) -> Result<Balances> {
+        let raw_response = self.return_balances().await?;
         let result = utils::parse_result(&raw_response)?;
 
         let mut balances = Balances::new();

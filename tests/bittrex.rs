@@ -28,7 +28,7 @@ mod bittrex_tests {
     /// IMPORTANT: Real keys are needed in order to retrieve the balances
     #[test]
     #[cfg_attr(not(feature = "bittrex_private_tests"), ignore)]
-    fn balances_should_return_a_result() {
+    async fn balances_should_return_a_result() {
         use std::path::PathBuf;
         let path = PathBuf::from("./keys_real.json");
         let creds = BittrexCreds::new_from_file("account_bittrex", path).unwrap();

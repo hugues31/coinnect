@@ -2,7 +2,7 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Poloniex offers.
 
-use crate::exchange::ExchangeApi;
+use crate::exchange::{ExchangeApi, FResult};
 use crate::poloniex::api::PoloniexApi;
 
 use bigdecimal::BigDecimal;
@@ -12,17 +12,18 @@ use crate::error::*;
 use crate::types::*;
 use crate::poloniex::utils;
 use crate::helpers;
-
+use async_trait::async_trait;
 
 use futures::{Future, Stream};
 
+#[async_trait]
 impl ExchangeApi for PoloniexApi {
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
+    async fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
-        let raw_response = self.return_ticker()?;
+        let raw_response = self.return_ticker().await?;
 
         let result = utils::parse_result(&raw_response)?;
 
@@ -41,12 +42,12 @@ impl ExchangeApi for PoloniexApi {
         })
     }
 
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
+    async fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
-        let raw_response = self.return_order_book(pair_name, "1000")?; // 1000 entries max
+        let raw_response = self.return_order_book(pair_name, "1000").await?; // 1000 entries max
 
         let result = utils::parse_result(&raw_response)?;
 
@@ -84,7 +85,7 @@ impl ExchangeApi for PoloniexApi {
         })
     }
 
-    fn add_order(&mut self, order_type: OrderType, pair: Pair, quantity: Volume, price: Option<Price>) -> Result<OrderInfo> {
+    async fn add_order(&mut self, order_type: OrderType, pair: Pair, quantity: Volume, price: Option<Price>) -> Result<OrderInfo> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -103,14 +104,14 @@ impl ExchangeApi for PoloniexApi {
                     &price.unwrap().to_string(),
                     &quantity.to_string(),
                     None,
-                )
+                ).await
             }
             OrderType::BuyMarket => self.buy(
                 pair_name,
                 "9999999999999999999",
                 &quantity.to_string(),
                 None,
-            ),
+            ).await,
             OrderType::SellLimit => {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
@@ -121,9 +122,9 @@ impl ExchangeApi for PoloniexApi {
                     &price.unwrap().to_string(),
                     &quantity.to_string(),
                     None,
-                )
+                ).await
             }
-            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string(), None),
+            OrderType::SellMarket => self.sell(pair_name, "0.0", &quantity.to_string(), None).await,
         }?;
 
         let result = utils::parse_result(&raw_response)?;
@@ -139,8 +140,8 @@ impl ExchangeApi for PoloniexApi {
         })
     }
 
-    fn balances(&mut self) -> Result<Balances> {
-        let raw_response = self.return_balances()?;
+    async fn balances(&mut self) -> Result<Balances> {
+        let raw_response = self.return_balances().await?;
         let result = utils::parse_result(&raw_response)?;
 
         let mut balances = Balances::new();

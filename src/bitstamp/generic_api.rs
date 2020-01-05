@@ -2,7 +2,7 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Bitstamp offers.
 
-use crate::exchange::ExchangeApi;
+use crate::exchange::{ExchangeApi, FResult};
 use crate::bitstamp::api::BitstampApi;
 use crate::bitstamp::utils;
 
@@ -19,30 +19,29 @@ use awc::error::WsClientError;
 use actix_codec::Framed;
 use awc::BoxedSocket;
 use awc::ws::{Codec, Frame};
+use async_trait::async_trait;
 
+#[async_trait]
 impl ExchangeApi for BitstampApi {
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
-
-        let result = self.return_ticker(pair)?;
-
+    async fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
+        let result = self.return_ticker(pair).await?;
         let price = helpers::from_json_bigdecimal(&result["last"], "last")?;
         let ask = helpers::from_json_bigdecimal(&result["ask"], "ask")?;
         let bid = helpers::from_json_bigdecimal(&result["bid"], "bid")?;
         let vol = helpers::from_json_bigdecimal(&result["volume"], "volume")?;
-
         Ok(Ticker {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               pair: pair,
-               last_trade_price: price,
-               lowest_ask: ask,
-               highest_bid: bid,
-               volume: Some(vol),
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair: pair,
+            last_trade_price: price,
+            lowest_ask: ask,
+            highest_bid: bid,
+            volume: Some(vol),
+        })
     }
 
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
+    async fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
 
-        let raw_response = self.return_order_book(pair)?;
+        let raw_response = self.return_order_book(pair).await?;
 
         let result = utils::parse_result(&raw_response)?;
 
@@ -80,7 +79,7 @@ impl ExchangeApi for BitstampApi {
         })
     }
 
-    fn add_order(&mut self,
+    async fn add_order(&mut self,
                  order_type: OrderType,
                  pair: Pair,
                  quantity: Volume,
@@ -98,18 +97,18 @@ impl ExchangeApi for BitstampApi {
                 }
 
                 // Unwrap safe here with the check above.
-                self.buy_limit(pair, quantity, price.unwrap(), None, None)
+                self.buy_limit(pair, quantity, price.unwrap(), None, None).await
             }
-            OrderType::BuyMarket => self.buy_market(pair, quantity),
+            OrderType::BuyMarket => self.buy_market(pair, quantity).await,
             OrderType::SellLimit => {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
                 }
 
                 // Unwrap safe here with the check above.
-                self.sell_limit(pair, quantity, price.unwrap(), None, None)
+                self.sell_limit(pair, quantity, price.unwrap(), None, None).await
             }
-            OrderType::SellMarket => self.sell_market(pair, quantity),
+            OrderType::SellMarket => self.sell_market(pair, quantity).await,
         };
 
         Ok(OrderInfo {
@@ -124,8 +123,8 @@ impl ExchangeApi for BitstampApi {
     }
 
     /// Return the balances for each currency on the account
-    fn balances(&mut self) -> Result<Balances> {
-        let raw_response = self.return_balances()?;
+    async fn balances(&mut self) -> Result<Balances> {
+        let raw_response = self.return_balances().await?;
         let result = utils::parse_result(&raw_response)?;
 
         let mut balances = Balances::new();

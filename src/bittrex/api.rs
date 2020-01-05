@@ -73,11 +73,11 @@ impl BittrexApi {
     /// This function sets or removes the limitation.
     /// Burst false implies no block.
     /// Burst true implies there is a control over the number of calls allowed to the exchange
-    pub fn set_burst(&mut self, burst: bool) {
+    pub async fn set_burst(&mut self, burst: bool) {
         self.burst = burst
     }
 
-    pub fn block_or_continue(&self) {
+    pub async fn block_or_continue(&self) {
         if ! self.burst {
             let threshold: u64 = 500; // 1 request/500ms
             let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
@@ -88,7 +88,7 @@ impl BittrexApi {
         }
     }
 
-    fn public_query(&mut self,
+    async fn public_query(&mut self,
                     method: &str,
                     params: &mut HashMap<&str, &str>)
                     -> Result<Map<String, Value>> {
@@ -99,13 +99,13 @@ impl BittrexApi {
         let url: Uri = string.as_str().parse().map_err(|_e| ErrorKind::BadParse)?;
 
         self.block_or_continue();
-        let buf = futures::executor::block_on(self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = self.http_client.get(url).and_then(|resp| hyper::body::aggregate(resp.into_body())).await?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
         json::deserialize_json_r(reader)
     }
 
-    fn private_query(&mut self,
+    async fn private_query(&mut self,
                      method: &str,
                      mut params: &mut HashMap<&str, &str>)
                      -> Result<Map<String, Value>> {
@@ -137,7 +137,7 @@ impl BittrexApi {
             .body(Body::empty())
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
         let req2 = req.unwrap();
-        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())).await?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
         json::deserialize_json_r(reader)
@@ -171,9 +171,9 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_markets(&mut self) -> Result<Map<String, Value>> {
+    pub async fn get_markets(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
-        self.public_query("/public/getmarkets", &mut params)
+        self.public_query("/public/getmarkets", &mut params).await
     }
 
     /// Used to get all supported currencies at Bittrex along with other meta data.
@@ -202,9 +202,9 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_currencies(&mut self) -> Result<Map<String, Value>> {
+    pub async fn get_currencies(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
-        self.public_query("/public/getcurrencies", &mut params)
+        self.public_query("/public/getcurrencies", &mut params).await
     }
 
     /// Used to get the current tick values for a market.
@@ -221,10 +221,10 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_ticker(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub async fn get_ticker(&mut self, market: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
-        self.public_query("/public/getticker", &mut params)
+        self.public_query("/public/getticker", &mut params).await
     }
 
     /// Used to get the last 24 hour summary of all active exchanges
@@ -267,9 +267,9 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_market_summaries(&mut self) -> Result<Map<String, Value>> {
+    pub async fn get_market_summaries(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
-        self.public_query("/public/getmarketsummaries", &mut params)
+        self.public_query("/public/getmarketsummaries", &mut params).await
     }
 
     /// Used to get the last 24 hour summary of all active exchanges
@@ -298,10 +298,10 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_market_summary(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub async fn get_market_summary(&mut self, market: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
-        self.public_query("/public/getmarketsummary", &mut params)
+        self.public_query("/public/getmarketsummary", &mut params).await
     }
 
     /// Used to get retrieve the orderbook for a given market
@@ -335,11 +335,11 @@ impl BittrexApi {
     ///     }
     /// }
     /// ```
-    pub fn get_order_book(&mut self, market: &str, order_type: &str) -> Result<Map<String, Value>> {
+    pub async fn get_order_book(&mut self, market: &str, order_type: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("type", order_type);
-        self.public_query("/public/getorderbook", &mut params)
+        self.public_query("/public/getorderbook", &mut params).await
     }
 
     /// Used to retrieve the latest trades that have occured for a specific market.
@@ -385,10 +385,10 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_market_history(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub async fn get_market_history(&mut self, market: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
-        self.public_query("/public/getmarkethistory", &mut params)
+        self.public_query("/public/getmarkethistory", &mut params).await
     }
 
     /// Used to place a buy order in a specific market. Use buylimit to place limit orders.
@@ -406,12 +406,12 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn buy_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub async fn buy_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("quantity", quantity);
         params.insert("rate", rate);
-        self.private_query("/market/buylimit", &mut params)
+        self.private_query("/market/buylimit", &mut params).await
     }
 
     /// Used to place a sell order in a specific market. Use selllimit to place limit orders.
@@ -429,12 +429,12 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn sell_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
+    pub async fn sell_limit(&mut self, market: &str, quantity: &str, rate: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
         params.insert("quantity", quantity);
         params.insert("rate", rate);
-        self.private_query("/market/selllimit", &mut params)
+        self.private_query("/market/selllimit", &mut params).await
     }
 
     /// Used to cancel a buy or sell order.
@@ -447,10 +447,10 @@ impl BittrexApi {
     /// "result" : null
     /// }
     /// ```
-    pub fn cancel(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+    pub async fn cancel(&mut self, uuid: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("uuid", uuid);
-        self.private_query("/market/cancel", &mut params)
+        self.private_query("/market/cancel", &mut params).await
     }
 
     /// Get all orders that you currently have opened. A specific market can be requested
@@ -500,10 +500,10 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_open_orders(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub async fn get_open_orders(&mut self, market: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
-        self.private_query("/market/getopenorders", &mut params)
+        self.private_query("/market/getopenorders", &mut params).await
     }
 
     /// Used to retrieve all balances from your account
@@ -533,9 +533,9 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_balances(&mut self) -> Result<Map<String, Value>> {
+    pub async fn get_balances(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
-        self.private_query("/account/getbalances", &mut params)
+        self.private_query("/account/getbalances", &mut params).await
     }
 
     /// Used to retrieve the balance from your account for a specific currency.
@@ -556,10 +556,10 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_balance(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub async fn get_balance(&mut self, currency: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
-        self.private_query("/account/getbalance", &mut params)
+        self.private_query("/account/getbalance", &mut params).await
     }
 
     /// Used to retrieve or generate an address for a specific currency.
@@ -576,10 +576,10 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_deposit_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub async fn get_deposit_address(&mut self, currency: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
-        self.private_query("/account/getdepositaddress", &mut params)
+        self.private_query("/account/getdepositaddress", &mut params).await
     }
 
     /// Used to withdraw funds from your account. note: please account for txfee.
@@ -597,13 +597,13 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn withdraw(&mut self, currency: &str, quantity: &str, address: &str, paymentid: &str) -> Result<Map<String, Value>> {
+    pub async fn withdraw(&mut self, currency: &str, quantity: &str, address: &str, paymentid: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
         params.insert("quantity", quantity);
         params.insert("address", address);
         params.insert("paymentid", paymentid);
-        self.private_query("/account/withdraw", &mut params)
+        self.private_query("/account/withdraw", &mut params).await
     }
 
     /// Used to retrieve a single order by uuid.
@@ -640,10 +640,10 @@ impl BittrexApi {
     /// 	}
     /// }
     /// ```
-    pub fn get_order(&mut self, uuid: &str) -> Result<Map<String, Value>> {
+    pub async fn get_order(&mut self, uuid: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("uuid", uuid);
-        self.private_query("/account/getorder", &mut params)
+        self.private_query("/account/getorder", &mut params).await
     }
 
     /// Used to retrieve your order history.
@@ -688,10 +688,10 @@ impl BittrexApi {
     /// 	]
     /// }
     /// ```
-    pub fn get_order_history(&mut self, market: &str) -> Result<Map<String, Value>> {
+    pub async fn get_order_history(&mut self, market: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("market", market);
-        self.private_query("/account/getorderhistory", &mut params)
+        self.private_query("/account/getorderhistory", &mut params).await
     }
 
     /// Used to retrieve your withdrawal history.
@@ -730,10 +730,10 @@ impl BittrexApi {
 	///  ]
     /// }
     /// ```
-    pub fn get_withdrawal_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub async fn get_withdrawal_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
-        self.private_query("/account/getwithdrawalhistory", &mut params)
+        self.private_query("/account/getwithdrawalhistory", &mut params).await
     }
 
     /// Used to retrieve your deposit history.
@@ -773,9 +773,9 @@ impl BittrexApi {
     ///     ]
     /// }
     /// ```
-    pub fn get_deposit_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
+    pub async fn get_deposit_history(&mut self, currency: &str) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("currency", currency);
-        self.private_query("/account/getdeposithistory", &mut params)
+        self.private_query("/account/getdeposithistory", &mut params).await
     }
 }

@@ -83,7 +83,7 @@ impl GdaxApi {
         }
     }
 
-    fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
+    async fn public_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
         let method: &str = params
             .get("method")
@@ -101,8 +101,8 @@ impl GdaxApi {
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
 
         let req2 = req.unwrap();
-        let buf = futures::executor::block_on(self.http_client.request(req2)
-            .and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let resp = self.http_client.request(req2).await?;
+        let buf = hyper::body::aggregate(resp.into_body()).await?;
 
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
@@ -120,7 +120,7 @@ impl GdaxApi {
     /// let  result = api.private_query("balance", "btcusd");
     /// assert_eq!(true, true);
     /// ```
-    fn private_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
+    async fn private_query(&mut self, params: &HashMap<&str, &str>) -> Result<Map<String, Value>> {
 
         let method: &str = params
             .get("method")
@@ -153,7 +153,7 @@ impl GdaxApi {
             .body(Body::from(post_data))
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
         let req2 = req.unwrap();
-        let buf = futures::executor::block_on(self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())))?;
+        let buf = self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())).await?;
         self.last_request = helpers::get_unix_timestamp_ms();
         let reader = buf.reader();
         json::deserialize_json_r(reader)
@@ -171,7 +171,7 @@ impl GdaxApi {
     /// "percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"},
     /// ... }
     /// ```
-    pub fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub async fn return_ticker(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -180,7 +180,7 @@ impl GdaxApi {
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("pair", pair_name);
         params.insert("method", "ticker");
-        self.public_query(&params)
+        self.public_query(&params).await
     }
 
     /// Sample output :
@@ -189,7 +189,7 @@ impl GdaxApi {
     /// {"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],
     /// [0.00006900,408], ... ], "timestamp": "1234567890"}
     /// ```
-    pub fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub async fn return_order_book(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -199,7 +199,7 @@ impl GdaxApi {
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("method", "order_book");
         params.insert("pair", pair_name);
-        self.public_query(&params)
+        self.public_query(&params).await
     }
 
     /// Sample output :
@@ -210,7 +210,7 @@ impl GdaxApi {
     /// {"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655",
     /// "total":"0.04978"}, ... ]
     /// ```
-    pub fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>> {
+    pub async fn return_trade_history(&mut self, pair: Pair) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -219,7 +219,7 @@ impl GdaxApi {
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("pair", pair_name);
         params.insert("method", "transactions");
-        self.public_query(&params)
+        self.public_query(&params).await
     }
 
 
@@ -230,11 +230,11 @@ impl GdaxApi {
     /// ```json
     /// {"BTC":"0.59098578","LTC":"3.31117268", ... }
     /// ```
-    pub fn return_balances(&mut self) -> Result<Map<String, Value>> {
+    pub async fn return_balances(&mut self) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("method", "balance");
         params.insert("pair", "");
-        self.private_query(&params)
+        self.private_query(&params).await
     }
 
     /// Add a buy limit order to the exchange
@@ -242,7 +242,7 @@ impl GdaxApi {
     /// with "limit_price" as its price.
     /// daily_order (Optional) : Opens buy limit order which will be canceled
     /// at 0:00 UTC unless it already has been executed. Possible value: True
-    pub fn buy_limit(&mut self,
+    pub async fn buy_limit(&mut self,
                      pair: Pair,
                      amount: Volume,
                      price: Price,
@@ -273,7 +273,7 @@ impl GdaxApi {
             params.insert("daily_order", daily_order_str);
         }
 
-        self.private_query(&params)
+        self.private_query(&params).await
     }
 
     /// Add a sell limit order to the exchange
@@ -281,7 +281,7 @@ impl GdaxApi {
     /// with "limit_price" as its price.
     /// daily_order (Optional) : Opens sell limit order which will be canceled
     /// at 0:00 UTC unless it already has been executed. Possible value: True
-    pub fn sell_limit(&mut self,
+    pub async fn sell_limit(&mut self,
                       pair: Pair,
                       amount: Volume,
                       price: Price,
@@ -312,14 +312,14 @@ impl GdaxApi {
             params.insert("daily_order", daily_order_str);
         }
 
-        self.private_query(&params)
+        self.private_query(&params).await
     }
 
     /// Add a market buy order to the exchange
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn buy_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
+    pub async fn buy_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -333,14 +333,14 @@ impl GdaxApi {
 
         params.insert("amount", &amount_string);
 
-        self.private_query(&params)
+        self.private_query(&params).await
     }
 
     /// Add a market sell order to the exchange
     /// By placing a market order you acknowledge that the execution of your order depends
     /// on the market conditions and that these conditions may be subject to sudden changes
     /// that cannot be foreseen.
-    pub fn sell_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
+    pub async fn sell_market(&mut self, pair: Pair, amount: Volume) -> Result<Map<String, Value>> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -354,7 +354,7 @@ impl GdaxApi {
 
         params.insert("amount", &amount_string);
 
-        self.private_query(&params)
+        self.private_query(&params).await
     }
 }
 

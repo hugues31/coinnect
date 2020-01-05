@@ -5,25 +5,26 @@
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
-use crate::exchange::ExchangeApi;
+use crate::exchange::{ExchangeApi, FResult};
 use crate::bittrex::api::BittrexApi;
 
 use crate::error::*;
 use crate::types::*;
 use crate::bittrex::utils;
 use crate::helpers;
-
+use async_trait::async_trait;
 
 use futures::{Future, Stream};
 
+#[async_trait]
 impl ExchangeApi for BittrexApi {
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
+    async fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let raw_response = self.get_market_summary(pair_name)?;
+        let raw_response = self.get_market_summary(pair_name).await?;
 
         let result = utils::parse_result(&raw_response)?;
         let result_array = result.as_array();
@@ -52,13 +53,13 @@ impl ExchangeApi for BittrexApi {
 
     }
 
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
+    async fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let raw_response = self.get_order_book(pair_name, "both")?;
+        let raw_response = self.get_order_book(pair_name, "both").await?;
 
         let result = utils::parse_result(&raw_response)?;
 
@@ -105,7 +106,7 @@ impl ExchangeApi for BittrexApi {
         })
     }
 
-    fn add_order(&mut self,
+    async fn add_order(&mut self,
                  order_type: OrderType,
                  pair: Pair,
                  quantity: Volume,
@@ -122,21 +123,21 @@ impl ExchangeApi for BittrexApi {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
                 }
-                self.buy_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string())
+                self.buy_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string()).await
             }
             OrderType::BuyMarket => {
                 let min_price = "0.000000001";
-                self.buy_limit(pair_name, &quantity.to_string(), min_price)
+                self.buy_limit(pair_name, &quantity.to_string(), min_price).await
             }
             OrderType::SellLimit => {
                 if price.is_none() {
                     return Err(ErrorKind::MissingPrice.into());
                 }
-                self.sell_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string())
+                self.sell_limit(pair_name, &quantity.to_string(), &price.unwrap().to_string()).await
             }
             OrderType::SellMarket => {
                 let max_price = "999999999.99";
-                self.buy_limit(pair_name, &quantity.to_string(), max_price)
+                self.buy_limit(pair_name, &quantity.to_string(), max_price).await
             }
         }?;
 
@@ -150,8 +151,8 @@ impl ExchangeApi for BittrexApi {
         })
     }
 
-    fn balances(&mut self) -> Result<Balances> {
-        let raw_response = self.get_balances()?;
+    async fn balances(&mut self) -> Result<Balances> {
+        let raw_response = self.get_balances().await?;
 
         let result = utils::parse_result(&raw_response)?;
 

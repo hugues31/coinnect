@@ -7,6 +7,7 @@ use std::str::FromStr;
 use crate::error::*;
 use crate::types::*;
 use futures::{Future, Stream};
+use async_trait::async_trait;
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash, Deserialize, Serialize)]
 pub enum Exchange {
@@ -44,12 +45,15 @@ impl FromStr for Exchange {
     }
 }
 
+pub type FResult<T> = Future<Output = Result<T>>;
+
+#[async_trait]
 pub trait ExchangeApi: Debug {
     /// Return a Ticker for the Pair specified.
-    fn ticker(&mut self, pair: Pair) -> Result<Ticker>;
+    async fn ticker(&mut self, pair: Pair) -> Result<Ticker>;
 
     /// Return an Orderbook for the specified Pair.
-    fn orderbook(&mut self, pair: Pair) -> Result<Orderbook>;
+    async fn orderbook(&mut self, pair: Pair) -> Result<Orderbook>;
 
     /// Place an order directly to the exchange.
     /// Quantity is in quote currency. So if you want to buy 1 Bitcoin for X€ (pair BTC_EUR),
@@ -59,7 +63,7 @@ pub trait ExchangeApi: Debug {
     ///
     /// A good practice is to store the return type (OrderInfo) somewhere since it can later be used
     /// to modify or cancel the order.
-    fn add_order(&mut self,
+    async fn add_order(&mut self,
                  order_type: OrderType,
                  pair: Pair,
                  quantity: Volume,
@@ -68,5 +72,5 @@ pub trait ExchangeApi: Debug {
 
     /// Retrieve the current amounts of all the currencies that the account holds
     /// The amounts returned are available (not used to open an order)
-    fn balances(&mut self) -> Result<Balances>;
+    async fn balances(&mut self) -> Result<Balances>;
 }
