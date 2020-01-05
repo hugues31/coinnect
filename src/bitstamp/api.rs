@@ -144,9 +144,7 @@ impl BitstampApi {
             .body(post_data.into())
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
         let req2 = req.unwrap();
-        let buf = futures::executor::block_on(async {
-            self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())).await
-        })?;
+        let buf = self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())).await?;
         let reader = buf.reader();
         utils::deserialize_json_r(reader)
     }
