@@ -32,6 +32,7 @@ use futures::select;
 use bytes::buf::BufExt as _;
 use futures::executor::ThreadPool;
 use tokio::task;
+use awc::http::StatusCode;
 
 #[derive(Debug)]
 pub struct BitstampApi {
@@ -144,9 +145,15 @@ impl BitstampApi {
             .body(post_data.into())
             .map_err(|e| ErrorKind::ServiceUnavailable(e.to_string()).into());
         let req2 = req.unwrap();
-        let buf = self.http_client.request(req2).and_then(|resp| hyper::body::aggregate(resp.into_body())).await?;
+        let resp = self.http_client.request(req2).await?;
+        let code = resp.status().clone();
+        if code.is_client_error() && code == StatusCode::FORBIDDEN {
+            return Err(ErrorKind::BadCredentials.into());
+        }
+        let buf = hyper::body::aggregate(resp.into_body()).await?;
         let reader = buf.reader();
-        utils::deserialize_json_r(reader)
+        let result = utils::deserialize_json_r(reader);
+        result
     }
 
     /// Sample output :
@@ -283,8 +290,12 @@ impl BitstampApi {
             None => return Err(ErrorKind::PairUnsupported.into()),
         };
 
-        let amount_string = amount.to_string();
-        let price_string = price.to_string();
+        let amount_string = format!("{:.8}", amount);
+        let price_string = if pair == Pair::BTC_USD {
+            format!("{:.2}", price)
+        } else {
+            format!("{}", price)
+        };
         let price_limit_string = match price_limit {
             Some(limit) => limit.to_string(),
             None => "".to_string(),

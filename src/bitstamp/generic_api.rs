@@ -109,11 +109,10 @@ impl ExchangeApi for BitstampApi {
                 self.sell_limit(pair, quantity, price.unwrap(), None, None).await
             }
             OrderType::SellMarket => self.sell_market(pair, quantity).await,
-        };
-
+        }?;
         Ok(OrderInfo {
                timestamp: helpers::get_unix_timestamp_ms(),
-               identifier: vec![result?["id"]
+               identifier: vec![result["id"]
                                     .as_str()
                                     .ok_or_else(|| {
                                                     ErrorKind::MissingField("id".to_string())
