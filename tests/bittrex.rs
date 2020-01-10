@@ -2,7 +2,7 @@
 mod bittrex_tests {
     extern crate coinnect;
 
-    use self::coinnect::bittrex::{BittrexApi, BittrexCreds};
+    use self::coinnect_rt::bittrex::{BittrexApi, BittrexCreds};
 
     #[test]
     fn get_markets_should_return_a_result() {

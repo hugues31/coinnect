@@ -2,8 +2,8 @@
 mod poloniex_tests {
     extern crate coinnect;
 
-    use self::coinnect::poloniex::{PoloniexApi, PoloniexCreds};
-    use self::coinnect::bitstamp::BitstampCreds;
+    use self::coinnect_rt::poloniex::{PoloniexApi, PoloniexCreds};
+    use self::coinnect_rt::bitstamp::BitstampCreds;
 
     #[test]
     fn fail_with_invalid_creds() {

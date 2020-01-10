@@ -7,6 +7,7 @@ use serde_json;
 use hyper;
 use data_encoding;
 use crate::exchange::Exchange;
+use signalr_rs;
 
 error_chain!{
     types {
@@ -23,6 +24,11 @@ error_chain!{
     }
 
     errors {
+        Hub(e: signalr_rs::hub::client::HubClientError) {
+            description("Hub client error")
+                display("{}", e)
+        }
+
         BadParse {
             description("ParsingError")
                 display("The response could not be parsed.")

@@ -8,12 +8,12 @@ extern crate coinnect;
 extern crate actix;
 #[macro_use] extern crate actix_derive;
 
-use crate::coinnect::coinnect::Coinnect;
+use crate::coinnect::coinnect_rt::Coinnect;
 use crate::coinnect::bitstamp::BitstampCreds;
 use crate::coinnect::exchange::Exchange::*;
 use crate::coinnect::types::Pair::*;
 use std::path::PathBuf;
-use coinnect::helpers;
+use coinnect_rt::helpers;
 use serde::{Serialize, Deserialize};
 use actix::{Context, io::SinkWrite, Actor, Handler, StreamHandler, AsyncContext, ActorContext};
 use awc::{
@@ -35,7 +35,7 @@ fn main() {
     Arbiter::spawn(async {
         let path = PathBuf::from("keys_real.json");
         let my_creds = BitstampCreds::new_from_file("account_bitstamp", path).unwrap();
-        Coinnect::new_stream(Bitstamp, my_creds, None).await;
+        coinnect_rt::new_stream(Bitstamp, my_creds, None).await;
     });
     sys.run().unwrap();
 }

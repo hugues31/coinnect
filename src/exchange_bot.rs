@@ -11,16 +11,17 @@ use bytes::Buf;
 use serde_json::{Value, Map};
 use std::collections::HashMap;
 use crate::helpers;
+use crate::error;
 use std::rc::Rc;
 use std::cell::RefCell;
 
-pub struct ExchangeBot {
+pub struct DefaultWsActor {
     inner: SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>,
-    handler: Box<ExchangeBotHandler>,
+    handler: Box<WsHandler>,
     hb: Instant
 }
 
-pub trait ExchangeBotHandler {
+pub trait WsHandler {
     /// Handle incoming messages
     fn handle_in(&mut self, w: &mut SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>, msg: Bytes);
     fn handle_started(&mut self, w: &mut SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>);
@@ -30,7 +31,7 @@ pub trait ExchangeBotHandler {
 #[rtype(result = "()")]
 struct ClientCommand(String);
 
-impl Actor for ExchangeBot
+impl Actor for DefaultWsActor
 {
     type Context = Context<Self>;
 
@@ -44,20 +45,20 @@ impl Actor for ExchangeBot
     }
 }
 
-impl actix::Supervised for ExchangeBot {
-    fn restarting(&mut self, ctx: &mut Context<ExchangeBot>) {
+impl actix::Supervised for DefaultWsActor {
+    fn restarting(&mut self, ctx: &mut Context<DefaultWsActor>) {
         println!("restarting exchange bot...");
     }
 }
 
-impl ExchangeBot
+impl DefaultWsActor
 {
-    pub async fn new(wss_url: &str, handler: Box<ExchangeBotHandler>) -> Addr<ExchangeBot> {
+    pub async fn new(wss_url: &str, handler: Box<WsHandler>) -> Addr<DefaultWsActor> {
         let c = helpers::new_ws_client(wss_url).await;
         let (sink, stream) = c.split();
         actix::Supervisor::start(|ctx| {
-            ExchangeBot::add_stream(stream, ctx);
-            ExchangeBot { inner: SinkWrite::new(sink, ctx), handler, hb: Instant::now() }
+            DefaultWsActor::add_stream(stream, ctx);
+            DefaultWsActor { inner: SinkWrite::new(sink, ctx), handler, hb: Instant::now() }
         })
     }
     fn hb(&self, ctx: &mut Context<Self>) {
@@ -71,7 +72,7 @@ impl ExchangeBot
 }
 
 /// Handle stdin commands
-impl Handler<ClientCommand> for ExchangeBot
+impl Handler<ClientCommand> for DefaultWsActor
 {
     type Result = ();
 
@@ -81,7 +82,7 @@ impl Handler<ClientCommand> for ExchangeBot
 }
 
 /// Handle server websocket messages
-impl StreamHandler<Result<Frame, WsProtocolError>> for ExchangeBot
+impl StreamHandler<Result<Frame, WsProtocolError>> for DefaultWsActor
 {
     fn handle(&mut self, msg: Result<Frame, WsProtocolError>, ctx: &mut Context<Self>) {
         match msg {
@@ -109,6 +110,10 @@ impl StreamHandler<Result<Frame, WsProtocolError>> for ExchangeBot
     }
 }
 
-impl actix::io::WriteHandler<WsProtocolError> for ExchangeBot
+impl actix::io::WriteHandler<WsProtocolError> for DefaultWsActor
 {}
 
+pub trait ExchangeBot {
+    /// Returns the address of the exchange actor
+    fn is_connected(&self) -> bool;
+}

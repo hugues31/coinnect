@@ -6,12 +6,12 @@ mod gdax_tests {
     use self::bigdecimal::BigDecimal;
     use std::str::FromStr;
 
-    use self::coinnect::gdax::utils;
-    use self::coinnect::gdax::{GdaxApi, GdaxCreds};
-    use self::coinnect::bitstamp::BitstampCreds;
+    use self::coinnect_rt::gdax::utils;
+    use self::coinnect_rt::gdax::{GdaxApi, GdaxCreds};
+    use self::coinnect_rt::bitstamp::BitstampCreds;
 
-    use self::coinnect::exchange::ExchangeApi;
-    use self::coinnect::types::Pair;
+    use self::coinnect_rt::exchange::ExchangeApi;
+    use self::coinnect_rt::types::Pair;
 
     #[test]
     fn build_url_should_return_the_a_url() {

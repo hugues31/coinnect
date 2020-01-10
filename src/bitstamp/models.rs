@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use serde_json;
 use std::collections::HashSet;
-use crate::types::{LiveEvent, Pair};
+use crate::types::{LiveEvent, Pair, Channel};
 use crate::types;
 use bigdecimal::BigDecimal;
 use super::utils;
@@ -116,30 +116,19 @@ pub struct Subscription {
     data: Data,
 }
 
-#[derive(Debug, Clone)]
-pub enum Channel {
-    LiveTrades,
-    LiveOrders,
-    LiveOrderBook,
-    LiveDetailOrderBook,
-    LiveFullOrderBook,
-}
-
-impl Channel {
-    pub fn subscription(c: Channel, currency_pair: &str) -> Subscription {
-        let channel_str = match c {
-            Channel::LiveTrades => "live_trades",
-            Channel::LiveOrders => "live_orders",
-            Channel::LiveOrderBook => "order_book",
-            Channel::LiveDetailOrderBook => "detail_order_book",
-            Channel::LiveFullOrderBook => "diff_order_book",
-        };
-        Subscription {
-            event: String::from("bts:subscribe"),
-            data: Data {
-                channel: format!("{}_{}", channel_str, currency_pair)
-            },
-        }
+pub fn subscription(c: Channel, currency_pair: &str) -> Subscription {
+    let channel_str = match c {
+        Channel::LiveTrades => "live_trades",
+        Channel::LiveOrders => "live_orders",
+        Channel::LiveOrderBook => "order_book",
+        Channel::LiveDetailOrderBook => "detail_order_book",
+        Channel::LiveFullOrderBook => "diff_order_book",
+    };
+    Subscription {
+        event: String::from("bts:subscribe"),
+        data: Data {
+            channel: format!("{}_{}", channel_str, currency_pair)
+        },
     }
 }
 

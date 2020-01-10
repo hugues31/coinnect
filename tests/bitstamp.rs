@@ -6,12 +6,12 @@ mod bitstamp_tests {
     use self::bigdecimal::BigDecimal;
     use std::str::FromStr;
 
-    use self::coinnect::bitstamp::utils;
-    use self::coinnect::bitstamp::{BitstampApi, BitstampCreds};
-    use self::coinnect::kraken::KrakenCreds;
+    use self::coinnect_rt::bitstamp::utils;
+    use self::coinnect_rt::bitstamp::{BitstampApi, BitstampCreds};
+    use self::coinnect_rt::kraken::KrakenCreds;
 
-    use self::coinnect::exchange::ExchangeApi;
-    use self::coinnect::types::Pair;
+    use self::coinnect_rt::exchange::ExchangeApi;
+    use self::coinnect_rt::types::Pair;
 
     #[test]
     fn build_url_should_return_the_a_url() {

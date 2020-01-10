@@ -3,13 +3,23 @@
 use std::collections::HashMap;
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
-
+use indexmap::IndexMap;
 
 pub type Amount = BigDecimal;
 pub type Price = BigDecimal;
 pub type Volume = BigDecimal;
 
 pub type Balances = HashMap<Currency, Amount>;
+use chrono::prelude::*;
+
+#[derive(Debug, Clone)]
+pub enum Channel {
+    LiveTrades,
+    LiveOrders,
+    LiveOrderBook,
+    LiveDetailOrderBook,
+    LiveFullOrderBook,
+}
 
 #[derive(Debug)]
 pub struct Ticker {
@@ -53,6 +63,27 @@ impl Orderbook {
             /
             BigDecimal::from_str("2.0").unwrap()
         )
+    }
+}
+
+#[derive(Debug)]
+pub struct LiveAggregatedOrderBook {
+    pub depth: usize,
+    pub pair: Pair,
+    pub asks_by_price: IndexMap<Price, (Price, Volume)>,
+    pub bids_by_price: IndexMap<Price, (Price, Volume)>
+}
+
+impl LiveAggregatedOrderBook {
+    pub fn order_book(&self, depth: i8) -> Orderbook {
+        let asks : Vec<(Price, Volume)> = self.asks_by_price.iter().map(|(k, v)| v.clone()).take(self.depth).collect();
+        let bids: Vec<(Price, Volume)> = self.bids_by_price.iter().map(|(k, v)| v.clone()).take(self.depth).collect();
+        Orderbook {
+            timestamp: Utc::now().timestamp_millis(),
+            pair: self.pair,
+            asks,
+            bids,
+        }
     }
 }
 

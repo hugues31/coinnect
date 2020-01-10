@@ -53,10 +53,13 @@ extern crate actix;
 #[macro_use] extern crate actix_derive;
 #[macro_use] extern crate pin_project;
 extern crate url;
-extern crate log;
+#[macro_use] extern crate log;
 extern crate futures;
 extern crate futures_util;
 extern crate awc;
+extern crate signalr_rs;
+extern crate base64;
+extern crate libflate;
 
 pub mod coinnect;
 pub mod exchange;

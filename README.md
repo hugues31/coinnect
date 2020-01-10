@@ -18,8 +18,7 @@ platform you target or use the generic Coinnect API, which is more user-friendly
 and safe. Ideally, use the raw API when the Coinnect API could not retrieve the
 data/perform the action you want.
 
-**NOTE:** A new version with Futures support is coming as soon as async-await
-syntax will be stabilized !
+**Note**   This fork uses the latest Rust (in 2020), async await, futures 0.3, actix 2.0, etc. And has a streaming api with websocket clients for each exchange on top of the generic_api mod !
 
 **WARNING:**  This library is highly experimental at the moment. Please do not
 invest what you can't afford to lose. This is a personal project, I cannot be
