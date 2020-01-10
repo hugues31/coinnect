@@ -64,5 +64,3 @@ async-trait = "0.1.22"
 signalr_rs = { git = "ssh://git@github.com/Igosuki/signalr-rs.git", branch = "master" }
 base64 = "0.11.0"
 libflate = "0.1"
-indexmap = "1.3.0"
-

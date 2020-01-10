@@ -109,11 +109,11 @@ pub(crate) enum TradeType {
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct OrderLog {
     #[serde(alias = "TY")]
-    Type: i32,
+    pub Type: i32,
     #[serde(alias = "R")]
-    Rate: f32,
+    pub Rate: f32,
     #[serde(alias = "Q")]
-    Quantity: f32,
+    pub Quantity: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -137,9 +137,9 @@ pub(crate) struct MarketDelta {
     #[serde(alias = "N")]
     Nonce: i32,
     #[serde(alias = "Z")]
-    Buys: Vec<OrderLog>,
+    pub Buys: Vec<OrderLog>,
     #[serde(alias = "S")]
-    Sells: Vec<OrderLog>,
+    pub Sells: Vec<OrderLog>,
     #[serde(alias = "f")]
     Fills: Vec<Fill>,
 }

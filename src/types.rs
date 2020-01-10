@@ -1,9 +1,8 @@
 //! Types definition used for handling returned data when generic API is used.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
-use indexmap::IndexMap;
 
 pub type Amount = BigDecimal;
 pub type Price = BigDecimal;
@@ -70,14 +69,14 @@ impl Orderbook {
 pub struct LiveAggregatedOrderBook {
     pub depth: usize,
     pub pair: Pair,
-    pub asks_by_price: IndexMap<Price, (Price, Volume)>,
-    pub bids_by_price: IndexMap<Price, (Price, Volume)>
+    pub asks_by_price: BTreeMap<Price, (Price, Volume)>,
+    pub bids_by_price: BTreeMap<Price, (Price, Volume)>
 }
 
 impl LiveAggregatedOrderBook {
     pub fn order_book(&self, depth: i8) -> Orderbook {
-        let asks : Vec<(Price, Volume)> = self.asks_by_price.iter().map(|(k, v)| v.clone()).take(self.depth).collect();
-        let bids: Vec<(Price, Volume)> = self.bids_by_price.iter().map(|(k, v)| v.clone()).take(self.depth).collect();
+        let asks : Vec<(Price, Volume)> = self.asks_by_price.iter().rev().map(|(k, v)| v.clone()).take(self.depth).collect();
+        let bids: Vec<(Price, Volume)> = self.bids_by_price.iter().rev().map(|(k, v)| v.clone()).take(self.depth).collect();
         Orderbook {
             timestamp: Utc::now().timestamp_millis(),
             pair: self.pair,

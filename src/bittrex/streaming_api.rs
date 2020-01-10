@@ -11,7 +11,7 @@ use actix::{Context, io::SinkWrite, Actor, Handler, StreamHandler, AsyncContext,
 use awc::{
     error::WsProtocolError,
     ws::{Codec, Frame, Message},
-    Client, BoxedSocket
+    Client, BoxedSocket,
 };
 use actix_codec::{AsyncRead, AsyncWrite, Framed};
 use actix_rt::{System, Arbiter};
@@ -21,7 +21,10 @@ use serde::de::DeserializeOwned;
 use libflate::deflate::Decoder;
 use chrono::prelude::*;
 use bigdecimal::BigDecimal;
-use indexmap::IndexMap;
+use std::hash::{Hash, Hasher};
+use std::collections::BTreeMap;
+use std::thread;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub struct BittrexStreamingApi {
@@ -31,7 +34,7 @@ pub struct BittrexStreamingApi {
     currency_pair: String,
     pub recipients: Vec<Recipient<LiveEvent>>,
     channels: Vec<Channel>,
-    agg: LiveAggregatedOrderBook
+    agg: LiveAggregatedOrderBook,
 }
 
 pub struct BittrexBot {
@@ -57,16 +60,16 @@ impl BittrexStreamingApi {
             agg: LiveAggregatedOrderBook {
                 depth: 5,
                 pair: Pair::BTC_USD,
-                asks_by_price: IndexMap::new(),
-                bids_by_price: IndexMap::new()
+                asks_by_price: BTreeMap::new(),
+                bids_by_price: BTreeMap::new(),
             },
         });
-        let client = HubClient::new(hub, "https://socket.bittrex.com/signalr/", api).await;
+        let client = HubClient::new(hub, "https://socket.bittrex.com/signalr/", 100, api).await;
         match client {
             Ok(addr) => {
 //                addr.do_send(HubQuery::new(hub.to_string(), "SubscribeToSummaryDeltas".to_string(), "".to_string(), "0".to_string()));
+                addr.do_send(HubQuery::new(hub.to_string(), "QueryExchangeState".to_string(), vec!["USDT-BTC"], "QE2".to_string()));
                 addr.do_send(HubQuery::new(hub.to_string(), "SubscribeToExchangeDeltas".to_string(), vec!["USDT-BTC"], "1".to_string()));
-//                addr.do_send(HubQuery::new(hub.to_string(), "QueryExchangeState".to_string(), vec!["USDT-BTC"], "QE2".to_string()));
                 return Ok(BittrexBot { addr });
             }
             Err(e) => {
@@ -80,10 +83,9 @@ impl BittrexStreamingApi {
     fn deflate<T>(binary: &String) -> Result<T> where T: DeserializeOwned {
         let decoded = base64::decode(binary).map_err(|e| ErrorKind::Hub(HubClientError::Base64DecodeError(e)))?;
         let mut decoder = Decoder::new(&decoded[..]);
-        let mut decoded_data : Vec<u8> = Vec::new();
+        let mut decoded_data: Vec<u8> = Vec::new();
         decoder.read_to_end(&mut decoded_data);
         let v: &[u8] = &decoded_data;
-        println!("{:?}", std::str::from_utf8(v));
         serde_json::from_slice::<T>(v).map_err(|e| ErrorKind::Hub(HubClientError::ParseError(e)).into())
     }
 
@@ -104,30 +106,46 @@ impl HubClientHandler for BittrexStreamingApi {
 
     fn error(&self, id: Option<&str>, msg: &Value) {}
 
-        fn handle(&mut self, method: &str, message: &Value) {
+    fn handle(&mut self, method: &str, message: &Value) {
         let live_event = match method {
             "uE" => {
-                BittrexStreamingApi::deflate_array::<MarketDelta>(message);
-                Err(())
-            },
+                let delta = BittrexStreamingApi::deflate_array::<MarketDelta>(message).unwrap();
+                for op in delta.Sells {
+                    let kp = (BigDecimal::from(op.Rate), BigDecimal::from(op.Quantity));
+                    if op.Quantity == 0.0 {
+                        self.agg.asks_by_price.remove(&kp.0.clone());
+                    } else {
+                        self.agg.asks_by_price.entry(kp.0.clone()).or_insert(kp);
+                    }
+                };
+                for op in delta.Buys {
+                    let kp = (BigDecimal::from(op.Rate), BigDecimal::from(op.Quantity));
+                    if op.Quantity == 0.0 {
+                        self.agg.bids_by_price.remove(&kp.0.clone());
+                    } else {
+                        self.agg.bids_by_price.entry(kp.0.clone()).or_insert(kp);
+                    }
+                };
+                let latest_order_book: Orderbook = self.agg.order_book(5);
+                Ok(LiveEvent::LiveOrderbook(latest_order_book.clone()))
+            }
             "uS" => {
                 BittrexStreamingApi::deflate_array::<SummaryDeltaResponse>(message);
                 Err(())
-            },
+            }
             s if s.starts_with("QE") => {
                 let state = BittrexStreamingApi::deflate_string::<ExchangeState>(message).unwrap();
-                state.Sells.into_iter().map(|op| {
+                for op in state.Sells {
                     let kp = (BigDecimal::from(op.R), BigDecimal::from(op.Q));
                     self.agg.asks_by_price.entry(kp.0.clone()).or_insert(kp);
-                });
-                state.Buys.into_iter().map(|op| {
+                };
+                for op in state.Buys {
                     let kp = (BigDecimal::from(op.R), BigDecimal::from(op.Q));
                     self.agg.bids_by_price.entry(kp.0.clone()).or_insert(kp);
-                });
-                println!("{:?}", self.agg);
-                let latest_order_book : Orderbook = self.agg.order_book(10);
+                };
+                let latest_order_book: Orderbook = self.agg.order_book(5);
                 Ok(LiveEvent::LiveOrderbook(latest_order_book.clone()))
-            },
+            }
             _ => {
                 debug!("Unknown message : method {:?} message {:?}", method, message);
                 Err(())
@@ -137,10 +155,9 @@ impl HubClientHandler for BittrexStreamingApi {
             let le = live_event.unwrap();
             let vec = self.recipients.clone();
             for r in &vec {
-                let le : LiveEvent = le.clone();
-                r.do_send(le);
+                let le: LiveEvent = le.clone();
+                r.do_send(le).unwrap();
             }
-
         }
     }
 }
