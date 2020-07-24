@@ -1,4 +1,5 @@
 //! Use this module to interact with the raw-original API provided by Kraken.
+//! It is recommended to use a nonce window setting of 5000 for your API key when sending requests in quick succession in order to avoid nonce errors.
 //! WARNING: Special attention should be paid to error management: parsing number, etc.
 
 #![allow(too_many_arguments)]
@@ -296,7 +297,7 @@ impl KrakenApi {
     /// ```json
     /// pair = asset pair to get OHLC data for
     /// interval = time frame interval in minutes (optional):
-    /// 	1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
+    ///     1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
     /// since = return committed OHLC data since given id (optional.  exclusive)
     /// ```
     ///
@@ -1094,6 +1095,17 @@ impl KrakenApi {
         params.insert("asset", asset);
         params.insert("method", method);
         self.private_query("WithdrawStatus", &mut params)
+    }
+
+    /// Result: returns a token to be used when authenticating with private websockets API:
+    ///
+    /// ```json
+    /// expires = time in seconds when token expires
+    /// token = the token to be used for authentication
+    /// ```
+    pub fn get_websockets_token(&mut self) -> Result<Map<String, Value>> {
+        let mut params = HashMap::new();
+        self.private_query("GetWebSocketsToken", &mut params)
     }
 
     /// Input:
