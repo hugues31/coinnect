@@ -2,3 +2,4 @@ target
 Cargo.lock
 keys_real.json
 .idea/
+.vscode/
