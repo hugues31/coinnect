@@ -1,0 +1,436 @@
+openapi: "3.0.0"
+info:
+  version: 0.0.1
+  title: GDAX REST API
+servers:
+  - url: https://api.gdax.com
+paths:
+  /products:
+    get:
+      description: |
+        Get a list of available currency pairs for trading.
+      operationId: getProducts
+      responses:
+        '200':
+          description: List of available products.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+                example:
+                  - id: BTC-USD
+                    base_currency: BTC
+                    quote_currency: USD
+                    base_min_size: '0.01'
+                    base_max_size: '10000.00'
+                    quote_increment: '0.01'
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{product_id}/book:
+    get:
+      description: |
+        Get a list of open orders for a product.
+      operationId: getProductOrderBook
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          description: Currency pair ID
+        - in: query
+          name: level
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 3
+            default: 1
+          description: |
+            Select response detail.
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Level</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Only the best bid and ask</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>Top 50 bids and asks (aggregated)</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>Full order book (non aggregated)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            Levels 1 and 2 are aggregated and return the number of orders at each level. Level 3 is non-aggregated and returns the entire order book.
+
+
+      responses:
+        '200':
+          description: Order book for the product.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOrderBook'
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{product_id}/ticker:
+    get:
+      description: |
+        Snapshot information about the last trade (tick), best bid/ask and 24h volume.
+      operationId: getProductTicker
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          description: Currency pair ID
+
+      responses:
+        '200':
+          description: Ticker information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductTicker'
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{product_id}/trades:
+    get:
+      description: |
+        List the latest trades for a product.
+      operationId: getTrades
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          description: Currency pair ID
+
+      responses:
+        '200':
+          description: Ticker information.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+                example:
+                  - time: '2014-11-07T22:19:28.578544Z'
+                    trade_id: 74
+                    price: '10.00000000'
+                    size: '0.01000000'
+                    side: buy
+                  - time: '2014-11-07T01:08:43.642366Z'
+                    trade_id: 73
+                    price: '100.00000000'
+                    size: '0.01000000'
+                    side: sell
+
+  /products/{product_id}/candles:
+    get:
+      description: |
+        Historic rates for a product.
+      operationId: getHistoricRates
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          description: Currency pair ID
+        - in: query
+          name: start
+          schema:
+            type: string
+            format: date-time
+          description: Start time in ISO 8601
+        - in: query
+          name: end
+          schema:
+            type: string
+            format: date-time
+          description: End time in ISO 8601
+        - in: query
+          name: granularity
+          schema:
+            type: integer
+            enum: [60, 300, 900, 3600, 21600, 86400]
+          description: Desired timeslice in seconds
+
+      responses:
+        '200':
+          description: Ticker information.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+                example:
+                  - time: '2014-11-07T22:19:28.578544Z'
+                    trade_id: 74
+                    price: '10.00000000'
+                    size: '0.01000000'
+                    side: buy
+                  - time: '2014-11-07T01:08:43.642366Z'
+                    trade_id: 73
+                    price: '100.00000000'
+                    size: '0.01000000'
+                    side: sell
+
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /currencies:
+    get:
+      description: |
+        List known currencies.
+      operationId: getCurrencies
+      responses:
+        '200':
+          description: List of currencies.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Currency'
+                example:
+                  - id: BTC
+                    name: Bitcoin
+                    min_size: '0.00000001'
+                  - id: USD
+                    name: United States Dollar
+                    min_size: '0.01000000'
+
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /time:
+    get:
+      description: |
+        Get the API server time.
+      operationId: getTime
+      responses:
+        '200':
+          description: Server time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Time'
+
+
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+components:
+  schemas:
+    Product:
+      properties:
+        id:
+          type: string
+          description: Currency pair ID
+        base_currency:
+          type: string
+          description: the base currency of the pair
+        quote_currency:
+          type: string
+          description: the quote currency of the pair
+        base_min_size:
+          type: string
+          description: the minimum order size
+        base_max_size:
+          type: string
+          description: the maximum order size
+        quote_increment:
+          type: string
+          description: the minimum order price and the price increment
+
+    ProductOrderBook:
+      example:
+        sequence: 3
+        bids:
+          - ['295.96', '4.39088265', 2]
+        asks:
+          - ['295.97', '25.23542881', 12]
+      properties:
+        sequence:
+          type: integer
+          description: Order book ID
+        bids:
+          type: array
+          description: the bids of the order book
+          items:
+            type: array
+            minItems: 3
+            maxItems: 3
+            format: '["price", "size", num-orders]'
+            items:
+              type: string
+
+        asks:
+          type: array
+          description: the asks of the order book
+          items:
+            type: array
+            minItems: 3
+            maxItems: 3
+            format: '["price", "size", num-orders]'
+            items:
+              type: string
+
+    ProductTicker:
+      example:
+        trade_id: 4729088
+        price: '333.99'
+        size: '0.193'
+        bid: '333.98'
+        ask: '333.99'
+        volume: '5957.11914015'
+        time: '2015-11-14T20:46:03.511254Z'
+      properties:
+        trade_id:
+          type: integer
+          description: Trade ID
+        price:
+          type: string
+          description: price of the last trade
+        size:
+          type: string
+          description: size of the last trade
+        bid:
+          type: string
+          description: best bid
+        ask:
+          type: string
+          description: best ask
+        volume:
+          type: string
+          description: 24h volume
+        time:
+          type: string
+          format: date-time
+          description: time of the last trade
+
+    Trade:
+      properties:
+        time:
+          type: string
+          format: date-time
+          description: time of the trade
+        trade_id:
+          type: integer
+          description: Trade ID
+        price:
+          type: string
+          description: price of the trade
+        size:
+          type: string
+          description: size of the trade
+        side:
+          type: string
+          enum: [buy, sell]
+          description: |
+            indicates the maker order side.
+
+            The maker order is the order that was open on the order book. `buy` side indicates a down-tick because the maker was a buy order and their order was removed. Conversely, `sell` side indicates an up-tick.
+
+    Candle:
+      type: array
+      minItems: 6
+      maxItems: 6
+      format: '[time, low, high, open, close, volume]'
+      description: |
+        Each bucket is an array of the following information:
+
+        * `time` bucket start time
+        * `low` lowest price during the bucket interval
+        * `high` highest price during the bucket interval
+        * `open` opening price (first trade) in the bucket interval
+        * `close` closing price (last trade) in the bucket interval
+        * `volume` volume of trading activity during the bucket interval
+
+      items:
+        type: number
+        format: double
+
+    Currency:
+      properties:
+        id:
+          type: string
+          description: currency ID
+        name:
+          type: string
+          description: currency name
+        min_size:
+          type: string
+          description: minimum trade size for the currency
+
+    Time:
+      example:
+        iso: '2015-01-07T23:47:25.201Z'
+        epoch: 1420674445.201
+      properties:
+        iso:
+          type: string
+          format: date-time
+          description: ISO time
+        epoch:
+          type: number
+          format: double
+          description: decimal seconds since Unix Epoch
+
+    Error:
+      required:
+        - message
+      properties:
+        message:
+          type: string
