@@ -21,24 +21,21 @@
 //! the library malfunction, which can lead to a loss of money.
 
 // error_chain can make a lot of recursions.
-#![recursion_limit="128"]
-
+#![recursion_limit = "128"]
 // Allow lint customization.
 #![allow(unknown_lints)]
-
 // Move all the clippy warning in deny.
-#![deny(clippy)]
-
+#![deny(clippy::all)]
 // Avoid warning for the Crypto-currency about quotes.
-#![allow(doc_markdown)]
+#![allow(clippy::doc_markdown)]
 
 #[macro_use]
 extern crate hyper;
-extern crate sha2;
+extern crate chrono;
 extern crate hmac;
 extern crate hyper_native_tls;
 extern crate serde_json;
-extern crate chrono;
+extern crate sha2;
 #[macro_use]
 extern crate lazy_static;
 extern crate bidir_map;
@@ -48,13 +45,13 @@ extern crate error_chain;
 extern crate bigdecimal;
 
 pub mod coinnect;
-pub mod exchange;
 pub mod error;
-pub mod types;
+pub mod exchange;
 mod helpers;
+pub mod types;
 
 pub mod bitstamp;
-pub mod poloniex;
-pub mod kraken;
 pub mod bittrex;
 pub mod gdax;
+pub mod kraken;
+pub mod poloniex;

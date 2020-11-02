@@ -9,9 +9,9 @@ use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
 use error::*;
-use types::*;
-use poloniex::utils;
 use helpers;
+use poloniex::utils;
+use types::*;
 
 impl ExchangeApi for PoloniexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -30,7 +30,7 @@ impl ExchangeApi for PoloniexApi {
 
         Ok(Ticker {
             timestamp: helpers::get_unix_timestamp_ms(),
-            pair: pair,
+            pair,
             last_trade_price: price,
             lowest_ask: ask,
             highest_bid: bid,
@@ -75,13 +75,19 @@ impl ExchangeApi for PoloniexApi {
 
         Ok(Orderbook {
             timestamp: helpers::get_unix_timestamp_ms(),
-            pair: pair,
+            pair,
             asks: ask_offers,
             bids: bid_offers,
         })
     }
 
-    fn add_order(&mut self, order_type: OrderType, pair: Pair, quantity: Volume, price: Option<Price>) -> Result<OrderInfo> {
+    fn add_order(
+        &mut self,
+        order_type: OrderType,
+        pair: Pair,
+        quantity: Volume,
+        price: Option<Price>,
+    ) -> Result<OrderInfo> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -127,12 +133,10 @@ impl ExchangeApi for PoloniexApi {
 
         Ok(OrderInfo {
             timestamp: helpers::get_unix_timestamp_ms(),
-            identifier: vec![
-                result["orderNumber"]
-                    .as_f64()
-                    .ok_or_else(|| ErrorKind::MissingField("orderNumber".to_string()))?
-                    .to_string(),
-            ],
+            identifier: vec![result["orderNumber"]
+                .as_f64()
+                .ok_or_else(|| ErrorKind::MissingField("orderNumber".to_string()))?
+                .to_string()],
         })
     }
 
