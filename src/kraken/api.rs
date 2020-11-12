@@ -2,32 +2,32 @@
 //! It is recommended to use a nonce window setting of 5000 for your API key when sending requests in quick succession in order to avoid nonce errors.
 //! WARNING: Special attention should be paid to error management: parsing number, etc.
 
-#![allow(too_many_arguments)]
+#![allow(clippy::too_many_arguments)]
 
 use hmac::{Hmac, Mac};
-use sha2::{Sha256, Sha512, Digest};
+use sha2::{Digest, Sha256, Sha512};
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::Client;
 use hyper::header;
 use hyper::net::HttpsConnector;
+use hyper::Client;
+use hyper_native_tls::NativeTlsClient;
 
 use data_encoding::BASE64;
 
-use serde_json::Value;
 use serde_json::value::Map;
+use serde_json::Value;
 
 use std::collections::HashMap;
 use std::io::Read;
+use std::str;
 use std::thread;
 use std::time::Duration;
-use std::str;
 
 use error::*;
 use helpers;
 
-use exchange::Exchange;
 use coinnect::Credentials;
+use exchange::Exchange;
 use kraken::utils;
 
 header! {
@@ -50,7 +50,6 @@ pub struct KrakenApi {
     burst: bool,
 }
 
-
 impl KrakenApi {
     /// Create a new KrakenApi by providing an API key & API secret
     pub fn new<C: Credentials>(creds: C) -> Result<KrakenApi> {
@@ -66,15 +65,14 @@ impl KrakenApi {
         let connector = HttpsConnector::new(ssl);
 
         Ok(KrakenApi {
-               last_request: 0,
-               api_key: creds.get("api_key").unwrap_or_default(),
-               api_secret: creds.get("api_secret").unwrap_or_default(),
-               otp: None,
-               http_client: Client::with_connector(connector),
-               burst: false,
-           })
+            last_request: 0,
+            api_key: creds.get("api_key").unwrap_or_default(),
+            api_secret: creds.get("api_secret").unwrap_or_default(),
+            otp: None,
+            http_client: Client::with_connector(connector),
+            burst: false,
+        })
     }
-
 
     /// Use to provide your two-factor password (if two-factor enabled, otherwise not required)
     pub fn set_two_pass_auth(&mut self, otp: String) {
@@ -91,7 +89,7 @@ impl KrakenApi {
     }
 
     pub fn block_or_continue(&self) {
-        if ! self.burst {
+        if !self.burst {
             let threshold: u64 = 2000; // 1 request/2sec
             let offset: u64 = helpers::get_unix_timestamp_ms() as u64 - self.last_request as u64;
             if offset < threshold {
@@ -101,13 +99,16 @@ impl KrakenApi {
         }
     }
 
-    fn public_query(&mut self,
-                    method: &str,
-                    params: &mut HashMap<&str, &str>)
-                    -> Result<Map<String, Value>> {
+    fn public_query(
+        &mut self,
+        method: &str,
+        params: &mut HashMap<&str, &str>,
+    ) -> Result<Map<String, Value>> {
         helpers::strip_empties(params);
-        let url = "https://api.kraken.com/0/public/".to_string() + method + "?" +
-                  &helpers::url_encode_hashmap(params);
+        let url = "https://api.kraken.com/0/public/".to_string()
+            + method
+            + "?"
+            + &helpers::url_encode_hashmap(params);
 
         self.block_or_continue();
         //TODO: Handle correctly http errors with error_chain.
@@ -121,10 +122,11 @@ impl KrakenApi {
         utils::deserialize_json(&buffer)
     }
 
-    fn private_query(&mut self,
-                     method: &str,
-                     mut params: &mut HashMap<&str, &str>)
-                     -> Result<Map<String, Value>> {
+    fn private_query(
+        &mut self,
+        method: &str,
+        mut params: &mut HashMap<&str, &str>,
+    ) -> Result<Map<String, Value>> {
         let url = "https://api.kraken.com/0/private/".to_string() + method;
 
         let urlpath = "/0/private/".to_string() + method;
@@ -147,11 +149,13 @@ impl KrakenApi {
         custom_header.set(KeyHeader(self.api_key.clone()));
         custom_header.set(SignHeader(signature));
 
-        let mut res = match self.http_client
-                  .post(&url)
-                  .body(&postdata)
-                  .headers(custom_header)
-                  .send() {
+        let mut res = match self
+            .http_client
+            .post(&url)
+            .body(&postdata)
+            .headers(custom_header)
+            .send()
+        {
             Ok(res) => res,
             Err(err) => return Err(ErrorKind::ServiceUnavailable(err.to_string()).into()),
         };
@@ -211,11 +215,12 @@ impl KrakenApi {
     /// decimals = scaling decimal places for record keeping
     /// display_decimals = scaling decimal places for output display
     /// ```
-    pub fn get_asset_info(&mut self,
-                          info: &str,
-                          aclass: &str,
-                          asset: &str)
-                          -> Result<Map<String, Value>> {
+    pub fn get_asset_info(
+        &mut self,
+        info: &str,
+        aclass: &str,
+        asset: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("info", info);
         params.insert("aclass", aclass);
@@ -256,10 +261,11 @@ impl KrakenApi {
     ///     margin_call = margin call level
     ///     margin_stop = stop-out/liquidation margin level
     /// ```
-    pub fn get_tradable_asset_pairs(&mut self,
-                                    info: &str,
-                                    pair: &str)
-                                    -> Result<Map<String, Value>> {
+    pub fn get_tradable_asset_pairs(
+        &mut self,
+        info: &str,
+        pair: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("info", info);
         params.insert("pair", pair);
@@ -312,11 +318,12 @@ impl KrakenApi {
     ///
     /// Note: the last entry in the OHLC array is for the current, not-yet-committed frame and will
     /// always be present, regardless of the value of "since".
-    pub fn get_ohlc_data(&mut self,
-                         pair: &str,
-                         interval: &str,
-                         since: &str)
-                         -> Result<Map<String, Value>> {
+    pub fn get_ohlc_data(
+        &mut self,
+        pair: &str,
+        interval: &str,
+        since: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("interval", interval);
@@ -343,7 +350,6 @@ impl KrakenApi {
         params.insert("count", count);
         self.public_query("Depth", &mut params)
     }
-
 
     /// Input:
     ///
@@ -382,10 +388,11 @@ impl KrakenApi {
     /// ```
     /// Note: "since" is inclusive so any returned data with the same time as the previous set
     /// should overwrite all of the previous set's entries at that time
-    pub fn get_recent_spread_data(&mut self,
-                                  pair: &str,
-                                  since: &str)
-                                  -> Result<Map<String, Value>> {
+    pub fn get_recent_spread_data(
+        &mut self,
+        pair: &str,
+        since: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("since", since);
@@ -513,14 +520,15 @@ impl KrakenApi {
     /// ```
     /// Note: Times given by order tx ids are more accurate than unix timestamps. If an order tx id
     /// is given for the time, the order's open time is used
-    pub fn get_closed_orders(&mut self,
-                             trades: &str,
-                             userref: &str,
-                             start: &str,
-                             end: &str,
-                             ofs: &str,
-                             closetime: &str)
-                             -> Result<Map<String, Value>> {
+    pub fn get_closed_orders(
+        &mut self,
+        trades: &str,
+        userref: &str,
+        start: &str,
+        end: &str,
+        ofs: &str,
+        closetime: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("trades", trades);
         params.insert("userref", userref);
@@ -543,11 +551,12 @@ impl KrakenApi {
     /// ```json
     /// <order_txid> = order info.  See Get open orders/Get closed orders
     /// ```
-    pub fn query_orders_info(&mut self,
-                             trades: &str,
-                             userref: &str,
-                             txid: &str)
-                             -> Result<Map<String, Value>> {
+    pub fn query_orders_info(
+        &mut self,
+        trades: &str,
+        userref: &str,
+        txid: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("trades", trades);
         params.insert("userref", userref);
@@ -605,13 +614,14 @@ impl KrakenApi {
     /// Unless otherwise stated, costs, fees, prices, and volumes are in the asset pair's scale,
     /// not the currency's scale.
     /// Times given by trade tx ids are more accurate than unix timestamps.
-    pub fn get_trades_history(&mut self,
-                              type_trade: &str,
-                              trades: &str,
-                              start: &str,
-                              end: &str,
-                              ofs: &str)
-                              -> Result<Map<String, Value>> {
+    pub fn get_trades_history(
+        &mut self,
+        type_trade: &str,
+        trades: &str,
+        start: &str,
+        end: &str,
+        ofs: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("type", type_trade);
         params.insert("trades", trades);
@@ -706,14 +716,15 @@ impl KrakenApi {
     ///     balance = resulting balance
     /// ```
     /// Note: Times given by ledger ids are more accurate than unix timestamps.
-    pub fn get_ledgers_info(&mut self,
-                            aclass: &str,
-                            asset: &str,
-                            type_ledger: &str,
-                            start: &str,
-                            end: &str,
-                            ofs: &str)
-                            -> Result<Map<String, Value>> {
+    pub fn get_ledgers_info(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        type_ledger: &str,
+        start: &str,
+        end: &str,
+        ofs: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -860,20 +871,22 @@ impl KrakenApi {
     /// close out your position.
     /// If you receive the error "EOrder:Trading agreement required", refer to your API key
     /// management page for further details.
-    pub fn add_standard_order(&mut self,
-                              pair: &str,
-                              type_order: &str,
-                              ordertype: &str,
-                              price: &str,
-                              price2: &str,
-                              volume: &str,
-                              leverage: &str,
-                              oflags: &str,
-                              starttm: &str,
-                              expiretm: &str,
-                              userref: &str,
-                              validate: &str)
-                              -> Result<Map<String, Value>> {
+    pub fn add_standard_order(
+        &mut self,
+        pair: &str,
+        type_order: &str,
+        ordertype: &str,
+        price: &str,
+        price2: &str,
+        volume: &str,
+        leverage: &str,
+        oflags: &str,
+        starttm: &str,
+        expiretm: &str,
+        userref: &str,
+        validate: &str,
+        trading_agreement: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("pair", pair);
         params.insert("type", type_order);
@@ -887,6 +900,7 @@ impl KrakenApi {
         params.insert("expiretm", expiretm);
         params.insert("userref", userref);
         params.insert("validate", validate);
+        params.insert("trading_agreement", trading_agreement);
         self.private_query("AddOrder", &mut params)
     }
 
@@ -946,12 +960,13 @@ impl KrakenApi {
     /// expiretm = expiration time in unix timestamp, or 0 if not expiring
     /// new = whether or not address has ever been used
     /// ```
-    pub fn get_deposit_addresses(&mut self,
-                                 aclass: &str,
-                                 asset: &str,
-                                 method: &str,
-                                 new: &str)
-                                 -> Result<Map<String, Value>> {
+    pub fn get_deposit_addresses(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        method: &str,
+        new: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -986,11 +1001,12 @@ impl KrakenApi {
     ///     onhold = deposit is on hold pending review
     /// ```
     /// For information about the status, please refer to the IFEX financial transaction states.
-    pub fn get_status_of_recent_deposits(&mut self,
-                                         aclass: &str,
-                                         asset: &str,
-                                         method: &str)
-                                         -> Result<Map<String, Value>> {
+    pub fn get_status_of_recent_deposits(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        method: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -1014,12 +1030,13 @@ impl KrakenApi {
     /// limit = maximum net amount that can be withdrawn right now
     /// fee = amount of fees that will be paid
     /// ```
-    pub fn get_withdrawal_information(&mut self,
-                                      aclass: &str,
-                                      asset: &str,
-                                      key: &str,
-                                      amount: &str)
-                                      -> Result<Map<String, Value>> {
+    pub fn get_withdrawal_information(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        key: &str,
+        amount: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -1042,12 +1059,13 @@ impl KrakenApi {
     /// ```json
     /// refid = reference id
     /// ```
-    pub fn withdraw_funds(&mut self,
-                          aclass: &str,
-                          asset: &str,
-                          key: &str,
-                          amount: &str)
-                          -> Result<Map<String, Value>> {
+    pub fn withdraw_funds(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        key: &str,
+        amount: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -1085,11 +1103,12 @@ impl KrakenApi {
     ///     onhold = withdrawal is on hold pending review
     /// ```
     /// For information about the status, please refer to the IFEX financial transaction states.
-    pub fn get_status_of_recent_withdrawals(&mut self,
-                                            aclass: &str,
-                                            asset: &str,
-                                            method: &str)
-                                            -> Result<Map<String, Value>> {
+    pub fn get_status_of_recent_withdrawals(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        method: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -1124,11 +1143,12 @@ impl KrakenApi {
     /// Note: Cancelation cannot be guaranteed. This will put in a cancelation request. Depending
     /// upon how far along the withdrawal process is, it may not be possible to cancel the
     /// withdrawal.
-    pub fn request_withdrawal_cancelation(&mut self,
-                                          aclass: &str,
-                                          asset: &str,
-                                          refid: &str)
-                                          -> Result<Map<String, Value>> {
+    pub fn request_withdrawal_cancelation(
+        &mut self,
+        aclass: &str,
+        asset: &str,
+        refid: &str,
+    ) -> Result<Map<String, Value>> {
         let mut params = HashMap::new();
         params.insert("aclass", aclass);
         params.insert("asset", asset);
@@ -1163,7 +1183,6 @@ mod kraken_api_tests {
             assert!(difference >= 1999);
             assert!(difference < 10000);
 
-
             api.set_burst(true);
             let start = helpers::get_unix_timestamp_ms();
             api.block_or_continue();
@@ -1173,7 +1192,9 @@ mod kraken_api_tests {
             assert!(difference < 10);
 
             counter = counter + 1;
-            if counter >= 3 { break; }
+            if counter >= 3 {
+                break;
+            }
         }
     }
 }

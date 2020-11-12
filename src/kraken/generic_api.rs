@@ -6,9 +6,9 @@ use exchange::ExchangeApi;
 use kraken::api::KrakenApi;
 
 use error::*;
-use types::*;
-use kraken::utils;
 use helpers;
+use kraken::utils;
+use types::*;
 
 impl ExchangeApi for KrakenApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {
@@ -27,14 +27,13 @@ impl ExchangeApi for KrakenApi {
         let vol = helpers::from_json_bigdecimal(&result[*pair_name]["v"][0], "v")?;
 
         Ok(Ticker {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               pair: pair,
-               last_trade_price: price,
-               lowest_ask: ask,
-               highest_bid: bid,
-               volume: Some(vol),
-           })
-
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair,
+            last_trade_price: price,
+            lowest_ask: ask,
+            highest_bid: bid,
+            volume: Some(vol),
+        })
     }
 
     fn orderbook(&mut self, pair: Pair) -> Result<Orderbook> {
@@ -50,20 +49,12 @@ impl ExchangeApi for KrakenApi {
         let mut ask_offers = Vec::new();
         let mut bid_offers = Vec::new();
 
-        let ask_array =
-            result[*pair_name]["asks"]
-                .as_array()
-                .ok_or_else(|| {
-                                ErrorKind::InvalidFieldFormat(format!("{}.asks",
-                                                                      result[*pair_name]))
-                            })?;
-        let bid_array =
-            result[*pair_name]["bids"]
-                .as_array()
-                .ok_or_else(|| {
-                                ErrorKind::InvalidFieldFormat(format!("{}.bids",
-                                                                      result[*pair_name]))
-                            })?;
+        let ask_array = result[*pair_name]["asks"]
+            .as_array()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}.asks", result[*pair_name])))?;
+        let bid_array = result[*pair_name]["bids"]
+            .as_array()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}.bids", result[*pair_name])))?;
 
         for ask in ask_array {
             let price = helpers::from_json_bigdecimal(&ask[0], "ask price")?;
@@ -80,19 +71,20 @@ impl ExchangeApi for KrakenApi {
         }
 
         Ok(Orderbook {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               pair: pair,
-               asks: ask_offers,
-               bids: bid_offers,
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            pair,
+            asks: ask_offers,
+            bids: bid_offers,
+        })
     }
 
-    fn add_order(&mut self,
-                 order_type: OrderType,
-                 pair: Pair,
-                 quantity: Volume,
-                 price: Option<Price>)
-                 -> Result<OrderInfo> {
+    fn add_order(
+        &mut self,
+        order_type: OrderType,
+        pair: Pair,
+        quantity: Volume,
+        price: Option<Price>,
+    ) -> Result<OrderInfo> {
         let pair_name = match utils::get_pair_string(&pair) {
             Some(name) => name,
             None => return Err(ErrorKind::PairUnsupported.into()),
@@ -113,38 +105,42 @@ impl ExchangeApi for KrakenApi {
             price_str = price.unwrap().to_string()
         };
 
-        let raw_response = self.add_standard_order(pair_name,
-                                                   direction,
-                                                   order_type_str,
-                                                   &price_str,
-                                                   "",
-                                                   &quantity.to_string(),
-                                                   "",
-                                                   "",
-                                                   "",
-                                                   "",
-                                                   "",
-                                                   "")?;
+        let raw_response = self.add_standard_order(
+            pair_name,
+            direction,
+            order_type_str,
+            &price_str,
+            "",
+            &quantity.to_string(),
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        )?;
 
         let result = utils::parse_result(&raw_response)?;
 
         let mut txids = Vec::new();
 
-        let list_id =
-            result["txid"]
-                .as_array()
-                .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["txid"])))?;
+        let list_id = result["txid"]
+            .as_array()
+            .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", result["txid"])))?;
 
         for id in list_id {
-            txids.push(id.as_str()
-                           .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", id)))?
-                           .to_string());
+            txids.push(
+                id.as_str()
+                    .ok_or_else(|| ErrorKind::InvalidFieldFormat(format!("{}", id)))?
+                    .to_string(),
+            );
         }
 
         Ok(OrderInfo {
-               timestamp: helpers::get_unix_timestamp_ms(),
-               identifier: txids,
-           })
+            timestamp: helpers::get_unix_timestamp_ms(),
+            identifier: txids,
+        })
     }
 
     fn balances(&mut self) -> Result<Balances> {
@@ -161,8 +157,8 @@ impl ExchangeApi for KrakenApi {
                     let amount = helpers::from_json_bigdecimal(&val, "amount")?;
 
                     balances.insert(c, amount);
-                },
-                _ => ()
+                }
+                _ => (),
             }
         }
 
