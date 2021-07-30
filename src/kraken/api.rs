@@ -4,7 +4,7 @@
 
 #![allow(too_many_arguments)]
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, Mac, NewMac};
 use sha2::{Sha256, Sha512, Digest};
 
 use hyper_native_tls::NativeTlsClient;
@@ -165,9 +165,9 @@ impl KrakenApi {
         let message_presha256 = nonce.to_string() + postdata;
 
         let mut sha256 = Sha256::default();
-        sha256.input(&message_presha256.as_bytes());
+        sha256.update(&message_presha256.as_bytes());
 
-        let output = sha256.result();
+        let output = sha256.finalize();
 
         let mut concatenated = urlpath.as_bytes().to_vec();
         for elem in output {
@@ -175,9 +175,9 @@ impl KrakenApi {
         }
 
         let hmac_key = BASE64.decode(self.api_secret.as_bytes())?;
-        let mut mac = Hmac::<Sha512>::new(&hmac_key[..]);
-        mac.input(&concatenated);
-        Ok(BASE64.encode(mac.result().code()))
+        let mut mac = Hmac::<Sha512>::new_from_slice(&hmac_key[..]).unwrap();
+        mac.update(&concatenated);
+        Ok(BASE64.encode(&mac.finalize().into_bytes()))
     }
 
     /// Result: Server's time

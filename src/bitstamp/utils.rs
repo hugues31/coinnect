@@ -1,6 +1,6 @@
 use bidir_map::BidirMap;
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, Mac, NewMac};
 use sha2::{Sha256};
 
 use serde_json;
@@ -56,14 +56,14 @@ pub fn build_signature(nonce: &str,
 
     let message = nonce.to_owned() + customer_id + api_key;
 
-    let mut mac = Hmac::<Sha256>::new(api_secret.as_bytes());
+    let mut mac = Hmac::<Sha256>::new_from_slice(api_secret.as_bytes()).unwrap();
 
-    mac.input(message.as_bytes());
-    let result = mac.result();
+    mac.update(message.as_bytes());
+    let result = mac.finalize();
 
-    let raw_signature = result.code();
+    let raw_signature = result.into_bytes();
     let mut signature = Vec::with_capacity(raw_signature.len() * 2);
-    for &byte in raw_signature {
+    for &byte in &raw_signature {
         signature.push(C[(byte >> 4) as usize]);
         signature.push(C[(byte & 0xf) as usize]);
     }

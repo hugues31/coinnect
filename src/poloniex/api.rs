@@ -1,7 +1,7 @@
 //! Use this module to interact with Poloniex exchange.
 //! See examples for more informations.
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, Mac, NewMac};
 use sha2::Sha512;
 
 use hyper_native_tls::NativeTlsClient;
@@ -151,10 +151,10 @@ impl PoloniexApi {
         helpers::strip_empties(&mut post_params);
         let post_data = helpers::url_encode_hashmap(&post_params);
 
-        let mut mac = Hmac::<Sha512>::new(self.api_secret.as_bytes());
-        mac.input(post_data.as_bytes());
+        let mut mac = Hmac::<Sha512>::new_from_slice(self.api_secret.as_bytes()).unwrap();
+        mac.update(post_data.as_bytes());
 
-        let sign = HEXLOWER.encode(mac.result().code());
+        let sign = HEXLOWER.encode(&mac.finalize().into_bytes());
 
         let mut custom_header = header::Headers::new();
         custom_header.set(KeyHeader(self.api_key.to_owned()));
