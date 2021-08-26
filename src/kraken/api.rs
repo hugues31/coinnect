@@ -2,8 +2,6 @@
 //! It is recommended to use a nonce window setting of 5000 for your API key when sending requests in quick succession in order to avoid nonce errors.
 //! WARNING: Special attention should be paid to error management: parsing number, etc.
 
-#![allow(too_many_arguments)]
-
 use hmac::{Hmac, Mac, NewMac};
 use sha2::{Sha256, Sha512, Digest};
 

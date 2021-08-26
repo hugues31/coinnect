@@ -1,8 +1,5 @@
 //! Use this module to create a generic API.
 
-
-#![allow(new_ret_no_self)]
-
 use std::path::PathBuf;
 
 use crate::exchange::{Exchange, ExchangeApi};
@@ -27,7 +24,7 @@ pub struct Coinnect;
 
 impl Coinnect {
     /// Create a new CoinnectApi by providing an API key & API secret
-    pub fn new<C: Credentials>(exchange: Exchange, creds: C) -> Result<Box<ExchangeApi>> {
+    pub fn new<C: Credentials>(exchange: Exchange, creds: C) -> Result<Box<dyn ExchangeApi>> {
         match exchange {
             Exchange::Bitstamp => Ok(Box::new(BitstampApi::new(creds)?)),
             Exchange::Kraken => Ok(Box::new(KrakenApi::new(creds)?)),
@@ -45,7 +42,7 @@ impl Coinnect {
     pub fn new_from_file(exchange: Exchange,
                          name: &str,
                          path: PathBuf)
-                         -> Result<Box<ExchangeApi>> {
+                         -> Result<Box<dyn ExchangeApi>> {
         match exchange {
             Exchange::Bitstamp => {
                 Ok(Box::new(BitstampApi::new(BitstampCreds::new_from_file(name, path)?)?))

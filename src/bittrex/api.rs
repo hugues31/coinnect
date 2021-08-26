@@ -1,8 +1,6 @@
 //! Use this module to interact with the raw-original API provided by Bittrex.
 //! WARNING: Special attention should be paid to error management: parsing number, etc.
 
-#![allow(too_many_arguments)]
-
 use hmac::{Hmac, Mac, NewMac};
 use sha2::{Sha512};
 

@@ -1,6 +1,3 @@
-
-#![warn(clone_double_ref)]
-
 use serde_json::Value;
 use crate::error::*;
 use bigdecimal::BigDecimal;
