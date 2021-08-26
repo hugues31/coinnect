@@ -11,6 +11,7 @@ homepage = "https://github.com/hugues31/coinnect"
 repository = "https://github.com/hugues31/coinnect"
 keywords = [ "bitcoin", "trading", "poloniex", "kraken", "bitstamp" ]
 readme = "README.md"
+edition = "2018"
 
 [features]
 default = []

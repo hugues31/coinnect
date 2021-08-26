@@ -2,13 +2,13 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Bitstamp offers.
 
-use exchange::ExchangeApi;
-use bitstamp::api::BitstampApi;
-use bitstamp::utils;
+use crate::exchange::ExchangeApi;
+use crate::bitstamp::api::BitstampApi;
+use crate::bitstamp::utils;
 
-use error::*;
-use types::*;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::helpers;
 
 impl ExchangeApi for BitstampApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {

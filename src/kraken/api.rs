@@ -23,12 +23,12 @@ use std::thread;
 use std::time::Duration;
 use std::str;
 
-use error::*;
-use helpers;
+use crate::error::*;
+use crate::helpers;
 
-use exchange::Exchange;
-use coinnect::Credentials;
-use kraken::utils;
+use crate::exchange::Exchange;
+use crate::coinnect::Credentials;
+use crate::kraken::utils;
 
 header! {
     #[doc(hidden)]

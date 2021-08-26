@@ -5,13 +5,13 @@
 
 use std::path::PathBuf;
 
-use exchange::{Exchange, ExchangeApi};
-use bitstamp::{BitstampApi, BitstampCreds};
-use kraken::{KrakenApi, KrakenCreds};
-use poloniex::{PoloniexApi, PoloniexCreds};
-use bittrex::{BittrexApi, BittrexCreds};
-use gdax::{GdaxApi, GdaxCreds};
-use error::*;
+use crate::exchange::{Exchange, ExchangeApi};
+use crate::bitstamp::{BitstampApi, BitstampCreds};
+use crate::kraken::{KrakenApi, KrakenCreds};
+use crate::poloniex::{PoloniexApi, PoloniexCreds};
+use crate::bittrex::{BittrexApi, BittrexCreds};
+use crate::gdax::{GdaxApi, GdaxCreds};
+use crate::error::*;
 
 pub trait Credentials {
     /// Get an element from the credentials.
