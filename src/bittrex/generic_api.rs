@@ -5,13 +5,13 @@
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
-use exchange::ExchangeApi;
-use bittrex::api::BittrexApi;
+use crate::exchange::ExchangeApi;
+use crate::bittrex::api::BittrexApi;
 
-use error::*;
-use types::*;
-use bittrex::utils;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::bittrex::utils;
+use crate::helpers;
 
 impl ExchangeApi for BittrexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {

@@ -1,17 +1,14 @@
 //! Use this module to create a generic API.
 
-
-#![allow(new_ret_no_self)]
-
 use std::path::PathBuf;
 
-use exchange::{Exchange, ExchangeApi};
-use bitstamp::{BitstampApi, BitstampCreds};
-use kraken::{KrakenApi, KrakenCreds};
-use poloniex::{PoloniexApi, PoloniexCreds};
-use bittrex::{BittrexApi, BittrexCreds};
-use gdax::{GdaxApi, GdaxCreds};
-use error::*;
+use crate::exchange::{Exchange, ExchangeApi};
+use crate::bitstamp::{BitstampApi, BitstampCreds};
+use crate::kraken::{KrakenApi, KrakenCreds};
+use crate::poloniex::{PoloniexApi, PoloniexCreds};
+use crate::bittrex::{BittrexApi, BittrexCreds};
+use crate::gdax::{GdaxApi, GdaxCreds};
+use crate::error::*;
 
 pub trait Credentials {
     /// Get an element from the credentials.
@@ -27,7 +24,7 @@ pub struct Coinnect;
 
 impl Coinnect {
     /// Create a new CoinnectApi by providing an API key & API secret
-    pub fn new<C: Credentials>(exchange: Exchange, creds: C) -> Result<Box<ExchangeApi>> {
+    pub fn new<C: Credentials>(exchange: Exchange, creds: C) -> Result<Box<dyn ExchangeApi>> {
         match exchange {
             Exchange::Bitstamp => Ok(Box::new(BitstampApi::new(creds)?)),
             Exchange::Kraken => Ok(Box::new(KrakenApi::new(creds)?)),
@@ -45,7 +42,7 @@ impl Coinnect {
     pub fn new_from_file(exchange: Exchange,
                          name: &str,
                          path: PathBuf)
-                         -> Result<Box<ExchangeApi>> {
+                         -> Result<Box<dyn ExchangeApi>> {
         match exchange {
             Exchange::Bitstamp => {
                 Ok(Box::new(BitstampApi::new(BitstampCreds::new_from_file(name, path)?)?))

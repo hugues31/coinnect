@@ -3,10 +3,10 @@ use serde_json;
 use serde_json::Value;
 use serde_json::value::Map;
 
-use error::*;
-use types::Currency;
-use types::Pair;
-use types::Pair::*;
+use crate::error::*;
+use crate::types::Currency;
+use crate::types::Pair;
+use crate::types::Pair::*;
 
 lazy_static! {
     static ref PAIRS_STRING: BidirMap<Pair, &'static str> = {

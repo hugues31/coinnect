@@ -2,13 +2,13 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Kraken offers.
 
-use exchange::ExchangeApi;
-use kraken::api::KrakenApi;
+use crate::exchange::ExchangeApi;
+use crate::kraken::api::KrakenApi;
 
-use error::*;
-use types::*;
-use kraken::utils;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::kraken::utils;
+use crate::helpers;
 
 impl ExchangeApi for KrakenApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {

@@ -2,16 +2,16 @@
 //! This a more convenient and safe way to deal with the exchange since methods return a Result<>
 //! but this generic API does not provide all the functionnality that Poloniex offers.
 
-use exchange::ExchangeApi;
-use poloniex::api::PoloniexApi;
+use crate::exchange::ExchangeApi;
+use crate::poloniex::api::PoloniexApi;
 
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
-use error::*;
-use types::*;
-use poloniex::utils;
-use helpers;
+use crate::error::*;
+use crate::types::*;
+use crate::poloniex::utils;
+use crate::helpers;
 
 impl ExchangeApi for PoloniexApi {
     fn ticker(&mut self, pair: Pair) -> Result<Ticker> {

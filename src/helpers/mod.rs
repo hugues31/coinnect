@@ -1,8 +1,5 @@
-
-#![warn(clone_double_ref)]
-
 use serde_json::Value;
-use error::*;
+use crate::error::*;
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 
